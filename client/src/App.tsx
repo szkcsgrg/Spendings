@@ -3,6 +3,15 @@ import { AuthContext } from "./components/AuthContext";
 type InputEvent = (event: React.ChangeEvent<HTMLInputElement>) => void;
 type KeyboardEvent = (event: React.KeyboardEvent<HTMLInputElement>) => void;
 
+interface Log{
+  id: number;
+  income: number;
+  saving: number;
+  amount: number;
+  emoji: string;
+  type: string;
+}
+
 interface Spending {
   id: number;
   amount: number;
@@ -36,6 +45,8 @@ function App() {
     {id: 15, amount: 0, type: 'Withdraw', emoji: '💶'},
     {id: 16, amount: 0, type: 'Savings', emoji: '🔐'},
   ];
+  const [logEntries, setLogEntries] = useState<Log[]>([]);
+  const [isDataFetched, setIsDataFetched] = useState(false); 
   const [spendings, setSpendings] = useState<Spending[]>(initialSpendings);
   const [allSavings, setAllSavings] = useState<number[]>([]);
   const [totalSavings, setTotalSavings] = useState('0.00');
@@ -43,6 +54,8 @@ function App() {
   "July", "August", "September", "October", "November", "December"
   ];
   const currentDate = new Date();
+  const tableHeader = {backgroundColor: '#2b2b2b', color: '#d7942d', fontWeight: '1000'};
+  const table = {backgroundColor: '#232323', color: 'white', borderColor: '#525252', fontWeight: '400'};
   //Inital Values END
 
   //Fetching the Data from the DB START
@@ -58,8 +71,39 @@ function App() {
       if (!response.ok) {
         throw new Error('HTTP error ' + response.status);
       }
-    
+
       const fetchedData: any[] = await response.json();
+  
+      const userEntries = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[currentDate.getMonth()]).map(entry => {
+        
+        // Check if the saving has any value. If there is, add that value to the .amount. Add 'Saving' to the .type.
+        // Keep the rest as well
+      
+        if (entry.saving !== null) {
+          return {
+            id: entry.id,
+            income: entry.income,
+            saving: entry.saving,
+            amount: entry.saving,
+            emoji: '🔐',
+            type: 'Savings',
+          };
+        } else {
+          //Here we need to add everything else based on initialSpendings types.
+          const initialItem = initialSpendings.find(item => item.id === entry.type_id);
+          return {
+            id: entry.id,
+            income: entry.income,
+            saving: entry.saving,
+            amount: entry.amount,
+            emoji: initialItem?.emoji || '💳',
+            type: initialItem?.type || 'Income',
+          };
+        }
+
+      });
+      setLogEntries(userEntries);
+      setIsDataFetched(true);
 
       // Merge fetched data with initial spendings
       const mergedData = initialSpendings.map(initialItem => {
@@ -114,7 +158,7 @@ function App() {
     
     fetchData();
     fetchAllDataFromUser();
-  }, []);
+  }, [isDataFetched]);
   //Fetching the Data from the DB END
 
   //Calculations START
@@ -290,7 +334,7 @@ function App() {
         throw new Error('HTTP error ' + response.status);
       }
     }
-
+    setIsDataFetched(false);
   }
   //Functions and Event handlers END
 
@@ -343,6 +387,28 @@ function App() {
             </div>
           ))}
         </div>
+      </section>
+      <hr />
+      <section className="row mt-lg-5 my-1 mb-5 pb-5">
+        <h2 className="text-center mb-5">Previous Entries</h2>
+        <table className="col-12 col-md-8 col-lg-6 table table-hover">
+          <thead>
+            <tr>
+              <th scope="col" style={tableHeader}>Income After</th>
+              <th scope="col" style={tableHeader}>Category</th>
+              <th scope="col" style={tableHeader}>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+          {logEntries.slice().reverse().map((entry, index) => (
+              <tr key={index}>
+                <th style={table}>{entry.income}</th>
+                <th style={table}>{entry.emoji +' '+ entry.type}</th>
+                <th style={table}>{Number(entry.amount || 0).toFixed(2)}</th>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
       <footer className="fixed-bottom d-flex justify-content-center gap-5 py-3">
         <h5 className="text-center">

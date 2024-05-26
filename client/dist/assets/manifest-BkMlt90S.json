@@ -1,0 +1,12 @@
+{
+    "name": "Spendings - Szakács Gergő",
+    "short_name": "Spendings",
+    "version": "1.0.0",
+    "icons": [
+      {
+        "src": "icon.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      }
+    ]
+  }
