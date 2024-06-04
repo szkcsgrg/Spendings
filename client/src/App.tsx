@@ -47,6 +47,7 @@ function App() {
   ];
   const [logEntries, setLogEntries] = useState<Log[]>([]);
   const [isDataFetched, setIsDataFetched] = useState(false); 
+  //const [choosenCategory, setChoosenCategory] = useState(false);
   const [spendings, setSpendings] = useState<Spending[]>(initialSpendings);
   const [allSavings, setAllSavings] = useState<number[]>([]);
   const [totalSavings, setTotalSavings] = useState('0.00');
@@ -54,112 +55,156 @@ function App() {
   "July", "August", "September", "October", "November", "December"
   ];
   const currentDate = new Date();
-  const tableHeader = {backgroundColor: '#2b2b2b', color: '#d7942d', fontWeight: '1000'};
-  const table = {backgroundColor: '#232323', color: 'white', borderColor: '#525252', fontWeight: '400'};
+  const [choosenMonth, setChoosenMonth] = useState(monthNames[currentDate.getMonth()])
+  const [uniqueMonths, setUniqueMonths] = useState<string[]>([]);
+  const isCurrentMonth = choosenMonth === monthNames[new Date().getMonth()];
+  const tableHeader = {backgroundColor: '#424769', color: '#f9b17a', fontWeight: '1000'};
+  const table = {backgroundColor: '#676f9d', color: 'white', borderColor: '#525252', fontWeight: '400'};
+  const radius = {width: "90%", margin: "auto"};
   //Inital Values END
 
   //Fetching the Data from the DB START
-  useEffect(() => {  
-    //Fetch Data based on User and currentMonth
-    const fetchData = async () => {
-      const response = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${encodeURIComponent(monthNames[currentDate.getMonth()])}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) {
-        throw new Error('HTTP error ' + response.status);
-      }
+  //Fetch Data based on User and currentMonth
+  const fetchData = async (choosenMonth: string | number | boolean) => {
+    const response = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${encodeURIComponent(choosenMonth)}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      throw new Error('HTTP error ' + response.status);
+    }
 
-      const fetchedData: any[] = await response.json();
-  
-      const userEntries = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[currentDate.getMonth()]).map(entry => {
-        
-        // Check if the saving has any value. If there is, add that value to the .amount. Add 'Saving' to the .type.
-        // Keep the rest as well
+    const fetchedData: any[] = await response.json();
+
+    const userEntries = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === choosenMonth).map(entry => {
       
-        if (entry.saving !== null) {
-          return {
-            id: entry.id,
-            income: entry.income,
-            saving: entry.saving,
-            amount: entry.saving,
-            emoji: '🔐',
-            type: 'Savings',
-          };
-        } else {
-          //Here we need to add everything else based on initialSpendings types.
-          const initialItem = initialSpendings.find(item => item.id === entry.type_id);
-          return {
-            id: entry.id,
-            income: entry.income,
-            saving: entry.saving,
-            amount: entry.amount,
-            emoji: initialItem?.emoji || '💳',
-            type: initialItem?.type || 'Income',
-          };
-        }
-
-      });
-      setLogEntries(userEntries);
-      setIsDataFetched(true);
-
-      // Merge fetched data with initial spendings
-      const mergedData = initialSpendings.map(initialItem => {
-        // Find all fetched items of this type
-        const fetchedItems = fetchedData.filter(item => item.type_id === initialItem.id);
-
-        if (fetchedItems.length > 0) {
-          // If there are fetched items of this type, sum their amounts
-          const totalAmount = fetchedItems.reduce((sum, item) => sum + Number(item.amount), 0);
-          return { ...initialItem, amount: totalAmount };
-        } else {
-          // If there are no fetched items of this type, use the initial amount
-          return initialItem;
-        }
-      });
-
-      // Get all rows of the fetched data for the specific user and month
-      const userRows = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[currentDate.getMonth()])
-      if (userRows.length > 0) {
-        let totalSavings = 0;
-        userRows.forEach(row => {
-          const saving = Number(row.saving || 0);
-          totalSavings += saving; // add the saving, whether it's positive or negative
-        });
-        const savingsIndex = mergedData.findIndex(item => item.id === 16);
-        if (savingsIndex !== -1) {
-          mergedData[savingsIndex].amount = totalSavings;
-        }
-        setIncome(userRows[userRows.length - 1].income);
+      // Check if the saving has any value. If there is, add that value to the .amount. Add 'Saving' to the .type.
+      // Keep the rest as well
+    
+      if (entry.saving !== null) {
+        return {
+          id: entry.id,
+          income: entry.income,
+          saving: entry.saving,
+          amount: entry.saving,
+          emoji: '🔐',
+          type: 'Savings',
+        };
       } else {
-        setIncome(0);
+        //Here we need to add everything else based on initialSpendings types.
+        const initialItem = initialSpendings.find(item => item.id === entry.type_id);
+        return {
+          id: entry.id,
+          income: entry.income,
+          saving: entry.saving,
+          amount: entry.amount,
+          emoji: initialItem?.emoji || '💳',
+          type: initialItem?.type || 'Income',
+        };
       }
 
-      setSpendings(mergedData);
-    };
+    });
+    setLogEntries(userEntries);
+    setIsDataFetched(true);
 
-    //Fetch Data - The full spendings of the user
-    const fetchAllDataFromUser = async () => {
-      const response = await fetch(`${backendServer}/getspendingsUser?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}`, {
-        method: "GET",
+    // Merge fetched data with initial spendings
+    const mergedData = initialSpendings.map(initialItem => {
+      // Find all fetched items of this type
+      const fetchedItems = fetchedData.filter(item => item.type_id === initialItem.id);
+
+      if (fetchedItems.length > 0) {
+        // If there are fetched items of this type, sum their amounts
+        const totalAmount = fetchedItems.reduce((sum, item) => sum + Number(item.amount), 0);
+        return { ...initialItem, amount: totalAmount };
+      } else {
+        // If there are no fetched items of this type, use the initial amount
+        return initialItem;
+      }
+    });
+
+    // Get all rows of the fetched data for the specific user and month
+    const userRows = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === choosenMonth)
+    if (userRows.length > 0) {
+      let totalSavings = 0;
+      userRows.forEach(row => {
+        const saving = Number(row.saving || 0);
+        totalSavings += saving; // add the saving, whether it's positive or negative
+      });
+      const savingsIndex = mergedData.findIndex(item => item.id === 16);
+      if (savingsIndex !== -1) {
+        mergedData[savingsIndex].amount = totalSavings;
+      }
+      setIncome(userRows[userRows.length - 1].income);
+    } else {
+      setIncome(0);
+    }
+
+    setSpendings(mergedData);
+  };
+  
+  //Fetch Data - The full spendings of the user
+  const fetchAllDataFromUser = async () => {
+    const response = await fetch(`${backendServer}/getspendingsUser?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('HTTP error ' + response.status);
+    }
+    const fetchedData: any[] = await response.json();
+
+
+    const currentMonth = monthNames[new Date().getMonth()];
+    let uniqueMonthsFromData = [...new Set(fetchedData.map(item => item.month))] as string[];
+
+    if (!uniqueMonthsFromData.includes(currentMonth)) {
+        uniqueMonthsFromData = [...uniqueMonthsFromData, currentMonth];
+    }
+    setUniqueMonths(uniqueMonthsFromData);
+
+    // Sort the fetched data by month in ascending order
+    fetchedData.sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
+    const lastMonthData = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[new Date().getMonth() - 1]);
+    const currentMonthData = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[new Date().getMonth()]);
+    const lastMonthIncome = lastMonthData[lastMonthData.length - 1];
+    const currentMonthIncome = currentMonthData[currentMonthData.length - 1];
+    if (lastMonthIncome && currentMonthIncome) {
+      setIncome(currentMonthIncome.income);
+    } else {
+      setIncome(lastMonthIncome.income);
+      const newIncome = (Number(income) + Number(incomeInput.replace(',', '.'))).toFixed(2);
+      const postResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          userId: localStorage.getItem("userEmail"),
+          month: monthNames[currentDate.getMonth()],
+          income: newIncome,
+        }),
       });
-      if (!response.ok) {
-        throw new Error('HTTP error ' + response.status);
+      if (!postResponse.ok) {
+        throw new Error('HTTP error ' + postResponse.status);
       }
-      const fetchedData: any[] = await response.json();
-      const savingsData = fetchedData.map(item => Number(item.saving));
-      setAllSavings(savingsData);
     }
     
-    fetchData();
+
+    const savingsData = fetchedData.map(item => Number(item.saving));
+    setAllSavings(savingsData);
+  }
+  //Fetching the Data from the DB END
+
+  useEffect(() => {  
+    fetchData(monthNames[currentDate.getMonth()]);
     fetchAllDataFromUser();
   }, [isDataFetched]);
-  //Fetching the Data from the DB END
+  
 
   //Calculations START
   useEffect(() => {
@@ -263,9 +308,15 @@ function App() {
     }
   }
   const handleAmountSubmit: KeyboardEvent = (event) => {
+    //&& choosenCategory
     if (event.key === 'Enter') {
+      setShowTypes(false);
+      //handleTypeClick(, );
+    }
+    else{
       setShowTypes(true);
     }
+    
   }
 
   const handleTypeClick: (type: string, id: number) => void = async (type, id) => {
@@ -336,6 +387,11 @@ function App() {
     }
     setIsDataFetched(false);
   }
+
+  const handleSelectChange = (event: { target: { value: any; }; }) => {
+      setChoosenMonth(event.target.value);
+      fetchData(event.target.value);
+  };
   //Functions and Event handlers END
 
   return (
@@ -352,25 +408,44 @@ function App() {
       </nav>
       <header className="d-flex flex-column flex-md-row justify-content-center justify-content-md-evenly mt-5 pt-5">
         <h5 className="text-center">
-          <span className="month">{monthNames[currentDate.getMonth()]}</span> - <a onClick={resetSpendings}>Reset Monthly Spending</a>
+        {uniqueMonths.length > 0 ? (
+          <select className="month" onChange={handleSelectChange} defaultValue={monthNames[currentDate.getMonth()]}>
+            {uniqueMonths.filter(month => month !== 'initial').map((month, index) => (
+              <option key={index} value={month}>
+                {month}
+              </option>
+            ))}
+          </select>
+          ) : (
+            <span className="month">{monthNames[currentDate.getMonth()]}</span> 
+          )}
+          {isCurrentMonth && (
+              <>
+              {" "} - <a onClick={resetSpendings}>Reset Monthly Spending</a>
+              </>
+          )}
         </h5>
-        <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row">
+        <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row"> 
           <span className="income mx-3 mx-md-1">
             {Number(income).toFixed(2)}
           </span>
-          <input className="mx-5 mx-md-1" value={incomeInput} onChange={handleIncomeChange} onKeyDown={handleIncomeSubmit} type="text" placeholder="income"/>
+          {isCurrentMonth && (
+            <input className="mx-5 mx-md-1" value={incomeInput} onChange={handleIncomeChange} onKeyDown={handleIncomeSubmit} type="text" placeholder="income"/>
+          )}
         </h5>
       </header>
       <section className="d-flex justify-content-center align-items-center mt-4">
         <h3 className="mb-4 mb-md-0">
+        {isCurrentMonth && (
           <input value={amount} onChange={handleAmountChange} onKeyDown={handleAmountSubmit} type="text" placeholder="spent" />
+        )}
         </h3>
       </section>
       <section className="d-flex flex-row justify-content-evenly">
         {showTypes && (
           <div>
             {initialSpendings.map((spending) => (
-              <button key={spending.type} onClick={() => handleTypeClick(spending.type, spending.id)}>
+              <button className="button-secondary" key={spending.type} onClick={() => handleTypeClick(spending.type, spending.id)}>
                 {spending.emoji+" "+spending.type}
               </button>
             ))} 
@@ -391,7 +466,7 @@ function App() {
       <hr />
       <section className="row mt-lg-5 my-1 mb-5 pb-5">
         <h2 className="text-center mb-5">Previous Entries</h2>
-        <table className="col-12 col-md-8 col-lg-6 table table-hover">
+        <table style={radius} className="col-11 col-md-8 col-lg-6 table table-hover">
           <thead>
             <tr>
               <th scope="col" style={tableHeader}>Income After</th>

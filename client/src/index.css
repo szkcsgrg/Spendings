@@ -6,6 +6,13 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --background: #2d3250;
+  --background-light: #424769;
+  --background-lightest: #676f9d;
+
+  --color: #f3f3f3;
+  --accent: #f9b17a;
 }
 
 a {
@@ -14,12 +21,13 @@ a {
 }
 a:hover {
   cursor:pointer;
-  color: #535bf2;
+  color: var(--accent);
 }
 
 *, body {
-  background-color: #232323;
-  color: #f3f3f3;
+  background-color: var(--background);
+  color: var(--color);
+  overflow-x: hidden;
 }
 body{
   min-width: 320px;
@@ -30,37 +38,48 @@ h1 {
   font-size: 3.2em;
   line-height: 1.1;
   margin: 0;
+  padding: 7.5px;
+  overflow: hidden;
 }
-
+h2{
+  overflow: hidden;
+}
+h5, h5 span {
+  overflow: hidden;
+}
+.button-secondary {
+  background-color: var(--background-light);
+  color: var(--color);
+}
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
+  border: none;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
-  color: white;
+  color: var(--background);
+  background-color: var(--accent);
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all 0.5s;
 }
 button:hover {
-  border-color: #646cff;
+  background-color: var(--background-lightest);
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 3px solid var(--background-light);
 }
 input[type="text"]{
   border: none;
-  border-bottom: 1px solid #fff;
+  border-bottom: 1px solid var(--color);
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
   transition: border-color 0.25s;
 }
 input[type="text"]:focus{
-  border-color: #646cff;
+  border-color: var(--accent);
   outline: none;
 }
 ::placeholder {
@@ -85,9 +104,26 @@ input[type="text"]:focus{
 :-ms-input-placeholder {  
   text-align: center; 
 }
+
+.login{
+  border-radius: 1.5em;
+}
+.login, .login p, .login h1{
+  background-color: var(--background-light);
+}
+
+
+
+
 .month{
-  color: #d7942d;
-  font-weight: 600;
+  color: var(--accent);
+  font-weight: 700;
+  outline: none;
+  border: none;
+}
+.income{
+  color: var(--accent);
+  font-weight: 700;
 }
 .user{
   cursor: pointer;
@@ -104,11 +140,11 @@ input[type="text"]:focus{
   margin: 0 auto;
   display: block;
 }
-.income{
-  color: #d7942d;
-  font-weight: 600;
-}
+
 footer{
-  background-color: #232323;
+  background-color: var(--background-light);
   border-top: 1px solid #fff;
+}
+footer h5 span, footer h5{ 
+  background-color: var(--background-light);
 }
