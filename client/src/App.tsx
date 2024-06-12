@@ -21,12 +21,16 @@ interface Spending {
 
 function App() {
   //Inital Values START
+  //Defualt
   const authContext = useContext(AuthContext);
   const backendServer = import.meta.env.VITE_APP_SERVER;
+
+  //Variables
   const [income, setIncome] = useState<string | number>(0);
   const [incomeInput, setIncomeInput] = useState<string>('');
   const [amount, setAmount] = useState<string | number>('');
-  const [showTypes, setShowTypes] = useState<boolean>(false);
+  const [allSavings, setAllSavings] = useState<number[]>([]);
+  const [totalSavings, setTotalSavings] = useState('0.00'); 
   const initialSpendings: Spending[] = [
     {id: 1, amount: 0, type: 'Wages & Subscriptions', emoji: '💰'},
     {id: 2, amount: 0, type: 'Transport', emoji: '🚆'},
@@ -44,13 +48,15 @@ function App() {
     {id: 14, amount: 0, type: 'Transfer', emoji: '💸'},
     {id: 15, amount: 0, type: 'Withdraw', emoji: '💶'},
     {id: 16, amount: 0, type: 'Savings', emoji: '🔐'},
-  ];
-  const [logEntries, setLogEntries] = useState<Log[]>([]);
-  const [isDataFetched, setIsDataFetched] = useState(false); 
-  //const [choosenCategory, setChoosenCategory] = useState(false);
+    ];
   const [spendings, setSpendings] = useState<Spending[]>(initialSpendings);
-  const [allSavings, setAllSavings] = useState<number[]>([]);
-  const [totalSavings, setTotalSavings] = useState('0.00');
+  const [logEntries, setLogEntries] = useState<Log[]>([]);
+
+  //Conditional Rendering
+  const [isDataFetched, setIsDataFetched] = useState(false); 
+  const [showTypes, setShowTypes] = useState<boolean>(false);
+  
+  // Months Related
   const monthNames = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
   ];
@@ -58,10 +64,18 @@ function App() {
   const [choosenMonth, setChoosenMonth] = useState(monthNames[currentDate.getMonth()])
   const [uniqueMonths, setUniqueMonths] = useState<string[]>([]);
   const isCurrentMonth = choosenMonth === monthNames[new Date().getMonth()];
+
+  // Styles
   const tableHeader = {backgroundColor: '#424769', color: '#f9b17a', fontWeight: '1000'};
   const table = {backgroundColor: '#676f9d', color: 'white', borderColor: '#525252', fontWeight: '400'};
   const radius = {width: "90%", margin: "auto"};
   //Inital Values END
+
+
+
+  //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------\\
+
+
 
   //Fetching the Data from the DB START
   //Fetch Data based on User and currentMonth
@@ -206,6 +220,10 @@ function App() {
   }, [isDataFetched]);
   
 
+
+  //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------\\
+
+
   //Calculations START
   useEffect(() => {
     const total = allSavings.reduce((total: number, saving: number) => {
@@ -222,6 +240,10 @@ function App() {
     return total;
   }, 0).toFixed(2);
   //Calculations END
+
+
+  //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------\\
+
 
   //Functions and Event handlers START
   const resetSpendings: () => void = async () => {
@@ -268,7 +290,6 @@ function App() {
       throw new Error('HTTP error ' + postResponse.status);
     }
   }
-
   const handleIncomeChange: InputEvent =  (event) => {
     const newIncomeInput = event.target.value.replace(',', '.');
     const isValid = /^-?(\d+([.,]\d{0,2})?)?$/.test(newIncomeInput);
@@ -299,7 +320,6 @@ function App() {
       }
     }
   }
-
   const handleAmountChange: InputEvent = (event)  => {
     const newValue = event.target.value.replace(',', '.');
     const isValid = /^-?(\d+([.,]\d{0,2})?)?$/.test(newValue);
@@ -387,15 +407,20 @@ function App() {
     }
     setIsDataFetched(false);
   }
-
   const handleSelectChange = (event: { target: { value: any; }; }) => {
       setChoosenMonth(event.target.value);
       fetchData(event.target.value);
   };
   //Functions and Event handlers END
 
+
+  //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------\\
+
+
   return (
     <section className="container-fluid">  
+
+      {/* Navbar */}
       <nav className="navbar fixed-top">
         <div className="container-fluid justify-content-end">
           <div className="user d-flex flex-row gap-2" onClick={authContext.logOut}>
@@ -406,7 +431,10 @@ function App() {
           </div> 
         </div>
       </nav>
+
+      {/* Header - Month & Income */}
       <header className="d-flex flex-column flex-md-row justify-content-center justify-content-md-evenly mt-5 pt-5">
+        {/* Month */}
         <h5 className="text-center">
         {uniqueMonths.length > 0 ? (
           <select className="month" onChange={handleSelectChange} defaultValue={monthNames[currentDate.getMonth()]}>
@@ -425,6 +453,8 @@ function App() {
               </>
           )}
         </h5>
+
+        {/* Income */}
         <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row"> 
           <span className="income mx-3 mx-md-1">
             {Number(income).toFixed(2)}
@@ -434,6 +464,8 @@ function App() {
           )}
         </h5>
       </header>
+
+      {/* Spent */}
       <section className="d-flex justify-content-center align-items-center mt-4">
         <h3 className="mb-4 mb-md-0">
         {isCurrentMonth && (
@@ -441,6 +473,8 @@ function App() {
         )}
         </h3>
       </section>
+
+      {/* Types, Categories */}
       <section className="d-flex flex-row justify-content-evenly">
         {showTypes && (
           <div>
@@ -452,6 +486,8 @@ function App() {
           </div>
         )}  
       </section>
+
+      {/* Spendings */}
       <section className="mt-lg-5 my-1 mb-5 pb-5">
         <div className="row justify-content-evenly">
           {spendings.map((spending, index) => (
@@ -463,7 +499,10 @@ function App() {
           ))}
         </div>
       </section>
+
       <hr />
+
+      {/* Log */}
       <section className="row mt-lg-5 my-1 mb-5 pb-5">
         <h2 className="text-center mb-5">Previous Entries</h2>
         <table style={radius} className="col-11 col-md-8 col-lg-6 table table-hover">
@@ -485,6 +524,9 @@ function App() {
           </tbody>
         </table>
       </section>
+
+
+      {/* Footer */}
       <footer className="fixed-bottom d-flex justify-content-center gap-5 py-3">
         <h5 className="text-center">
           <span>Spent this month: {Number(totalSpent).toFixed(2)}</span>  
