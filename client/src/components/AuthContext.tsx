@@ -42,12 +42,16 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
 
         if (!response || !response.data || response.data.length === 0) {
           setIsFirstLogin(true);
-          axios.post(`${backendServer}/login`, {
-            email: localStorage.getItem("userEmail"),
-            displayName: localStorage.getItem("userName"),
-            photoURL: localStorage.getItem("userPhoto")
-          });
         } else {
+          localStorage.setItem("primary_name", response.data[0].primary_name);
+          localStorage.setItem("secondary_name", response.data[0].secondary_name);
+          localStorage.setItem("third_name", response.data[0].third_name);
+          localStorage.setItem("primary_format", response.data[0].primary_format);
+          localStorage.setItem("secondary_format", response.data[0].secondary_format);
+          localStorage.setItem("third_format", response.data[0].third_format);
+          localStorage.setItem("primary_tag", response.data[0].primary_tag);
+          localStorage.setItem("secondary_tag", response.data[0].secondary_tag);
+          localStorage.setItem("third_tag", response.data[0].third_tag);
           setIsFirstLogin(false);
         }
       }
@@ -77,6 +81,15 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
       localStorage.removeItem("userName");
       localStorage.removeItem("userEmail");
       localStorage.removeItem("userPhoto");
+      localStorage.removeItem("primary_name");
+      localStorage.removeItem("secondary_name");
+      localStorage.removeItem("third_name");
+      localStorage.removeItem("primary_format");
+      localStorage.removeItem("secondary_format");
+      localStorage.removeItem("third_format");
+      localStorage.removeItem("primary_tag");
+      localStorage.removeItem("secondary_tag");
+      localStorage.removeItem("third_tag");
       setIsLoggedIn(false);
     } catch (error) {
       alert(error);

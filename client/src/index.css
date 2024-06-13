@@ -15,7 +15,7 @@
   --accent: #f9b17a;
 }
 
-a {
+a, .link {
   font-weight: 500;
   text-decoration: underline;
 }
@@ -128,11 +128,12 @@ input[type="text"]:focus{
 .user{
   cursor: pointer;
 }
-.name{
+.currency, .name{
   font-weight: 600;
   font-size: 1.1rem;
   margin-top: 0.4em;
 }
+
 #ProfilePIC{
   border-radius: 50%;
   width: 2.5em;

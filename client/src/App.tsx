@@ -51,6 +51,30 @@ function App() {
     ];
   const [spendings, setSpendings] = useState<Spending[]>(initialSpendings);
   const [logEntries, setLogEntries] = useState<Log[]>([]);
+  const primaryCurrency = localStorage.getItem("primary_name") ?? ""; 
+  const secondaryCurrency = localStorage.getItem("secondary_name") ?? "";
+  const thirdCurrency = localStorage.getItem("third_name") ?? "";
+  const primaryFormat = localStorage.getItem("primary_format") ?? "";
+  const secondaryFormat = localStorage.getItem("secondary_format") ?? "";
+  const thirdFormat = localStorage.getItem("third_format") ?? "";
+  const primaryTag = localStorage.getItem("primary_tag") ?? "";
+  const secondaryTag = localStorage.getItem("secondary_tag") ?? "";
+  const thirdTag = localStorage.getItem("third_tag") ?? "";
+  const [choosenCurrency, setChoosenCurrency] = useState<string>(primaryCurrency);
+  const [choosenFormat, setChoosenFormat] = useState<number>(getFormatNumber(primaryFormat));
+  const [choosenTag, setChoosenTag] = useState<string>(primaryTag);
+
+  function getFormatNumber(formatString: string): number {
+    const decimalMatch = formatString.match(/\d+(?:\.\d+)?/); // Extract decimal part
+    if (decimalMatch) {
+      const decimalPlaces = decimalMatch[0].split('.')[1]?.length || 0; // Get decimal places
+      return decimalPlaces;
+    } else {
+      // Handle invalid formats (optional)
+      console.warn(`Invalid format: ${formatString}. Defaulting to 2.`);
+      return 2;  // Or return another default value
+    }
+  }
 
   //Conditional Rendering
   const [isDataFetched, setIsDataFetched] = useState(false); 
@@ -75,24 +99,29 @@ function App() {
 
   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------\\
 
+  const filterByCurrency = (data: any[], chosenCurrency: string) => {
+    return data.filter(item => item.currency === chosenCurrency);
+  };
 
 
   //Fetching the Data from the DB START
   //Fetch Data based on User and currentMonth
   const fetchData = async (choosenMonth: string | number | boolean) => {
-    const response = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${encodeURIComponent(choosenMonth)}`, {
+    const response = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${encodeURIComponent(choosenMonth)}&currency=${encodeURIComponent(choosenCurrency)}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
     });
     if (!response.ok) {
-      throw new Error('HTTP error ' + response.status);
+      throw new Error('HTTP error ' + response.status)
     }
 
     const fetchedData: any[] = await response.json();
 
-    const userEntries = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === choosenMonth).map(entry => {
+    const filteredData = filterByCurrency(fetchedData, choosenCurrency)
+
+    const userEntries = filteredData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === choosenMonth).map(entry => {
       
       // Check if the saving has any value. If there is, add that value to the .amount. Add 'Saving' to the .type.
       // Keep the rest as well
@@ -167,11 +196,11 @@ function App() {
       },
     });
 
-    if (!response.ok) {
-      throw new Error('HTTP error ' + response.status);
-    }
-    const fetchedData: any[] = await response.json();
+    // if (!response.ok) {
+    //   throw new Error('HTTP error ' + response.status);
+    // }
 
+    const fetchedData: any[] = await response.json();
 
     const currentMonth = monthNames[new Date().getMonth()];
     let uniqueMonthsFromData = [...new Set(fetchedData.map(item => item.month))] as string[];
@@ -181,17 +210,20 @@ function App() {
     }
     setUniqueMonths(uniqueMonthsFromData);
 
+    const filteredData = filterByCurrency(fetchedData, choosenCurrency);
+
     // Sort the fetched data by month in ascending order
     fetchedData.sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
-    const lastMonthData = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[new Date().getMonth() - 1]);
-    const currentMonthData = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[new Date().getMonth()]);
+    const lastMonthData = filteredData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[new Date().getMonth() - 1]);
+    const currentMonthData = filteredData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[new Date().getMonth()]);
     const lastMonthIncome = lastMonthData[lastMonthData.length - 1];
     const currentMonthIncome = currentMonthData[currentMonthData.length - 1];
     if (lastMonthIncome && currentMonthIncome) {
       setIncome(currentMonthIncome.income);
     } else {
-      setIncome(lastMonthIncome.income);
-      const newIncome = (Number(income) + Number(incomeInput.replace(',', '.'))).toFixed(2);
+       setIncome(lastMonthIncome.income);
+      
+      const newIncome = (Number(income) + Number(incomeInput.replace(',', '.'))).toFixed(choosenFormat);
       const postResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
         method: "POST",
         headers: {
@@ -217,7 +249,7 @@ function App() {
   useEffect(() => {  
     fetchData(monthNames[currentDate.getMonth()]);
     fetchAllDataFromUser();
-  }, [isDataFetched]);
+  }, [isDataFetched, choosenCurrency]);
   
 
 
@@ -228,7 +260,7 @@ function App() {
   useEffect(() => {
     const total = allSavings.reduce((total: number, saving: number) => {
       return total + saving;
-    }, 0).toFixed(2);
+    }, 0).toFixed(choosenFormat);
     setTotalSavings(total);
   }, [allSavings]);
 
@@ -238,7 +270,7 @@ function App() {
       total += amount;
     }
     return total;
-  }, 0).toFixed(2);
+  }, 0).toFixed(choosenFormat);
   //Calculations END
 
 
@@ -258,13 +290,13 @@ function App() {
   
     // Calculate the removed saving value and update totalSavings
     const removedSaving = spendings.reduce((total, spending) => total + (spending.type === 'Savings' ? spending.amount : 0), 0);
-    setTotalSavings(prevTotalSavings => (Number(prevTotalSavings) - removedSaving).toFixed(2));
+    setTotalSavings(prevTotalSavings => (Number(prevTotalSavings) - removedSaving).toFixed(choosenFormat));
 
 
     setSpendings(prevSpendings => prevSpendings.map(spending => ({...spending, amount: 0})));
 
     // Send a DELETE request to the server
-    const response = await fetch(`${backendServer}/deletespendingsUserMonth?userId=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${encodeURIComponent(monthNames[currentDate.getMonth()])}`, {
+    const response = await fetch(`${backendServer}/deletespendingsUserMonth?userId=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${encodeURIComponent(monthNames[currentDate.getMonth()])}&currency=${encodeURIComponent(choosenCurrency)}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -284,6 +316,7 @@ function App() {
         userId: localStorage.getItem("userEmail"),
         month: monthNames[currentDate.getMonth()],
         income: newIncome,
+        currency: choosenCurrency,
       }),
     });
     if (!postResponse.ok) {
@@ -300,7 +333,7 @@ function App() {
   }
   const handleIncomeSubmit: KeyboardEvent = async (event) => {
     if (event.key === 'Enter') {
-      const newIncome = (Number(income) + Number(incomeInput.replace(',', '.'))).toFixed(2);
+      const newIncome = (Number(income) + Number(incomeInput.replace(',', '.'))).toFixed(choosenFormat);
       setIncome(newIncome);
       setIncomeInput('');
       // Here we need a PUT 
@@ -350,7 +383,7 @@ function App() {
         const newSpendings = [...prevSpendings];
         newSpendings[existingSpendingIndex] = {
           ...newSpendings[existingSpendingIndex],
-          amount: Number((newSpendings[existingSpendingIndex].amount + currentAmount).toFixed(2)),
+          amount: Number((newSpendings[existingSpendingIndex].amount + currentAmount).toFixed(choosenFormat)),
           // Ensure emoji preservation
           emoji: newSpendings[existingSpendingIndex].emoji
         };
@@ -380,6 +413,7 @@ function App() {
           month: monthNames[currentDate.getMonth()],
           income: newIncome,
           saving: Number(currentAmount),
+          currency: choosenCurrency,
         })
       });
       if (!response.ok) {
@@ -399,6 +433,7 @@ function App() {
           month: monthNames[currentDate.getMonth()],
           income: newIncome,
           amount: Number(currentAmount),
+          currency: choosenCurrency,
         })
       });
       if (!response.ok) {
@@ -421,15 +456,22 @@ function App() {
     <section className="container-fluid">  
 
       {/* Navbar */}
-      <nav className="navbar fixed-top">
-        <div className="container-fluid justify-content-end">
-          <div className="user d-flex flex-row gap-2" onClick={authContext.logOut}>
-            <p className="name">
-              {localStorage.getItem("userName")}
-            </p>
-            <img id="ProfilePIC" src={localStorage.getItem("userPhoto") || ''} alt="" />
-          </div> 
+      <nav className="navbar fixed-top mx-2">
+        <div className="currency d-flex flex-row gap-2">
+          {primaryCurrency !== 'null' && (
+            <> {/* Wrap in fragment to avoid unnecessary element */}
+              <p onClick={() => {setChoosenCurrency(primaryCurrency); setChoosenFormat(getFormatNumber(primaryFormat)); setChoosenTag(primaryTag)}}>{primaryCurrency}</p>
+              {secondaryCurrency !== 'null' && <p onClick={() => {setChoosenCurrency(secondaryCurrency); setChoosenFormat(getFormatNumber(secondaryFormat)); setChoosenTag(secondaryTag)}}>{secondaryCurrency}</p>}
+              {thirdCurrency !== 'null' && <p onClick={() => {setChoosenCurrency(thirdCurrency); setChoosenFormat(getFormatNumber(thirdFormat)); setChoosenTag(thirdTag)}}>{thirdCurrency}</p>}
+            </>
+          )}
         </div>
+        <div className="user d-flex flex-row gap-2" onClick={authContext.logOut}>
+          <p className="name">
+            {localStorage.getItem("userName")}
+          </p>
+          <img id="ProfilePIC" src={localStorage.getItem("userPhoto") || ''} alt="" />
+        </div> 
       </nav>
 
       {/* Header - Month & Income */}
@@ -457,7 +499,9 @@ function App() {
         {/* Income */}
         <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row"> 
           <span className="income mx-3 mx-md-1">
-            {Number(income).toFixed(2)}
+          {income && (
+            Number(income).toFixed(choosenFormat)+""+choosenTag
+          )}
           </span>
           {isCurrentMonth && (
             <input className="mx-5 mx-md-1" value={incomeInput} onChange={handleIncomeChange} onKeyDown={handleIncomeSubmit} type="text" placeholder="income"/>
@@ -494,7 +538,7 @@ function App() {
             <div className="col-6 col-md-4 col-lg-2 my-2 text-center" key={index}>
               <h1>{spending.emoji}</h1>
               <span>{spending.type}</span>
-              <h2>{Number(spending.amount || 0).toFixed(2)}</h2>
+              <h2>{Number(spending.amount || 0).toFixed(choosenFormat)}{choosenTag}</h2>
             </div>
           ))}
         </div>
@@ -516,9 +560,9 @@ function App() {
           <tbody>
           {logEntries.slice().reverse().map((entry, index) => (
               <tr key={index}>
-                <th style={table}>{entry.income}</th>
+                <th style={table}>{entry.income}{choosenTag}</th>
                 <th style={table}>{entry.emoji +' '+ entry.type}</th>
-                <th style={table}>{Number(entry.amount || 0).toFixed(2)}</th>
+                <th style={table}>{Number(entry.amount || 0).toFixed(choosenFormat)}{choosenTag}</th>
               </tr>
             ))}
           </tbody>
@@ -529,10 +573,10 @@ function App() {
       {/* Footer */}
       <footer className="fixed-bottom d-flex justify-content-center gap-5 py-3">
         <h5 className="text-center">
-          <span>Spent this month: {Number(totalSpent).toFixed(2)}</span>  
+          <span>Spent this month: {Number(totalSpent).toFixed(choosenFormat)}</span>  
         </h5>
         <h5 className="text-center">
-          <span>Total savings: {Number(totalSavings).toFixed(2)}</span>
+          <span>Total savings: {Number(totalSavings).toFixed(choosenFormat)}</span>
         </h5>
       </footer>
     </section>
