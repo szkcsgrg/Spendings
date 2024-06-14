@@ -1,7 +1,8 @@
-import { useState, useEffect, useContext} from "react";
+import { useRef, useState, useEffect, useContext} from "react";
 import { AuthContext } from "./components/AuthContext";
 type InputEvent = (event: React.ChangeEvent<HTMLInputElement>) => void;
 type KeyboardEvent = (event: React.KeyboardEvent<HTMLInputElement>) => void;
+import {Modal} from 'react-bootstrap';
 
 interface Log{
   id: number;
@@ -63,9 +64,13 @@ function App() {
   const [choosenCurrency, setChoosenCurrency] = useState<string>(primaryCurrency);
   const [choosenFormat, setChoosenFormat] = useState<number>(getFormatNumber(primaryFormat));
   const [choosenTag, setChoosenTag] = useState<string>(primaryTag);
+  const [newCurrencyName ,setNewCurrencyName] = useState<string>("");
+  const [newCurrencyFormat ,setNewCurrencyFormat] = useState<string>("");
+  const [newCurrencyTag ,setNewCurrencyTag] = useState<string>("");
+  const errorModalCurrency = useRef<HTMLDivElement>(null);
 
   function getFormatNumber(formatString: string): number {
-    const decimalMatch = formatString.match(/\d+(?:\.\d+)?/); // Extract decimal part
+    const decimalMatch = formatString.match(/^\$?\d{1,3}(?:,\d{3})*(?:\.\d+)?$/); // Extract decimal part
     if (decimalMatch) {
       const decimalPlaces = decimalMatch[0].split('.')[1]?.length || 0; // Get decimal places
       return decimalPlaces;
@@ -79,7 +84,9 @@ function App() {
   //Conditional Rendering
   const [isDataFetched, setIsDataFetched] = useState(false); 
   const [showTypes, setShowTypes] = useState<boolean>(false);
-  
+  const [showAddCurrencyModal, setShowAddCurrencyModal] = useState(false);
+
+
   // Months Related
   const monthNames = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
@@ -211,37 +218,42 @@ function App() {
     setUniqueMonths(uniqueMonthsFromData);
 
     const filteredData = filterByCurrency(fetchedData, choosenCurrency);
-
     // Sort the fetched data by month in ascending order
     fetchedData.sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
     const lastMonthData = filteredData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[new Date().getMonth() - 1]);
     const currentMonthData = filteredData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[new Date().getMonth()]);
     const lastMonthIncome = lastMonthData[lastMonthData.length - 1];
     const currentMonthIncome = currentMonthData[currentMonthData.length - 1];
+    if(!lastMonthIncome && !currentMonthIncome){
+      setIncome(0);
+    }
     if (lastMonthIncome && currentMonthIncome) {
       setIncome(currentMonthIncome.income);
-    } else {
-       setIncome(lastMonthIncome.income);
-      
-      const newIncome = (Number(income) + Number(incomeInput.replace(',', '.'))).toFixed(choosenFormat);
-      const postResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: localStorage.getItem("userEmail"),
-          month: monthNames[currentDate.getMonth()],
-          income: newIncome,
-        }),
-      });
-      if (!postResponse.ok) {
-        throw new Error('HTTP error ' + postResponse.status);
-      }
+    } 
+    if(!currentMonthIncome && lastMonthIncome){
+      setIncome(lastMonthIncome.income);
     }
-    
+    if(currentMonthIncome && !lastMonthIncome){
+      setIncome(currentMonthIncome.income);
+    }
+      // const newIncome = (Number(income) + Number(incomeInput.replace(',', '.'))).toFixed(choosenFormat);
+      // const postResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     userId: localStorage.getItem("userEmail"),
+      //     month: monthNames[currentDate.getMonth()],
+      //     income: newIncome,
+      //     currency: choosenCurrency,
+      //   }),
+      // });
+      // if (!postResponse.ok) {
+      //   throw new Error('HTTP error ' + postResponse.status);
+      // }
 
-    const savingsData = fetchedData.map(item => Number(item.saving));
+    const savingsData = filteredData.map(item => Number(item.saving));
     setAllSavings(savingsData);
   }
   //Fetching the Data from the DB END
@@ -258,6 +270,7 @@ function App() {
 
   //Calculations START
   useEffect(() => {
+    //console.log(allSavings);
     const total = allSavings.reduce((total: number, saving: number) => {
       return total + saving;
     }, 0).toFixed(choosenFormat);
@@ -322,6 +335,7 @@ function App() {
     if (!postResponse.ok) {
       throw new Error('HTTP error ' + postResponse.status);
     }
+    setIsDataFetched(false);
   }
   const handleIncomeChange: InputEvent =  (event) => {
     const newIncomeInput = event.target.value.replace(',', '.');
@@ -446,6 +460,49 @@ function App() {
       setChoosenMonth(event.target.value);
       fetchData(event.target.value);
   };
+  const addNewCurrencyModal: () => void = async () => {
+    setShowAddCurrencyModal(true); // Set modal visibility to true
+  };
+  const handleAddCurrency: () => void = async () => {
+    // Add new currency to the list
+    if(newCurrencyName && newCurrencyFormat && newCurrencyTag){
+      console.log(newCurrencyName, newCurrencyFormat, newCurrencyTag);
+        if(secondaryCurrency === 'null'){
+          localStorage.setItem("secondary_name", newCurrencyName);
+          localStorage.setItem("secondary_format", newCurrencyFormat);
+          localStorage.setItem("secondary_tag", newCurrencyTag);
+          setChoosenCurrency(newCurrencyName);
+          setChoosenFormat(getFormatNumber(newCurrencyFormat));
+          setChoosenTag(newCurrencyTag);
+
+          const response = await fetch(`${backendServer}/addSecondaryCurrency`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email: localStorage.getItem('userEmail'),
+              secondary_name: newCurrencyName,
+              secondary_format: newCurrencyFormat,
+              secondary_tag: newCurrencyTag,
+            })
+          });
+          if (!response.ok) {
+            throw new Error('HTTP error ' + response.status);
+          }
+        }
+        if(thirdCurrency === 'null'){
+        
+        }
+      
+      setShowAddCurrencyModal(false);
+    }
+    else{
+      errorModalCurrency.current?.classList.remove("d-none");
+      errorModalCurrency.current?.classList.add("d-block");
+    }
+  }
+  
   //Functions and Event handlers END
 
 
@@ -454,7 +511,6 @@ function App() {
 
   return (
     <section className="container-fluid">  
-
       {/* Navbar */}
       <nav className="navbar fixed-top mx-2">
         <div className="currency d-flex flex-row gap-2">
@@ -463,6 +519,7 @@ function App() {
               <p onClick={() => {setChoosenCurrency(primaryCurrency); setChoosenFormat(getFormatNumber(primaryFormat)); setChoosenTag(primaryTag)}}>{primaryCurrency}</p>
               {secondaryCurrency !== 'null' && <p onClick={() => {setChoosenCurrency(secondaryCurrency); setChoosenFormat(getFormatNumber(secondaryFormat)); setChoosenTag(secondaryTag)}}>{secondaryCurrency}</p>}
               {thirdCurrency !== 'null' && <p onClick={() => {setChoosenCurrency(thirdCurrency); setChoosenFormat(getFormatNumber(thirdFormat)); setChoosenTag(thirdTag)}}>{thirdCurrency}</p>}
+              {thirdCurrency === 'null' && <span className="" onClick={addNewCurrencyModal}>+</span>}
             </>
           )}
         </div>
@@ -473,6 +530,30 @@ function App() {
           <img id="ProfilePIC" src={localStorage.getItem("userPhoto") || ''} alt="" />
         </div> 
       </nav>
+      {/* Modal content */}
+      {showAddCurrencyModal && (
+        <Modal className="modal" show={showAddCurrencyModal} onHide={() => setShowAddCurrencyModal(false)}>
+          <Modal.Header className="header" closeButton>
+            <Modal.Title>Add New Currency</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="text-center d-flex flex-column px-5 py-5">
+            
+            <p className="d-none error" ref={errorModalCurrency}>Please fill out all the fields!</p>
+            <input className="my-2" placeholder="Name (EUR, HUF, ...)" type="text" onChange={e => setNewCurrencyName(e.target.value)} title="Choose a clear and recognizable name for your currency profile. This name will be displayed within the app to help you easily identify the currency."/>
+            <input className="my-2" placeholder="Format (0.00, 0, ...)" type="text" onChange={e => setNewCurrencyFormat(e.target.value)} title="Specify how you want numbers to be formatted within this currency profile. For example, some currencies use two decimal places (0.00), while others might not use any decimals (0)."/>
+            <input className="my-2" placeholder="Tag (€, Ft, ...)" type="text"  onChange={e => setNewCurrencyTag(e.target.value)} title="Define a symbol or tag to visually represent your chosen currency. This tag will be displayed alongside the amount when viewing transactions in this currency profile."/>
+            
+          </Modal.Body>
+          <Modal.Footer className="footer gap-3">
+            <a onClick={() => setShowAddCurrencyModal(false)}>
+              Close 
+            </a>
+            <button className="button" onClick={() => handleAddCurrency()}>
+              Save
+            </button>
+          </Modal.Footer>
+        </Modal>
+      )}
 
       {/* Header - Month & Income */}
       <header className="d-flex flex-column flex-md-row justify-content-center justify-content-md-evenly mt-5 pt-5">
@@ -560,7 +641,7 @@ function App() {
           <tbody>
           {logEntries.slice().reverse().map((entry, index) => (
               <tr key={index}>
-                <th style={table}>{entry.income}{choosenTag}</th>
+                <th style={table}>{Number(entry.income).toFixed(choosenFormat)}{choosenTag}</th>
                 <th style={table}>{entry.emoji +' '+ entry.type}</th>
                 <th style={table}>{Number(entry.amount || 0).toFixed(choosenFormat)}{choosenTag}</th>
               </tr>
@@ -573,10 +654,10 @@ function App() {
       {/* Footer */}
       <footer className="fixed-bottom d-flex justify-content-center gap-5 py-3">
         <h5 className="text-center">
-          <span>Spent this month: {Number(totalSpent).toFixed(choosenFormat)}</span>  
+          <span>Spent this month: {Number(totalSpent).toFixed(choosenFormat)}{choosenTag}</span>  
         </h5>
         <h5 className="text-center">
-          <span>Total savings: {Number(totalSavings).toFixed(choosenFormat)}</span>
+          <span>Total savings: {Number(totalSavings).toFixed(choosenFormat)}{choosenTag}</span>
         </h5>
       </footer>
     </section>
