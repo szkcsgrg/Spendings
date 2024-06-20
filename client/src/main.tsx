@@ -1,52 +1,38 @@
-import React, { useContext, useEffect } from "react";
+import React, { 
+  // Suspense,
+   useContext } from 'react';
 import { createRoot } from 'react-dom/client';
-import { useNavigate, BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthContext, AuthProvider } from './components/AuthContext';
+import {  BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthContext, AuthProvider } from './utils/AuthContext';
 
 import App from './App';
-import Login from './Login';
 import InitialSetup from "./components/InitialSetup";
-//import NotFound from "./components/NotFound";
+import NotFound from "./components/NotFound";
+import ReleaseNotes from "./components/ReleaseNotes";
+import Login from './components/Login';
+
 
 import "./index.css";
 
 const Main: React.FC = () => {
-  const { isLoggedIn, isFirstLogin } = useContext(AuthContext);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      navigate('/');
-    } else {
-      navigate('/login');
-    }
-  }, [isLoggedIn, navigate]);
-
-
+  const {isLoggedIn, isFirstLogin} = useContext(AuthContext);
   
-  //If the user is not Logged in.
-  if (!isLoggedIn) {
-    return (
+  return (
       <Routes>
-        <Route path="/login" element={<Login />} />
-      </Routes>
-    );
-  }
-
-  //If first Login
-  if (isFirstLogin) {
-    return (
-      <InitialSetup/>
-    )
-  }
-  else{
-    return (
-      <Routes>
+        {isLoggedIn ? (
+          isFirstLogin ? (
+            <Route path="/" element={<InitialSetup />} />
+          ) : (
+              <Route path="/" element={<App />} />
+          )
+        ) : (
+          <Route path="/" element={<Login />} />
+        )}   
         <Route path="/" element={<App />} />
+        <Route path="/whatisnew" element={<ReleaseNotes />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
-    );
-  }
-
+  );
   
 
   

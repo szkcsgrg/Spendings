@@ -1,8 +1,8 @@
 import { useRef, useContext, useState } from "react";
-import { useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-import { AuthContext } from './AuthContext';
+import { AuthContext } from '../utils/AuthContext';
 
 function InitialSetup() {
 
@@ -85,8 +85,6 @@ function InitialSetup() {
         throw new Error('HTTP error ' + response.status);
       }
     }
-
-    navigate("/");
     setIsFirstLogin(false);
   };
 
@@ -270,17 +268,17 @@ function InitialSetup() {
             This is entirely optional, but it allows you to get a more comprehensive view of your overall financial situation within Spendings App. 
             You can always update this information later.
           </p>
-          <input className="my-2" placeholder="Savings Balance" type="text" onChange={e => setPrimaryAmount(e.target.value)} />{localStorage.getItem("primary_tag")}
+          <input className="my-2" placeholder="Savings Balance" type="text" onChange={e => setPrimaryAmount(e.target.value)} />{primaryTag}
           {secondaryName && secondaryName !== '' && (
             <>
               <input className="my-2" placeholder="Savings Balance" type="text" onChange={e => setSecondaryAmount(e.target.value)} />
-              <span>{localStorage.getItem("secondary_tag")}</span>
+              <span>{secondaryTag}</span>
             </>
           )}
           {thirdName && thirdName !== '' && (
             <>
               <input className="my-2" placeholder="Savings Balance" type="text" onChange={e => setThirdAmount(e.target.value)} />
-              <span>{localStorage.getItem("third_tag")}</span>
+              <span>{thirdTag}</span>
             </>
           )}
           <div className="d-flex justify-content-center align-items-center text-center gap-3 mt-4">

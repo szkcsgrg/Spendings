@@ -1,4 +1,4 @@
-:root {
+ :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -28,11 +28,44 @@ a:hover, .link:hover {
 *, body {
   background-color: var(--background);
   color: var(--color);
-  overflow-x: hidden;
 }
+
 body{
   min-width: 320px;
   min-height: 100vh;
+}
+
+nav, .navbar{
+  background-color: transparent;
+  max-height: 30svh;
+  height: 3svh;
+  /* border-bottom: 1px solid var(--background-light); */
+}
+.dropdown{ 
+  max-height: 30svh;
+  height: auto;
+} 
+.drop-toggle:focus{
+  outline: none;
+  border: none;
+}
+.drop-toggle i{
+  font-size: 1.2rem;
+}
+.drop-toggle::after{
+  display: none;
+}
+.dropdown-menu{
+ background-color: var(--background-light);
+ color: var(--color);
+ transition: all 1s ease;
+}
+.drop-item{
+  color: var(--color);
+  transition: all 0.5s ease;
+}
+.drop-item:hover{
+  background-color: var(--background-lightest);
 }
 
 h1 {
@@ -48,7 +81,16 @@ h2{
 h5, h5 span {
   overflow: hidden;
 }
-
+.btn-close{
+  background-color: transparent;
+  color: var(--color);
+  font-size: 1.5em;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-close:hover{
+  background-color: transparent;
+}
 .button-secondary {
   background-color: var(--background-light);
   color: var(--color);
@@ -130,6 +172,7 @@ input[type="text"]:focus{
   font-weight: 600;
   font-size: 1.1rem;
   margin-top: 0.4em;
+  cursor: pointer;
 }
 
 #ProfilePIC{
@@ -140,8 +183,12 @@ input[type="text"]:focus{
   display: block;
 }
 
-.modal{
+.modal-lg{
   background-color: transparent;
+}
+.modal-lg .body{
+  border: none;
+  border-radius: 1.5em;
 }
 .error{
   color: var(--accent);
@@ -151,9 +198,9 @@ input[type="text"]:focus{
 
 footer, .footer, .header{
   background-color: var(--background-light);
-  border-top: 1px solid #fff;
+  border-radius: 0;
 }
-.footer a, .header *{
+.footer a, .header div{
   background-color: var(--background-light);
 }
 .footer button .header button{
@@ -162,4 +209,4 @@ footer, .footer, .header{
 }
 footer h5 span, footer h5{ 
   background-color: var(--background-light);
-}
+} 

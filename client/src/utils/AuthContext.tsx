@@ -1,10 +1,15 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, signInWithPopup } from "firebase/auth";
+import { GoogleAuthProvider, 
+  // signInWithRedirect, 
+  signOut, 
+  onAuthStateChanged, 
+  signInWithPopup } from "firebase/auth";
 import {auth} from "./firebase";
 import axios from "axios";
 
 interface AuthContextProps {
   isLoggedIn: boolean;
+  setIsLoggedIn: (isLoggedIn: boolean) => void;
   isFirstLogin: boolean;
   setIsFirstLogin: (isFirstLogin: boolean) => void;
   logIn: () => void;
@@ -13,6 +18,7 @@ interface AuthContextProps {
 
 export const AuthContext = createContext<AuthContextProps>({
   isLoggedIn: false,
+  setIsLoggedIn: () => {},
   isFirstLogin: true,
   setIsFirstLogin: () => {},
   logIn: () => {},
@@ -23,13 +29,18 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
   const backendServer = import.meta.env.VITE_APP_SERVER;
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isFirstLogin, setIsFirstLogin] = useState(true);
+
+
   
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async user => {
       setIsLoggedIn(user !== null);
+      localStorage.setItem("isLoggedIn", user !== null ? "true" : "false");
+      //console.log(localStorage.getItem("isLoggedIn"));
       if(user && user.displayName && user.email && user.photoURL)
-      {
+        {
+
         localStorage.setItem("userName", user.displayName);
         localStorage.setItem("userEmail", user.email);
         localStorage.setItem("userPhoto", user.photoURL);
@@ -42,6 +53,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
 
         if (!response || !response.data || response.data.length === 0) {
           setIsFirstLogin(true);
+          localStorage.setItem("isFirstLogin", "true");
         } else {
           localStorage.setItem("primary_name", response.data[0].primary_name);
           localStorage.setItem("secondary_name", response.data[0].secondary_name);
@@ -53,6 +65,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
           localStorage.setItem("secondary_tag", response.data[0].secondary_tag);
           localStorage.setItem("third_tag", response.data[0].third_tag);
           setIsFirstLogin(false);
+          localStorage.setItem("isFirstLogin", "false");
         }
       }
     })
@@ -63,21 +76,22 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
   const logIn = async () => {
     const googleProvider = new GoogleAuthProvider();
     try {
-      if (/Mobi|Android/i.test(navigator.userAgent)) {
+      // if (/Mobi|Android/i.test(navigator.userAgent)) {
         await signInWithPopup(auth, googleProvider);
-      }
-      else{
-        await signInWithRedirect(auth, googleProvider);
-      }
+      // }
+      // else{
+      //   await signInWithRedirect(auth, googleProvider);
+      // }
     }
     catch(error) {
       alert(error);
     }
   }
-
+  
   const logOut = async () => {
     try {
       await signOut(auth);
+      setIsLoggedIn(false);
       localStorage.removeItem("userName");
       localStorage.removeItem("userEmail");
       localStorage.removeItem("userPhoto");
@@ -90,15 +104,16 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
       localStorage.removeItem("primary_tag");
       localStorage.removeItem("secondary_tag");
       localStorage.removeItem("third_tag");
-      setIsLoggedIn(false);
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("isFirstLogin");
     } catch (error) {
       alert(error);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, isFirstLogin, setIsFirstLogin, logIn, logOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
+      <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, isFirstLogin, setIsFirstLogin, logIn, logOut }}>
+        {children}
+      </AuthContext.Provider>
+    );
 };
