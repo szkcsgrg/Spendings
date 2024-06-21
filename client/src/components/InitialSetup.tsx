@@ -203,37 +203,42 @@ function InitialSetup() {
 
   return (
     <section className="h-100 row d-flex flex-column justify-content-center align-items-center text-center mt-2 pt-2 mt-md-5 pt-md-5 mx-2">
-        <div id="initialSetup" ref={initialSetupRef} className="mt-md-5 pt-md-5">
-          <h2 className="text-center">Why We Gather Information During Initial Setup</h2>
+      <div>
+        <h1>Welcome to Spendings!</h1>
+      </div>
+        <div id="initialSetup" ref={initialSetupRef} className="box-ui info mt-md-5 pt-md-5 col-11 col-md-8 col-lg-6">
+          <h3 className="text-center">Why We Gather Information During Initial Setup</h3>
           <p>
-            Welcome to Spendings App! To provide you with the best financial management experience, we'll guide you through a quick initial setup process. 
+            To provide you with the best financial management experience, we'll guide you through a quick initial setup process. 
             This helps us personalize your experience and ensure accurate tracking of your finances.
           </p>
 
-          <h3>
+          <h4>
             Here's why we collect some details:
-          </h3>
+          </h4>
           
             <p>
-              Default Currency: Specifying your primary currency type allows Spendings App to accurately categorize your transactions and visualize your spending habits.
+              <span>Default Currency:</span> Specifying your primary currency type allows Spendings App to accurately categorize your transactions and visualize your spending habits.
             </p>
             <p>
-              Currency Profiles (Up to 3): Do you deal with multiple currencies? Spendings App allows you to create up to 3 custom currency profiles. 
+            <span>Currency Profiles (Up to 3):</span> Do you deal with multiple currencies? Spendings App allows you to create up to 3 custom currency profiles. 
               This enables seamless transaction tracking for different currencies, a valuable feature for frequent travelers or business owners.
             </p>
             <p>
-              Savings Account Balance: Knowing your current savings balance gives you a complete picture of your overall financial health within Spendings App. 
+            <span>Savings Account Balance:</span> Knowing your current savings balance gives you a complete picture of your overall financial health within Spendings App. 
               You can track income and expenses alongside your savings, making informed budgeting decisions.
             </p>
           
 
           <p className="link" onClick={startSetup}>Let's get started!</p>
         </div>  
-        <div id="currencySetup" ref={currencySetupRef} className="col-12 col-md-8 col-lg-6 d-none mt-md-5 pt-md-5">
+
+
+        <div id="currencySetup" ref={currencySetupRef} className="box-ui info col-11 col-md-8 col-lg-6 d-none mt-md-5 pt-md-5">
           <h3>Currency Profiles</h3>
           <p>
           Do you have frequent transactions in other currencies? <br />
-          Spendings App allows you to create up to 3 custom currency profiles to provide the utmost flexibility in managing your finances. <br />
+          Spendings App allows you to create up to <span>3</span> custom currency profiles to provide the utmost flexibility in managing your finances. <br />
           This level of customization ensures accurate tracking and informed financial decisions regardless of the currencies you use.
           </p>
           <div id="mandatory" className="currencyProfile d-flex flex-column my-2 mx-5">
@@ -261,12 +266,16 @@ function InitialSetup() {
           <br />
           <button className="my-3" onClick={next}>Next</button>
         </div>
-        <div id="savingsSetup" ref={savingsSetupRef} className="col-12 col-md-8 col-lg-6 d-none">
+
+
+
+
+        <div id="savingsSetup" ref={savingsSetupRef} className="box-ui info col-11 col-md-8 col-lg-6 d-none">
           <h3>Savings Account Balance</h3>
           <p>
             Please enter your current savings account balance. 
-            This is entirely optional, but it allows you to get a more comprehensive view of your overall financial situation within Spendings App. 
-            You can always update this information later.
+            <br />This is entirely optional, but it allows you to get a more comprehensive view of your overall financial situation within Spendings App. 
+            <br />You can always update this information later.
           </p>
           <input className="my-2" placeholder="Savings Balance" type="text" onChange={e => setPrimaryAmount(e.target.value)} />{primaryTag}
           {secondaryName && secondaryName !== '' && (
@@ -282,11 +291,11 @@ function InitialSetup() {
             </>
           )}
           <div className="d-flex justify-content-center align-items-center text-center gap-3 mt-4">
-            <a onClick={() => {setIsFirstLogin(false); navigate("/")}}>Skip</a>
+            <span onClick={() => {setIsFirstLogin(false); navigate("/")}}>Skip</span>
             <button onClick={handleSavingsSubmit}>Save</button>
           </div>
-          <h4 className="mt-5">Once you've completed these steps, you're all set to start managing your finances with Spendings App!</h4>
         </div>
+        <h5 className="mt-5 col-11 col-md-8 col-lg-6">Once you've completed these steps, you're all set to start managing your finances with Spendings App!</h5>
         
         
     </section>

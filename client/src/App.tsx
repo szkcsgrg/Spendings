@@ -86,6 +86,9 @@ function App() {
 
   const errorModalCurrency = useRef<HTMLDivElement>(null);
   const exchangedRef = useRef<HTMLDivElement>(null);
+  const ProfileRef = useRef<HTMLImageElement>(null);
+  const CurrencyRef = useRef<HTMLDivElement>(null);
+
 
   function getFormatNumber(formatString: string): number {
     const decimalMatch = formatString.match(/^\$?\d{1,3}(?:,\d{3})*(?:\.\d+)?$/); // Extract decimal part
@@ -107,6 +110,10 @@ function App() {
   const [showTypes, setShowTypes] = useState<boolean>(false);
   const [showAddCurrencyModal, setShowAddCurrencyModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);  
+  const [showAreYouSureModal, setShowAreYouSureModal] = useState(false);
+  const [confirmFunction, setConfirmFunction] = useState<() => Promise<void> | null>(() => null);
+
+
 
 
   // Months Related
@@ -213,64 +220,7 @@ function App() {
       setIncome(0);
     }
     setSpendings(mergedData);
-    // setExchangeDifference(0);
-
-    // const exchangeEntries = filteredData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === choosenMonth && row.currency === choosenCurrency && row.type_id === 17); // Focus on no amount exchanges
-    // let exchangeSumNotNull = exchangeEntries.reduce((sum, entry) => sum + (entry.type_id === 17 && entry.amount !== null  ? Number(entry.amount) : 0), 0);
     
-    // let exchangeSumNull = exchangeEntries.reduce((sum, entry) => sum + (entry.type_id === 17 && entry.amount === null ? Number(entry.income) : 0), 0);
-
-    // // console.log("Initial Income Entry (" + choosenCurrency + "):", initialIncomeEntry);
-    // console.log("Initial Income (" + choosenCurrency + "):", initialIncome);
-    // console.log("Exchange Entries (" + choosenCurrency + "):", exchangeEntries);
-    // console.log("Exchange Sum Not Null (" + choosenCurrency + "):", exchangeSumNotNull);
-    // console.log("Exchange Sum Null (" + choosenCurrency + "):", exchangeSumNull);
-
-    
-
-    // let exchangeDifferenceLocal = 0;
-
-    // //if exchangeSumNotNull set exchangeDifference to exchangeSumNotNull
-    // //if exchangeSumNull calculate the difference between exchangeSumNotNull and initialIncome, then set exchangeDifference to that value.
-    // //if exchangeSumNotNull and exchangeSumNull is 0, set exchangeDifference to 0.
-
-    // if(exchangeSumNotNull === 0){
-    //   exchangeDifferenceLocal = Number(exchangeSumNull) -  Number(initialIncome);
-    // } else if(exchangeSumNotNull !== 0 && exchangeSumNull !== 0){
-    //   if(exchangeSumNull > initialIncome){
-    //     exchangeDifferenceLocal =  Number(exchangeSumNotNull);
-    //   }
-    //   else{
-    //     exchangeDifferenceLocal = Number(exchangeSumNull) - Number(initialIncome);
-    //   }
-    //   // exchangeDifferenceLocal = Number(exchangeSumNull) -  Number(initialIncome);
-    // }else if(exchangeSumNotNull !== 0 && exchangeSumNull === 0){
-    //   exchangeDifferenceLocal = Number(exchangeSumNotNull);
-    // }else if(exchangeSumNull !== 0){
-    //   exchangeDifferenceLocal = Number(exchangeSumNull) - Number(initialIncome);
-    // } else if(exchangeSumNotNull === 0 && exchangeSumNull === 0){
-    //   exchangeDifferenceLocal = 0;
-    // }
-
-
-
-
-    
-
-    
-    
-
-    // console.log("Exchange Difference (" + choosenCurrency + "):", exchangeDifferenceLocal*-1);
-    // setExchangeDifference(exchangeDifferenceLocal*-1);
-
-    
-
-    
-    
-    
-    
-    
-    // exchangeDifferenceLocal = 0;
   };
   
   //Fetch Data - The full spendings of the user
@@ -386,53 +336,9 @@ function App() {
 
   //Functions and Event handlers START
   const resetSpendings: () => void = async () => {
-    if(!window.confirm("Are you sure you want to delete everything from the current period?")){
-      return;
-    }
-
-    
-    
-    // // Sum up the amounts in spendings and add it to income
-
-    // // console.log("Income: " + income);
-    // // console.log("Exchange Difference: " + exchangeDifference);
-    // const totalSpending = spendings.reduce((total, spending) => {
-    //   if (spending.type === 'Exchange') {
-    //     console.log("Found spending with Exchange type:", spending);
-    //     return Number(total - spending.amount);
-    //   }
-    //   if (spending.type !== 'Exchange' && spending.amount !== 0) {
-    //     console.log("Found spending without Exchange type:", spending);
-    //     return Number(total + spending.amount);
-    //   }
-    //   return total;
-    // }, 0);
-    // //Correct
-    // console.log("Total Spending: " + totalSpending);
-
-    // //If (exchangDifference !== 0) then add the exchangeDifference to the totalSpending + income
-    // //if (exchangDifference === 0) then income + total Spending.
-
-    // let newIncome = 0;
-    // if(exchangeDifference !== 0){
-    //   newIncome = Number(income) + totalSpending + exchangeDifference;
-    // }
-    // else{
-    //   newIncome = Number(income) + totalSpending;
-    // }
-    
-    // console.log("New Income: " + newIncome);
-    // // let newIncome = Number(income) + totalSpending;
-    // // console.log("New Income: " + newIncome);
-    
-
-    
-    // // console.log(newIncome);
-    // setIncome(newIncome);
-    
-    
-
-    // console.log("New Income: " + newIncome);
+    setShowSettingsModal(false);
+    setShowAreYouSureModal(true);
+    setConfirmFunction(() => async () => {
   
     // Calculate the removed saving value and update totalSavings
     const removedSaving = spendings.reduce((total, spending) => total + (spending.type === 'Savings' ? spending.amount : 0), 0);
@@ -470,9 +376,9 @@ function App() {
     }
     setIncome(initialIncome);
     setIsDataFetched(false);
-    // setExchangeDifference(0);
-    // newIncome = 0;
-  }
+    setShowAreYouSureModal(false);;
+    });
+  };
   const handleIncomeChange: InputEvent =  (event) => {
     const newIncomeInput = event.target.value.replace(',', '.');
     const isValid = /^-?(\d+([.,]\d{0,2})?)?$/.test(newIncomeInput);
@@ -774,6 +680,85 @@ function App() {
       errorModalCurrency.current?.classList.add("d-block");
     }
   }
+  const handleDeleteData = () => {
+    setShowAreYouSureModal(true);
+    setShowSettingsModal(false);
+    setConfirmFunction(() => async () => {
+      try {
+        const response = await fetch(`${backendServer}/deleteAllData?userId=${encodeURIComponent(localStorage.getItem("userEmail") || "")}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error('HTTP error ' + response.status);
+        }
+        console.log('Data deleted!'); // Replace with appropriate success handling
+        setShowSettingsModal(false);
+        setShowAreYouSureModal(false);
+        fetchData(monthNames[currentDate.getMonth()]);
+      } catch (error) {
+        console.error('Error deleting data:', error); // Handle errors appropriately
+      }
+    });
+  };
+  const handleDeleteProfile = () => {
+    setShowAreYouSureModal(true);
+    setShowSettingsModal(false);
+    setConfirmFunction(() => async () => {
+      try {
+        const response1 = await fetch(`${backendServer}/deleteAllData?userId=${encodeURIComponent(localStorage.getItem("userEmail") || "")}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response1.ok) {
+          throw new Error('HTTP error ' + response1.status);
+        }
+        console.log('Data deleted!'); // Replace with appropriate success handling
+        setShowSettingsModal(false);
+        setShowAreYouSureModal(false);
+        fetchData(monthNames[currentDate.getMonth()]);
+        const response2 = await fetch(`${backendServer}/deleteUser?userId=${encodeURIComponent(localStorage.getItem("userEmail") || "")}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response2.ok) {
+          throw new Error('HTTP error ' + response2.status);
+        }
+        console.log('Profile deleted!'); // Replace with appropriate success handling
+        authContext.logOut(); // Assuming this logs out the user
+      } catch (error) {
+        console.error('Error deleting profile:', error); // Handle errors appropriately
+      }
+    });
+  };
+  // const handleProfileShow = () => {
+  //   if(ProfileRef.current?.classList.contains("d-none")){
+  //     ProfileRef.current?.classList.remove("d-none");
+  //     ProfileRef.current?.classList.add("d-block");
+  //     CurrencyRef.current?.classList.remove("d-block");
+  //     CurrencyRef.current?.classList.add("d-none");
+  //   } else{
+  //     ProfileRef.current?.classList.remove("d-block");
+  //     ProfileRef.current?.classList.add("d-none");
+  //   }
+  // };
+  // const handleCurrencyShow = () => {
+  //   if(CurrencyRef.current?.classList.contains("d-none")){
+  //   CurrencyRef.current?.classList.remove("d-none");
+  //   CurrencyRef.current?.classList.add("d-block");
+  //   ProfileRef.current?.classList.remove("d-block");
+  //   ProfileRef.current?.classList.add("d-none");
+  //   } else {
+  //     CurrencyRef.current?.classList.remove("d-block");
+  //     CurrencyRef.current?.classList.add("d-none");
+  //   }
+  // }
   //Functions and Event handlers END
 
 
@@ -782,197 +767,253 @@ function App() {
 
   return (
     <section className="container-fluid">  
-    {/* Navbar */}
-    <nav className="navbar fixed-top mx-2">
-      <div className="currency d-flex flex-row gap-2">
-      {primaryCurrency !== 'null' && (
-          <> 
-            <p key={primaryCurrency} onClick={() => {setChoosenCurrency(primaryCurrency); setChoosenFormat(getFormatNumber(primaryFormat)); setChoosenTag(primaryTag)}}>{primaryCurrency}</p>
-            {secondaryCurrency !== 'null' && <p key={secondaryCurrency} onClick={() => {setChoosenCurrency(secondaryCurrency); setChoosenFormat(getFormatNumber(secondaryFormat)); setChoosenTag(secondaryTag)}}>{secondaryCurrency}</p>}
-            {thirdCurrency !== 'null' && <p key={thirdCurrency} onClick={() => {setChoosenCurrency(thirdCurrency); setChoosenFormat(getFormatNumber(thirdFormat)); setChoosenTag(thirdTag)}}>{thirdCurrency}</p>}
-            {thirdCurrency === 'null' && <span key={"+"} className="" onClick={()=> setShowAddCurrencyModal(true)}>+</span>}
-          </>
-        )}
-      </div>
-      {/* Settings Icon */}
-      <div className="user d-flex flex-row gap-2" >
-        <Dropdown className="dropdown" title="Settings">
-          <Dropdown.Toggle className="drop-toggle" variant="" id="dropdown-menu">
-            <i className="bi bi-gear-fill"></i>
-          </Dropdown.Toggle>
-
-          <Dropdown.Menu>
-            <Link className="drop-item dropdown-item" to="/whatisnew">What is New?</Link>
-            <Dropdown.Item className="drop-item" onClick={() => setShowSettingsModal(true)}>Settings</Dropdown.Item>
-            <Dropdown.Item className="drop-item" onClick={authContext.logOut}>Logout</Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
-        {/* <p className="name">
-          {localStorage.getItem("userName")}
-        </p>
-        <img id="ProfilePIC" src={localStorage.getItem("userPhoto") || ''} alt="" /> */}
-      </div> 
-      {/* Settings */}
-      <Modal className="modal-lg" show={showSettingsModal} onHide={() => setShowSettingsModal(false)}>
-        <Modal.Header className="header">
-          <Modal.Title>Settings</Modal.Title>
-          <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={() => setShowSettingsModal(false)}></button>
-        </Modal.Header>
-        <Modal.Body className="d-flex flex-column px-5 py-5">
-          <aside className="menu">
-            <p>Profile</p>
-            <p>Currency</p>
-
-          </aside>
-          
-          
-        </Modal.Body>
-      </Modal>
-    </nav>
-    {/* Currency Modal */}
-    {showAddCurrencyModal && (
-      <Modal className="modal" show={showAddCurrencyModal} onHide={() => setShowAddCurrencyModal(false)}>
-        <Modal.Header className="header" >
-          <Modal.Title>Add New Currency</Modal.Title>
-          <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={() => setShowAddCurrencyModal(false)}></button>
-        </Modal.Header>
-        <Modal.Body className="text-center d-flex flex-column px-5 py-5">
-          
-          <p className="d-none error" ref={errorModalCurrency}>Please fill out all the fields!</p>
-          <input className="my-2" placeholder="Name (EUR, HUF, ...)" type="text" onChange={e => setNewCurrencyName(e.target.value)} title="Choose a clear and recognizable name for your currency profile. This name will be displayed within the app to help you easily identify the currency."/>
-          <input className="my-2" placeholder="Format (0.00, 0, ...)" type="text" onChange={e => setNewCurrencyFormat(e.target.value)} title="Specify how you want numbers to be formatted within this currency profile. For example, some currencies use two decimal places (0.00), while others might not use any decimals (0)."/>
-          <input className="my-2" placeholder="Tag (€, Ft, ...)" type="text"  onChange={e => setNewCurrencyTag(e.target.value)} title="Define a symbol or tag to visually represent your chosen currency. This tag will be displayed alongside the amount when viewing transactions in this currency profile."/>
-          
-        </Modal.Body>
-        <Modal.Footer className="footer gap-3">
-          <a onClick={() => setShowAddCurrencyModal(false)}>
-            Close 
-          </a>
-          <button className="button" onClick={() => handleAddCurrency()}>
-            Save
-          </button>
-        </Modal.Footer>
-      </Modal>
-    )}
-
-    {/* Header - Month & Income */}
-    <header className="d-flex flex-column flex-md-row justify-content-center justify-content-md-evenly mt-5 pt-5">
-      {/* Month */}
-      <h5 className="text-center">
-      {uniqueMonths.length > 0 ? (
-        <select className="month" onChange={handleSelectChange} defaultValue={monthNames[currentDate.getMonth()]}>
-          {uniqueMonths.filter(month => month !== 'initial').map((month, index) => (
-            <option key={index} value={month}>
-              {month}
-            </option>
-          ))}
-        </select>
-        ) : (
-          <span className="month">{monthNames[currentDate.getMonth()]}</span> 
-        )}
-        {isCurrentMonth && (
-            <>
-            {" "} - <a onClick={resetSpendings}>Reset Monthly Spending</a>
-            </>
-        )}
-      </h5>
-
-      {/* Income */}
-      <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row"> 
-        <span className="income mx-3 mx-md-1">
-        {income ? (
-          Number(income).toFixed(choosenFormat)+""+choosenTag
-        ) : (Number(income) + "" + choosenTag)}
-        </span>
-        {isCurrentMonth && (
-          <input className="mx-5 mx-md-1" value={incomeInput} onChange={handleIncomeChange} onKeyDown={handleIncomeSubmit} type="text" placeholder="income"/>
-        )}
-      </h5>
-    </header>
-
-    {/* Spent */}
-    <section className="d-flex justify-content-center align-items-center mt-5 flex-column">
-      <h3 className="mb-4 mb-md-2">
-      {isCurrentMonth && (
-        <input value={amount} onChange={handleAmountChange} onKeyDown={handleAmountSubmit} type="text" placeholder="spent" />
-      )}
-      </h3>
-      <h3 className="mt-3 mt-md-5 mb-4 mb-md-2 d-none d-flex flex-column justify-content-center align-items-center" ref={exchangedRef}>
-        <input type="text" value={exchangeAmount} onChange={handleExchangeChange} placeholder="Exchanged Value" />
+      {/* Navbar */}
+      <nav className="navbar fixed-top mx-2">
         <div className="currency d-flex flex-row gap-2">
         {primaryCurrency !== 'null' && (
-          <> 
-            {choosenCurrency !== primaryCurrency && <button onClick={() => {handleExchangeSubmit(primaryCurrency)}}>{primaryCurrency}</button>}
-            {choosenCurrency !== secondaryCurrency && secondaryCurrency !== 'null' && <button onClick={() => {handleExchangeSubmit(secondaryCurrency)}}>{secondaryCurrency}</button>}
-            {choosenCurrency !== thirdCurrency && thirdCurrency !== 'null' && <button onClick={() => {handleExchangeSubmit(thirdCurrency)}}>{thirdCurrency}</button>}
-          </>
+            <> 
+              <p key={primaryCurrency} onClick={() => {setChoosenCurrency(primaryCurrency); setChoosenFormat(getFormatNumber(primaryFormat)); setChoosenTag(primaryTag)}}>{primaryCurrency}</p>
+              {secondaryCurrency !== 'null' && <p key={secondaryCurrency} onClick={() => {setChoosenCurrency(secondaryCurrency); setChoosenFormat(getFormatNumber(secondaryFormat)); setChoosenTag(secondaryTag)}}>{secondaryCurrency}</p>}
+              {thirdCurrency !== 'null' && <p key={thirdCurrency} onClick={() => {setChoosenCurrency(thirdCurrency); setChoosenFormat(getFormatNumber(thirdFormat)); setChoosenTag(thirdTag)}}>{thirdCurrency}</p>}
+              {thirdCurrency === 'null' && <span key={"+"} className="" onClick={()=> setShowAddCurrencyModal(true)}>+</span>}
+            </>
         )}
-      </div>
-      </h3>
-    </section>
-    
+        </div>
+        {/* Settings Icon */}
+        <div className="user d-flex flex-row gap-2" >
+          <Dropdown className="dropdown" title="Settings">
+            <Dropdown.Toggle className="drop-toggle" variant="" id="dropdown-menu">
+              <i className="bi bi-gear-fill"></i>
+            </Dropdown.Toggle>
 
-    {/* Types, Categories */}
-    <section className="d-flex flex-row justify-content-evenly">
-      {showTypes && (
-        <div>
-          {initialSpendings.sort((a, b) => a.position - b.position).map((spending) => (
-            <button className="button-secondary" key={spending.position} onClick={() => handleTypeClick(spending.type, spending.id)}>
-              {spending.emoji+" "+spending.type}
+            <Dropdown.Menu>
+              <Link className="drop-item dropdown-item" to="/whatisnew">What is New?</Link>
+              <Dropdown.Item className="drop-item" onClick={() => setShowSettingsModal(true)}>Settings</Dropdown.Item>
+              <Dropdown.Item className="drop-item" onClick={authContext.logOut}>Logout</Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+        
+        </div> 
+        {/* Settings */}
+        <Modal className="modal-lg" show={showSettingsModal} onHide={() => setShowSettingsModal(false)}>
+          <Modal.Header className="modal-header">
+            <Modal.Title>Settings</Modal.Title>
+            <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={() => setShowSettingsModal(false)}></button>
+          </Modal.Header>
+          <Modal.Body className="modal-body d-flex flex-column flex-md-row px-3 py-3 px-lg-5 py-lg-5 gap-1 gap-lg-5">
+            {/* <aside className="menu d-flex flex-row gap-3 gap-md-0 flex-md-column col-3 col-md-4 col-lg-2">
+              <p onClick={handleProfileShow}>Profile</p>
+              <p onClick={handleCurrencyShow}>Currency</p>
+            </aside> */}
+            {/* Change it back to 8 from md */}
+            <div className="col-12 col-md-12">
+              <div className="d-block" ref={ProfileRef}>
+                <div className="text-center">
+                  <img id="ProfilePIC" src={localStorage.getItem("userPhoto") || ''} alt="" />
+                  <p className="name">{localStorage.getItem("userName")}</p>
+                </div>
+                <div className="text-center">
+                  <div className="my-3 py-3 info">
+                  {isCurrentMonth && (
+                      <>
+                      <a onClick={resetSpendings}>Reset Monthly Spending</a>
+                      </>
+                  )}
+                  </div>
+                  <hr />
+                  <div className="my-3 my-lg-5 info">
+                    <p>
+                      <span>Warning:</span> This button will permanently erase all your data. This includes information from all previous months and the current month, with the exception of your login credentials. This action cannot be undone. Please confirm only if you intend to wipe out all your data except your login details.
+                    </p>
+                    <button onClick={handleDeleteData}>Delete Data</button>
+                  </div>
+                  <div className="my-3 my-lg-5 info">
+                    <p>
+                      <span>Warning:</span> This button will permanently erase your profile. This action cannot be undone. Please confirm only if you intend to delete your profile and all associated data permanently.
+                    </p>
+                    <button onClick={handleDeleteProfile} className="button-secondary">
+                      Delete Profile
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="d-none" ref={CurrencyRef}>
+                <div className="text-center">
+                  <div className="d-flex flex-column gap-2">
+                    <div className="d-flex flex-row align-items-center gap-3">
+                      <span>1.</span> <div className="draggable py-1 px-1 col-10 col-md-8 col-lg-6 d-flex flex-row gap-3 justify-content-center"><input placeholder="EUR" id="currencyName" className="currencyInput" type="text" /> <input placeholder="0.00" id="currencyFormat" className="currencyInput"  type="text" /> <input placeholder="€" id="currencyTag" className="currencyInput"  type="text" /></div>
+                    </div>
+                    <div className="d-flex flex-row align-items-center gap-3">
+                      <span>2.</span> <div className="draggable py-1 px-1 col-10 col-md-8 col-lg-6 d-flex flex-row gap-3 justify-content-center"><input placeholder="EUR" id="currencyName" className="currencyInput" type="text" /> <input placeholder="0.00" id="currencyFormat" className="currencyInput"  type="text" /> <input placeholder="€" id="currencyTag" className="currencyInput"  type="text" /></div>
+                    </div>
+                    <div className="d-flex flex-row align-items-center gap-3">
+                      <span>3.</span> <div className="draggable py-1 px-1 col-10 col-md-8 col-lg-6 d-flex flex-row gap-3 justify-content-center"><input placeholder="EUR" id="currencyName" className="currencyInput" type="text" /> <input placeholder="0.00" id="currencyFormat" className="currencyInput"  type="text" /> <input placeholder="€" id="currencyTag" className="currencyInput"  type="text" /></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Modal.Body>
+        </Modal>
+        <Modal className="modal" show={showAreYouSureModal} onHide={() => setShowAreYouSureModal(false)} >
+          <Modal.Header>
+            <Modal.Title>Are you sure?</Modal.Title>
+            <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={() => setShowAreYouSureModal(false)}></button>
+          </Modal.Header>
+          <Modal.Body className="py-5 text-center d-flex align-items-center gap-4 justify-content-center">
+            <span className="pointer" onClick={() => { setShowAreYouSureModal(false); setShowSettingsModal(true)}}>Cancel</span>
+            {confirmFunction && (
+              <button type="button" className="button-secondary" onClick={() => confirmFunction()}>
+                Yes
+              </button>
+            )}
+          </Modal.Body>
+        </Modal>
+      </nav>
+      {/* Currency Modal */}
+      {showAddCurrencyModal && (
+        <Modal className="modal-lg" show={showAddCurrencyModal} onHide={() => setShowAddCurrencyModal(false)}>
+          <Modal.Header className="modal-header" >
+            <Modal.Title>Add New Currency</Modal.Title>
+            <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={() => setShowAddCurrencyModal(false)}></button>
+          </Modal.Header>
+          <Modal.Body className="text-center d-flex flex-column px-5 py-5">
+            
+            <p className="d-none error" ref={errorModalCurrency}>Please fill out all the fields!</p>
+            <input className="my-2" placeholder="Name (EUR, HUF, ...)" type="text" onChange={e => setNewCurrencyName(e.target.value)} title="Choose a clear and recognizable name for your currency profile. This name will be displayed within the app to help you easily identify the currency."/>
+            <input className="my-2" placeholder="Format (0.00, 0, ...)" type="text" onChange={e => setNewCurrencyFormat(e.target.value)} title="Specify how you want numbers to be formatted within this currency profile. For example, some currencies use two decimal places (0.00), while others might not use any decimals (0)."/>
+            <input className="my-2" placeholder="Tag (€, Ft, ...)" type="text"  onChange={e => setNewCurrencyTag(e.target.value)} title="Define a symbol or tag to visually represent your chosen currency. This tag will be displayed alongside the amount when viewing transactions in this currency profile."/>
+            
+          </Modal.Body>
+          <Modal.Footer className="footer gap-3">
+            <a onClick={() => setShowAddCurrencyModal(false)}>
+              Close 
+            </a>
+            <button className="button" onClick={() => handleAddCurrency()}>
+              Save
             </button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
+      {/* Header - Month & Income */}
+      <header className="d-flex flex-column flex-md-row justify-content-center justify-content-md-evenly mt-5 pt-5">
+        {/* Month */}
+        <h5 className="text-center">
+        {uniqueMonths.length > 0 ? (
+          <select className="month" onChange={handleSelectChange} defaultValue={monthNames[currentDate.getMonth()]}>
+            {uniqueMonths.filter(month => month !== 'initial').map((month, index) => (
+              <option key={index} value={month}>
+                {month}
+              </option>
+            ))}
+          </select>
+          ) : (
+            <span className="month">{monthNames[currentDate.getMonth()]}</span> 
+          )}
+          {isCurrentMonth && (
+              <>
+              {" "} - <a onClick={resetSpendings}>Reset Monthly Spending</a>
+              </>
+          )}
+        </h5>
+
+        {/* Income */}
+        <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row"> 
+          <span className="income mx-3 mx-md-1">
+          {income ? (
+            Number(income).toFixed(choosenFormat)+""+choosenTag
+          ) : (Number(income) + "" + choosenTag)}
+          </span>
+          {isCurrentMonth && (
+            <input className="mx-5 mx-md-1" value={incomeInput} onChange={handleIncomeChange} onKeyDown={handleIncomeSubmit} type="text" placeholder="income"/>
+          )}
+        </h5>
+      </header>
+
+      {/* Spent */}
+      <section className="d-flex justify-content-center align-items-center mt-5 flex-column">
+        <h3 className="mb-4 mb-md-2">
+        {isCurrentMonth && (
+          <input value={amount} onChange={handleAmountChange} onKeyDown={handleAmountSubmit} type="text" placeholder="spent" />
+        )}
+        </h3>
+        <h3 className="mt-3 mt-md-5 mb-4 mb-md-2 d-none d-flex flex-column justify-content-center align-items-center" ref={exchangedRef}>
+          <input type="text" value={exchangeAmount} onChange={handleExchangeChange} placeholder="Exchanged Value" />
+          <div className="currency d-flex flex-row gap-2 my-2 my-lg-3">
+          {primaryCurrency !== 'null' && (
+            <> 
+              {choosenCurrency !== primaryCurrency && <button onClick={() => {handleExchangeSubmit(primaryCurrency)}}>{primaryCurrency}</button>}
+              {choosenCurrency !== secondaryCurrency && secondaryCurrency !== 'null' && <button onClick={() => {handleExchangeSubmit(secondaryCurrency)}}>{secondaryCurrency}</button>}
+              {choosenCurrency !== thirdCurrency && thirdCurrency !== 'null' && <button onClick={() => {handleExchangeSubmit(thirdCurrency)}}>{thirdCurrency}</button>}
+            </>
+          )}
+        </div>
+        </h3>
+      </section>
+      
+
+      {/* Types, Categories */}
+      <section className="d-flex flex-row justify-content-evenly">
+        {showTypes && (
+          <div>
+            {initialSpendings.sort((a, b) => a.position - b.position).map((spending) => (
+              <button className="button-secondary" key={spending.position} onClick={() => handleTypeClick(spending.type, spending.id)}>
+                {spending.emoji+" "+spending.type}
+              </button>
+            ))}
+          </div>
+        )}  
+      </section>
+
+      {/* Spendings */}
+      <section className="mt-lg-5 my-1 mb-5 pb-5">
+        <div className="row justify-content-evenly">
+          {spendings.sort((a, b) => a.position - b.position).map((spending, index) => (
+            <div className="col-6 col-md-4 col-lg-2 my-2 text-center" key={index}>
+              <h1>{spending.emoji}</h1>
+              <span>{spending.type}</span>
+              <h2>{Number(spending.amount || 0).toFixed(choosenFormat)}{choosenTag}</h2>
+            </div>
           ))}
         </div>
-      )}  
-    </section>
+      </section>
 
-    {/* Spendings */}
-    <section className="mt-lg-5 my-1 mb-5 pb-5">
-      <div className="row justify-content-evenly">
-        {spendings.sort((a, b) => a.position - b.position).map((spending, index) => (
-          <div className="col-6 col-md-4 col-lg-2 my-2 text-center" key={index}>
-            <h1>{spending.emoji}</h1>
-            <span>{spending.type}</span>
-            <h2>{Number(spending.amount || 0).toFixed(choosenFormat)}{choosenTag}</h2>
-          </div>
-        ))}
-      </div>
-    </section>
+      <hr />
 
-    <hr />
-
-    {/* Log */}
-    <section className="row mt-lg-5 my-1 mb-5 pb-5">
-      <h2 className="text-center mb-5">Previous Entries</h2>
-      <table style={radius} className="col-11 col-md-8 col-lg-6 table table-hover">
-        <thead>
-          <tr>
-            <th scope="col" style={tableHeader}>Income After</th>
-            <th scope="col" style={tableHeader}>Category</th>
-            <th scope="col" style={tableHeader}>Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-        {logEntries.slice().reverse().map((entry, index) => (
-            <tr key={index}>
-              <th style={table}>{Number(entry.income).toFixed(choosenFormat)}{choosenTag}</th>
-              <th style={table}>{entry.emoji +' '+ entry.type}</th>
-              <th style={table}>{Number(entry.amount || 0).toFixed(choosenFormat)}{choosenTag}</th>
+      {/* Log */}
+      <section className="row mt-lg-5 my-1 mb-5 pb-5">
+        <h2 className="text-center mb-5">Previous Entries</h2>
+        <table style={radius} className="col-11 col-md-8 col-lg-6 table table-hover">
+          <thead>
+            <tr>
+              <th scope="col" style={tableHeader}>Income After</th>
+              <th scope="col" style={tableHeader}>Category</th>
+              <th scope="col" style={tableHeader}>Amount</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
+          </thead>
+          <tbody>
+          {logEntries.slice().reverse().map((entry, index) => (
+              <tr key={index}>
+                <th style={table}>{Number(entry.income).toFixed(choosenFormat)}{choosenTag}</th>
+                <th style={table}>{entry.emoji +' '+ entry.type}</th>
+                <th style={table}>{Number(entry.amount || 0).toFixed(choosenFormat)}{choosenTag}</th>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
 
 
-    {/* Footer */}
-    <footer className="fixed-bottom d-flex justify-content-center gap-5 py-3">
-      <h5 className="text-center">
-        <span>Spent this month: {Number(totalSpent).toFixed(choosenFormat)}{choosenTag}</span>  
-      </h5>
-      <h5 className="text-center">
-        <span>Total savings: {Number(totalSavings).toFixed(choosenFormat)}{choosenTag}</span>
-      </h5>
-    </footer>
+      {/* Footer */}
+      <footer className="fixed-bottom d-flex justify-content-center gap-5 py-3">
+        <h5 className="text-center">
+          <span>Spent this month: {Number(totalSpent).toFixed(choosenFormat)}{choosenTag}</span>  
+        </h5>
+        <h5 className="text-center">
+          <span>Total savings: {Number(totalSavings).toFixed(choosenFormat)}{choosenTag}</span>
+        </h5>
+      </footer>
     </section>
   )
 }

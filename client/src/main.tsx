@@ -1,5 +1,5 @@
 import React, { 
-  // Suspense,
+  Suspense,
    useContext } from 'react';
 import { createRoot } from 'react-dom/client';
 import {  BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -23,7 +23,7 @@ const Main: React.FC = () => {
           isFirstLogin ? (
             <Route path="/" element={<InitialSetup />} />
           ) : (
-              <Route path="/" element={<App />} />
+            <Route path="/" element={<Suspense fallback={<div className="loader"></div>}><App /></Suspense>} />
           )
         ) : (
           <Route path="/" element={<Login />} />
