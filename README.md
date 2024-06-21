@@ -52,7 +52,29 @@ Please note that while the code is viewable, the application itself is protected
 
 ## Release Notes
 
-### **Current Version:** <span style="color: #f9b17a;">1.2.1</span>
+### **Current Version:** <span style="color: #f9b17a;">1.2.2</span>
+
+**Release Notes for Version 1.2.2:**
+
+* **New Features:**
+
+    * Users can now create Currency Profiles to manage different currencies.
+    * A new feature allows users to easily exchange between their Currency Profiles.
+    * We've introduced a dedicated Settings UI for easier customization.
+    * Spending Types have been visually positioned for better organization.
+
+* **Improvements:**
+
+    * The application's design has been enhanced with color adjustments and minor UI tweaks to improve user experience.
+    * We've also implemented more aesthetically pleasing Modal designs
+
+* **Bug Fixes:**
+    * A bug that prevented the "Removed" button from setting the initial value has been fixed.
+
+
+
+
+### **Previous versions and details**
 
 **Release Notes for Version 1.2.1:**
 
@@ -63,4 +85,3 @@ Please note that while the code is viewable, the application itself is protected
 <!-- * **Bug Fixes:** -->
 
 
-<!-- **Previous versions and details** -->

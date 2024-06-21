@@ -1,27 +1,22 @@
 ## Spendings App - Release Notes
 
-### Version <span style="color: #f9b17a;">1.2.1</span> (Release Date: 2024-06-12)
+### Version <span style="color: #f9b17a;">1.2.2</span> (Release Date: 2024-06-21)
 
 **New Features:**
 
-* Added functionality to view previous month's spending data. Users can now access their transaction history for the previous month, providing a more comprehensive view of their financial activity.
+* Users can now create Currency Profiles to manage different currencies.
+* A new feature allows users to easily exchange between their Currency Profiles.
+* We've introduced a dedicated Settings UI for easier customization.
+* Spending Types have been visually positioned for better organization.
 
 **Improvements:**
 
-* Enhanced application design with color adjustments and minor UI tweaks for better user experience. The application's appearance has been improved with adjustments to color schemes and minor user interface refinements to enhance visual appeal and usability.
+* The application's design has been enhanced with color adjustments and minor UI tweaks to improve user experience.
+* We've also implemented more aesthetically pleasing Modal designs
 
-<!-- **Bug Fixes:**
-
-* (List any bug fixes implemented in this version. If there aren't any, you can leave this section out) -->
+**Bug Fixes:**
+* A bug that prevented the "Removed" button from setting the initial value has been fixed.
 
 ### We appreciate your continued use of [Spendings](https://spendings.szakacsgergo.com) App!
 
-<!-- **---**
 
-### Previous Versions (Optional)
-
-You can follow this format to add release notes for previous versions as well. For instance:
-
-### Version 1.2.0 (Release Date: 2024-05-30)
-
-* (List new features, improvements, and bug fixes for version 1.2.0) -->
