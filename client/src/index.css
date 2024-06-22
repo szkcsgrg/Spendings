@@ -14,6 +14,7 @@
 
   --color: #f3f3f3;
   --color-dark: #b5b5b3;
+  --color-darker: #7f7f7f;
   --accent: #f9b17a;
 
 }
@@ -112,6 +113,20 @@ h5, h5 span {
 .btn-close:hover{
   background-color: transparent;
 }
+.btn-bin{
+  background-color: transparent;
+  color: var(--color);
+  font-size: 1.1em;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-bin-disabled{
+  background-color: transparent;
+  color: var(--color-darker);
+  font-size: 1.1em;
+  font-weight: 700;
+  cursor: not-allowed;
+}
 .button-secondary {
   background-color: var(--background-light);
   color: var(--color);
@@ -170,18 +185,18 @@ input[type="text"]:focus{
   max-width: 30%;
 }
 #currencyTag{
-  max-width: 15%;
+  max-width: 18%;
 }
 .currencyInput::placeholder{
   text-align: center;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--background);
+  color: var(--background-lightest);
 }
-.draggable{
+.simpleInputs{
   border-radius: 0.5em;
   cursor: pointer;
-  background-color: var(--background-light);
+  /* background-color: var(--background); */
 }
 
 

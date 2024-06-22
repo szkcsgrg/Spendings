@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useContext} from "react";
 import { AuthContext } from "./utils/AuthContext";
 import { Modal, Dropdown } from 'react-bootstrap';
 import { Link } from "react-router-dom";
+import { getValue } from "firebase/remote-config";
 
 
 type InputEvent = (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -61,15 +62,15 @@ function App() {
     ];
   const [spendings, setSpendings] = useState<Spending[]>(initialSpendings);
   const [logEntries, setLogEntries] = useState<Log[]>([]);
-  const primaryCurrency = localStorage.getItem("primary_name") ?? ""; 
-  const secondaryCurrency = localStorage.getItem("secondary_name") ?? "";
-  const thirdCurrency = localStorage.getItem("third_name") ?? "";
-  const primaryFormat = localStorage.getItem("primary_format") ?? "";
-  const secondaryFormat = localStorage.getItem("secondary_format") ?? "";
-  const thirdFormat = localStorage.getItem("third_format") ?? "";
-  const primaryTag = localStorage.getItem("primary_tag") ?? "";
-  const secondaryTag = localStorage.getItem("secondary_tag") ?? "";
-  const thirdTag = localStorage.getItem("third_tag") ?? "";
+  const [primaryCurrency, setPrimaryCurrency] = useState<string>(localStorage.getItem("primary_name") ?? ""); 
+  const [secondaryCurrency, setSecondaryCurrency] = useState<string>(localStorage.getItem("secondary_name") ?? "");
+  const [thirdCurrency, setThirdCurrency] = useState<string>(localStorage.getItem("third_name") ?? "");
+  const [primaryFormat, setPrimaryFormat]= useState<string>(localStorage.getItem("primary_format") ?? "");
+  const [secondaryFormat, setSecondaryFormat ]= useState<string>(localStorage.getItem("secondary_format") ?? "");
+  const [thirdFormat, setThirdFormat ]= useState<string>(localStorage.getItem("third_format") ?? "");
+  const [primaryTag, setPrimaryTag ]= useState<string>(localStorage.getItem("primary_tag") ?? "");
+  const [secondaryTag, setSecondaryTag ]= useState<string>(localStorage.getItem("secondary_tag") ?? "");
+  const [thirdTag, setThirdTag ]= useState<string>(localStorage.getItem("third_tag") ?? "");
   const [choosenCurrency, setChoosenCurrency] = useState<string>(primaryCurrency);
   const [choosenFormat, setChoosenFormat] = useState<number>(getFormatNumber(primaryFormat));
   const [choosenTag, setChoosenTag] = useState<string>(primaryTag);
@@ -267,16 +268,6 @@ function App() {
         setIncomeOfThirdAccount(row.income.toString()); // Update state with income value
       }
     }
-    // const primaryCurrencyRow = userData.find(row => row.currency === primaryCurrency);
-    // const secondaryCurrencyRow = userData.find(row => row.currency === secondaryCurrency);
-    // const thirdCurrencyRow = userData.find(row => row.currency === thirdCurrency);
-
-    // // Update state variables with income values (or "0" if no row found)
-    // setIncomeOfPrimaryAccount(primaryCurrencyRow ? primaryCurrencyRow.income.toString() : "0");
-    // setIncomeOfSecondaryAccount(secondaryCurrencyRow ? secondaryCurrencyRow.income.toString() : "0");
-    // setIncomeOfThirdAccount(thirdCurrencyRow ? thirdCurrencyRow.income.toString() : "0");
-
-
 
     // Sort the fetched data by month in ascending order
     fetchedData.sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
@@ -737,28 +728,41 @@ function App() {
       }
     });
   };
-  // const handleProfileShow = () => {
-  //   if(ProfileRef.current?.classList.contains("d-none")){
-  //     ProfileRef.current?.classList.remove("d-none");
-  //     ProfileRef.current?.classList.add("d-block");
-  //     CurrencyRef.current?.classList.remove("d-block");
-  //     CurrencyRef.current?.classList.add("d-none");
-  //   } else{
-  //     ProfileRef.current?.classList.remove("d-block");
-  //     ProfileRef.current?.classList.add("d-none");
-  //   }
-  // };
-  // const handleCurrencyShow = () => {
-  //   if(CurrencyRef.current?.classList.contains("d-none")){
-  //   CurrencyRef.current?.classList.remove("d-none");
-  //   CurrencyRef.current?.classList.add("d-block");
-  //   ProfileRef.current?.classList.remove("d-block");
-  //   ProfileRef.current?.classList.add("d-none");
-  //   } else {
-  //     CurrencyRef.current?.classList.remove("d-block");
-  //     CurrencyRef.current?.classList.add("d-none");
-  //   }
-  // }
+  const handleProfileShow = () => {
+    if(ProfileRef.current?.classList.contains("d-none")){
+      ProfileRef.current?.classList.remove("d-none");
+      ProfileRef.current?.classList.add("d-block");
+      CurrencyRef.current?.classList.remove("d-block");
+      CurrencyRef.current?.classList.add("d-none");
+    } else{
+      ProfileRef.current?.classList.remove("d-block");
+      ProfileRef.current?.classList.add("d-none");
+    }
+  };
+  const handleCurrencyShow = () => {
+    if(CurrencyRef.current?.classList.contains("d-none")){
+    CurrencyRef.current?.classList.remove("d-none");
+    CurrencyRef.current?.classList.add("d-block");
+    ProfileRef.current?.classList.remove("d-block");
+    ProfileRef.current?.classList.add("d-none");
+    } else {
+      CurrencyRef.current?.classList.remove("d-block");
+      CurrencyRef.current?.classList.add("d-none");
+    }
+  }
+  const handleCurrencyChange: () => void = () => {
+    console.log("Currency Change");
+  }
+  const deleteCurrency: (currency: string) => void = async (currency) => {
+    console.log("Delete Currency: " + currency);
+  }
+  const handleSecondCurrencyChange: InputEvent = (event) => {
+    const newSecondaryCurrency = event.target.value.replace(',', '.');
+    const isValid = /^-?(\d+([.,]\d{0,2})?)?$/.test(newSecondaryCurrency);
+    if (isValid) {
+      setSecondaryCurrency(newSecondaryCurrency);
+    } 
+  }
   //Functions and Event handlers END
 
 
@@ -801,12 +805,12 @@ function App() {
             <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={() => setShowSettingsModal(false)}></button>
           </Modal.Header>
           <Modal.Body className="modal-body d-flex flex-column flex-md-row px-3 py-3 px-lg-5 py-lg-5 gap-1 gap-lg-5">
-            {/* <aside className="menu d-flex flex-row gap-3 gap-md-0 flex-md-column col-3 col-md-4 col-lg-2">
+             <aside className="menu d-flex flex-row gap-3 gap-md-0 flex-md-column col-3 col-md-4 col-lg-2">
               <p onClick={handleProfileShow}>Profile</p>
               <p onClick={handleCurrencyShow}>Currency</p>
-            </aside> */}
+            </aside> 
             {/* Change it back to 8 from md */}
-            <div className="col-12 col-md-12">
+            <div className="col-12 col-md-8">
               <div className="d-block" ref={ProfileRef}>
                 <div className="text-center">
                   <img id="ProfilePIC" src={localStorage.getItem("userPhoto") || ''} alt="" />
@@ -841,16 +845,35 @@ function App() {
                 <div className="text-center">
                   <div className="d-flex flex-column gap-2">
                     <div className="d-flex flex-row align-items-center gap-3">
-                      <span>1.</span> <div className="draggable py-1 px-1 col-10 col-md-8 col-lg-6 d-flex flex-row gap-3 justify-content-center"><input placeholder="EUR" id="currencyName" className="currencyInput" type="text" /> <input placeholder="0.00" id="currencyFormat" className="currencyInput"  type="text" /> <input placeholder="€" id="currencyTag" className="currencyInput"  type="text" /></div>
+                      <span>1.</span> 
+                      <div className="simpleInputs py-1 px-1 col-11 col-md-8 d-flex flex-row gap-3 justify-content-center">
+                        <input defaultValue={primaryCurrency} placeholder="EUR" id="currencyName" className="currencyInput" type="text" /> 
+                        <input defaultValue={primaryFormat} placeholder="0.00" id="currencyFormat" className="currencyInput"  type="text" /> 
+                        <input defaultValue={primaryTag} placeholder="€" id="currencyTag" className="currencyInput"  type="text" />
+                        <i className="btn-bin-disabled bi bi-trash-fill"></i>
+                      </div>
                     </div>
                     <div className="d-flex flex-row align-items-center gap-3">
-                      <span>2.</span> <div className="draggable py-1 px-1 col-10 col-md-8 col-lg-6 d-flex flex-row gap-3 justify-content-center"><input placeholder="EUR" id="currencyName" className="currencyInput" type="text" /> <input placeholder="0.00" id="currencyFormat" className="currencyInput"  type="text" /> <input placeholder="€" id="currencyTag" className="currencyInput"  type="text" /></div>
+                      <span>2.</span> 
+                      <div className="simpleInputs py-1 px-1 col-11 col-md-8 d-flex flex-row gap-3 justify-content-center">
+                        <input defaultValue={secondaryCurrency !== 'null' ? secondaryCurrency : ''} value={secondaryCurrency !== 'null' ? secondaryCurrency : ''} onChange={handleSecondCurrencyChange} placeholder="EUR" id="currencyName" className="currencyInput" type="text" /> 
+                        <input defaultValue={secondaryFormat !== 'null' ? secondaryFormat : ''} value={secondaryFormat !== 'null' ? secondaryFormat : ''} placeholder="0.00" id="currencyFormat" className="currencyInput"  type="text" /> 
+                        <input defaultValue={secondaryTag !== 'null' ? secondaryTag : ''} value={secondaryTag !== 'null' ? secondaryTag : ''} placeholder="€" id="currencyTag" className="currencyInput"  type="text" />
+                        <i className="btn-bin bi bi-trash-fill" onClick={() => deleteCurrency(secondaryCurrency)}></i>
+                      </div>
                     </div>
                     <div className="d-flex flex-row align-items-center gap-3">
-                      <span>3.</span> <div className="draggable py-1 px-1 col-10 col-md-8 col-lg-6 d-flex flex-row gap-3 justify-content-center"><input placeholder="EUR" id="currencyName" className="currencyInput" type="text" /> <input placeholder="0.00" id="currencyFormat" className="currencyInput"  type="text" /> <input placeholder="€" id="currencyTag" className="currencyInput"  type="text" /></div>
+                      <span>3.</span> 
+                      <div className="simpleInputs py-1 px-1 col-11 col-md-8 d-flex flex-row gap-3 justify-content-center">
+                        <input defaultValue={thirdCurrency !== 'null' ? thirdCurrency : ''} value={thirdCurrency !== 'null' ? thirdCurrency : ''} placeholder="EUR" id="currencyName" className="currencyInput" type="text" /> 
+                        <input defaultValue={thirdFormat !== 'null' ? thirdFormat : ''} value={thirdFormat !== 'null' ? thirdFormat : ''} placeholder="0.00" id="currencyFormat" className="currencyInput"  type="text" /> 
+                        <input defaultValue={thirdTag !== 'null' ? thirdTag : ''} value={thirdTag !== 'null' ? thirdTag : ''} placeholder="€" id="currencyTag" className="currencyInput"  type="text" />
+                        <i className="btn-bin bi bi-trash-fill" onClick={() => deleteCurrency(thirdCurrency)}></i>
+                      </div>
                     </div>
                   </div>
                 </div>
+                  <button className="mt-5" onClick={handleCurrencyChange}>Save</button>                
               </div>
             </div>
           </Modal.Body>
