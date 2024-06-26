@@ -91,17 +91,24 @@ nav, .navbar{
   }
 }
 h1 {
-  font-size: 3.2em;
+  font-size: 3.5em;
   line-height: 1.1;
   margin: 0;
   padding: 7.5px;
   overflow: hidden;
 }
 h2{
+  font-size: 2em;
   overflow: hidden;
 }
 h5, h5 span {
   overflow: hidden;
+}
+p{
+  font-size: 1.1em;
+  font-weight: 400;
+  line-height: 1.5;
+
 }
 .btn-close{
   background-color: transparent;
@@ -176,15 +183,14 @@ input[type="text"]:focus{
   border-radius: 0.75em;
   border: none;
   outline: none;
-  width: auto;
 }
-#currencyName{
+.currencyName{
   max-width: 30%;
 }
-#currencyFormat{
+.currencyFormat{
   max-width: 30%;
 }
-#currencyTag{
+.currencyTag{
   max-width: 18%;
 }
 .currencyInput::placeholder{
@@ -242,16 +248,29 @@ input[type="text"]:focus{
   color: var(--accent);
   font-weight: 700;
 }
-.info .link{
-  color: var(--color);
+a, link{
   font-size: 1.1em;
   font-weight: 500;
   text-decoration: none;
+  color: var(--color);
+  transition: all 0.5s;
+}
+.info{
+  font-size: 1.1em;
+}
+.info .link{
+  font-size: 1.1em;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--color);
   transition: all 0.5s;
 }
 .info .link:hover{
   color: var(--accent);
   text-decoration: underline;
+}
+.warning{
+  transition: display 1s ease-in-out;
 }
 
 .login{
@@ -276,10 +295,10 @@ input[type="text"]:focus{
 }
 .name{
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   margin-top: 0.4em;
 }
-.currency p, {
+.currency p {
   font-weight: 600;
   font-size: 1.1rem;
   margin-top: 0.4em;
@@ -344,7 +363,7 @@ footer h5 span, footer h5{
 
 
 .loader {
-  width: 50px;
+  width: 20px;
   aspect-ratio: 1;
   border-radius: 50%;
   border: 8px solid;
@@ -352,3 +371,23 @@ footer h5 span, footer h5{
   animation: l1 1s infinite;
 }
 @keyframes l1 {to{transform: rotate(.5turn)}}
+
+
+
+
+
+.copyItems{
+  background-color: var(--background-light);
+  border-radius: 1.5em;
+  transition: all 0.3s ease-in-out;
+}
+.copyItems li{
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  color: var(--color);
+  list-style: none;
+  font-size: 1.1em;
+  font-weight: 500;
+  padding: 0.3em;
+  border-radius: 1em;
+}

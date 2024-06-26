@@ -2,13 +2,9 @@ import { useRef, useState, useEffect, useContext} from "react";
 import { AuthContext } from "./utils/AuthContext";
 import { Modal, Dropdown } from 'react-bootstrap';
 import { Link } from "react-router-dom";
-import { getValue } from "firebase/remote-config";
-
 
 type InputEvent = (event: React.ChangeEvent<HTMLInputElement>) => void;
 type KeyboardEvent = (event: React.KeyboardEvent<HTMLInputElement>) => void;
-
-
 
 
 interface Log{
@@ -62,6 +58,7 @@ function App() {
     ];
   const [spendings, setSpendings] = useState<Spending[]>(initialSpendings);
   const [logEntries, setLogEntries] = useState<Log[]>([]);
+
   const [primaryCurrency, setPrimaryCurrency] = useState<string>(localStorage.getItem("primary_name") ?? ""); 
   const [secondaryCurrency, setSecondaryCurrency] = useState<string>(localStorage.getItem("secondary_name") ?? "");
   const [thirdCurrency, setThirdCurrency] = useState<string>(localStorage.getItem("third_name") ?? "");
@@ -71,24 +68,23 @@ function App() {
   const [primaryTag, setPrimaryTag ]= useState<string>(localStorage.getItem("primary_tag") ?? "");
   const [secondaryTag, setSecondaryTag ]= useState<string>(localStorage.getItem("secondary_tag") ?? "");
   const [thirdTag, setThirdTag ]= useState<string>(localStorage.getItem("third_tag") ?? "");
-  const [choosenCurrency, setChoosenCurrency] = useState<string>(primaryCurrency);
+
+  const [choosenCurrency, setChoosenCurrency] = useState<string>(primaryCurrency || secondaryCurrency || thirdCurrency);
   const [choosenFormat, setChoosenFormat] = useState<number>(getFormatNumber(primaryFormat));
   const [choosenTag, setChoosenTag] = useState<string>(primaryTag);
-  const [newCurrencyName ,setNewCurrencyName] = useState<string>("");
-  const [newCurrencyFormat ,setNewCurrencyFormat] = useState<string>("");
-  const [newCurrencyTag ,setNewCurrencyTag] = useState<string>("");
   const [exchangeAmount, setExchangeAmount] = useState<string>("");
-  // const [choosedCurrency, setChoosedCurrency] = useState<string>("");
+
   const [incomeOfPrimaryAccount, setIncomeOfPrimaryAccount] = useState<string>("");
   const [incomeOfSecondaryAccount, setIncomeOfSecondaryAccount] = useState<string>("");
   const [incomeOfThirdAccount, setIncomeOfThirdAccount] = useState<string>("");
   const [initialIncome, setInitialIncome] = useState<number>(0);
-  // const [exchangeDifference, setExchangeDifference] = useState<number>(0);
 
-  const errorModalCurrency = useRef<HTMLDivElement>(null);
+
   const exchangedRef = useRef<HTMLDivElement>(null);
   const ProfileRef = useRef<HTMLImageElement>(null);
   const CurrencyRef = useRef<HTMLDivElement>(null);
+  const warningRefPrimaryDelete = useRef<HTMLParagraphElement>(null);
+  const warningRefEmptyDelete = useRef<HTMLParagraphElement>(null);
 
 
   function getFormatNumber(formatString: string): number {
@@ -97,9 +93,7 @@ function App() {
       const decimalPlaces = decimalMatch[0].split('.')[1]?.length || 0; // Get decimal places
       return decimalPlaces;
     } else {
-      // Handle invalid formats (optional)
-      console.warn(`Invalid format: ${formatString}. Defaulting to 2.`);
-      return 2;  // Or return another default value
+      return 2; 
     }
   }
   const filterByCurrency = (data: any[], chosenCurrency: string) => {
@@ -109,11 +103,12 @@ function App() {
   //Conditional Rendering
   const [isDataFetched, setIsDataFetched] = useState(false); 
   const [showTypes, setShowTypes] = useState<boolean>(false);
-  const [showAddCurrencyModal, setShowAddCurrencyModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);  
   const [showAreYouSureModal, setShowAreYouSureModal] = useState(false);
   const [confirmFunction, setConfirmFunction] = useState<() => Promise<void> | null>(() => null);
-
+  const [clickedItemId, setClickedItemId] = useState<string | null>(null);
+  const [copyEffect, setCopyEffect] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
 
 
@@ -130,8 +125,12 @@ function App() {
   const tableHeader = {backgroundColor: '#424769', color: '#f9b17a', fontWeight: '1000'};
   const table = {backgroundColor: '#676f9d', color: 'white', borderColor: '#525252', fontWeight: '400'};
   const radius = {width: "90%", margin: "auto"};
+  const itemStyle = (itemId: string) => ({
+    color: clickedItemId === itemId && '#2d3250',
+    backgroundColor: clickedItemId === itemId && '#f9b17a',
+  });
   //Inital Values END
-
+  let uniqueCurrencies: any[] = [];
 
 
   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------\\
@@ -238,6 +237,8 @@ function App() {
 
     const fetchedData: any[] = await response.json();
 
+    uniqueCurrencies = [...new Set(fetchedData.map(item => item.currency).filter(currency => currency))]; // filter out falsy values
+
     const currentMonth = monthNames[new Date().getMonth()];
     let uniqueMonthsFromData = [...new Set(fetchedData.map(item => item.month))] as string[];
 
@@ -256,16 +257,16 @@ function App() {
 
     // Filter data for the user
     const userData = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail'));
-
     userData.sort((a, b) => b.id - a.id); // Sort by ID in descending order (highest ID first)
+    (userData)
 
     for (const row of userData.reverse()) {
       if (row.currency === primaryCurrency) {
-        setIncomeOfPrimaryAccount(row.income.toString()); // Update state with income value
+        setIncomeOfPrimaryAccount(row.income); // Update state with income value
       } else if (row.currency === secondaryCurrency) {
-        setIncomeOfSecondaryAccount(row.income.toString()); // Update state with income value
+        setIncomeOfSecondaryAccount(row.income); // Update state with income value
       } else if (row.currency === thirdCurrency) {
-        setIncomeOfThirdAccount(row.income.toString()); // Update state with income value
+        setIncomeOfThirdAccount(row.income); // Update state with income value
       }
     }
 
@@ -291,12 +292,49 @@ function App() {
     const savingsData = filteredData.map(item => Number(item.saving));
     setAllSavings(savingsData);
   }
-  //Fetching the Data from the DB END
 
-  useEffect(() => {  
-    fetchData(monthNames[currentDate.getMonth()]);
-    fetchAllDataFromUser();
-  }, [isDataFetched, choosenCurrency]);
+  //Fetching the Data from the DB END
+  useEffect(() => {
+    // (choosenMonth, monthNames[currentDate.getMonth()]);
+    if(choosenMonth === monthNames[currentDate.getMonth()]){
+      setIncome("");
+      setPrimaryCurrency(localStorage.getItem("primary_name") ?? "");
+      setSecondaryCurrency(localStorage.getItem("secondary_name") ?? "");
+      setThirdCurrency(localStorage.getItem("third_name") ?? "");
+      setPrimaryTag(localStorage.getItem("primary_tag") ?? "");
+      setSecondaryTag(localStorage.getItem("secondary_tag") ?? "");
+      setThirdTag(localStorage.getItem("third_tag") ?? "");
+      setPrimaryFormat(localStorage.getItem("primary_format") ?? "");
+      setSecondaryFormat(localStorage.getItem("secondary_format") ?? "");
+      setThirdFormat(localStorage.getItem("third_format") ?? "");
+      fetchData(monthNames[currentDate.getMonth()]);
+      fetchAllDataFromUser();
+    }
+    else{
+      setIsLoading(true); // Start loading
+      setTimeout(() => {
+        Promise.all([fetchData(choosenMonth), fetchAllDataFromUser()])
+        .then(() => {
+          while (uniqueCurrencies.length < 3) uniqueCurrencies.push(undefined);
+          setPrimaryCurrency(uniqueCurrencies[0] || '');
+          setSecondaryCurrency(uniqueCurrencies[1] || '');
+          setThirdCurrency(uniqueCurrencies[2] || '');
+          setPrimaryTag("");
+          setSecondaryTag("");
+          setThirdTag("");  
+          setPrimaryFormat("0.00");
+          setSecondaryFormat("0.00");
+          setThirdFormat("0.00");
+          
+          setIsLoading(false); // Stop loading once data is fetched
+        })
+        .catch((error) => {
+          console.error("Error fetching data: ", error);
+          setIsLoading(false); // Stop loading in case of error
+        });
+      }, 1500);
+    }
+  }, [choosenMonth, isDataFetched, choosenCurrency]);
   
 
 
@@ -305,7 +343,7 @@ function App() {
 
   //Calculations START
   useEffect(() => {
-    //console.log(allSavings);
+    //(allSavings);
     const total = allSavings.reduce((total: number, saving: number) => {
       return total + saving;
     }, 0).toFixed(choosenFormat);
@@ -326,6 +364,20 @@ function App() {
 
 
   //Functions and Event handlers START
+  const copyTextToClipboard = async (text: string, itemId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyEffect(true);
+      setClickedItemId(itemId);
+      setTimeout(() => {
+        setCopyEffect(false); 
+        setClickedItemId(null); 
+      }, 2000);
+
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
   const resetSpendings: () => void = async () => {
     setShowSettingsModal(false);
     setShowAreYouSureModal(true);
@@ -437,7 +489,6 @@ function App() {
       setShowTypes(true);
     }
   }
-  
   const handleExchangeSubmit = async (choosedCurrency:any) => {
     // A account is the currenct B account is the choosenCurrency Account.
     // fetchAllDataFromUser();
@@ -458,24 +509,24 @@ function App() {
       incomeOfOtherAccount = Number(incomeOfThirdAccount);
     }
     else{
-      //console.log("Error in the choosedCurrency");
+      //("Error in the choosedCurrency");
     }
 
-    // console.log("---------------------");
+    // ("---------------------");
 
-    // console.log("TO: " + choosedCurrency)
-    // console.log("Value: " + exchangeAmount); //This will go to the income of the B account
+    // ("TO: " + choosedCurrency)
+    // ("Value: " + exchangeAmount); //This will go to the income of the B account
     const newBIncom = Number(incomeOfOtherAccount)+Number(exchangeAmount); //This will be the new income of the B account
-    // console.log("New Income " + newBIncom + " to " + choosedCurrency);
+    // ("New Income " + newBIncom + " to " + choosedCurrency);
     
-    // console.log("---------------------");
+    // ("---------------------");
     
     //What we need to remove (Insert into DB) from the A account
-    // console.log("FROM: " + choosenCurrency)
+    // ("FROM: " + choosenCurrency)
     const currentAmount = Number(amount);
-    // console.log("Amount got exchanged: " + currentAmount); //This should be set to the Exchange amount id 17
+    // ("Amount got exchanged: " + currentAmount); //This should be set to the Exchange amount id 17
     const newAIncome = Number(income)-Number(currentAmount); //This should be the new income of the A account
-    // console.log("New Income " + newAIncome + " to " + choosenCurrency);
+    // ("New Income " + newAIncome + " to " + choosenCurrency);
 
 
     
@@ -610,67 +661,8 @@ function App() {
   }
   const handleSelectChange = (event: { target: { value: any; }; }) => {
       setChoosenMonth(event.target.value);
-      fetchData(event.target.value);
+      // fetchData(event.target.value);
   };
-  const handleAddCurrency: () => void = async () => {
-    // Add new currency to the list
-    if(newCurrencyName && newCurrencyFormat && newCurrencyTag){
-        if(secondaryCurrency === 'null'){
-          localStorage.setItem("secondary_name", newCurrencyName);
-          localStorage.setItem("secondary_format", newCurrencyFormat);
-          localStorage.setItem("secondary_tag", newCurrencyTag);
-          setChoosenCurrency(newCurrencyName);
-          setChoosenFormat(getFormatNumber(newCurrencyFormat));
-          setChoosenTag(newCurrencyTag);
-
-          const response = await fetch(`${backendServer}/addSecondaryCurrency`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              email: localStorage.getItem('userEmail'),
-              secondary_name: newCurrencyName,
-              secondary_format: newCurrencyFormat,
-              secondary_tag: newCurrencyTag,
-            })
-          });
-          if (!response.ok) {
-            throw new Error('HTTP error ' + response.status);
-          }
-        }
-        if(thirdCurrency === 'null'){
-          localStorage.setItem("third_name", newCurrencyName);
-          localStorage.setItem("third_format", newCurrencyFormat);
-          localStorage.setItem("third_tag", newCurrencyTag);
-          setChoosenCurrency(newCurrencyName);
-          setChoosenFormat(getFormatNumber(newCurrencyFormat));
-          setChoosenTag(newCurrencyTag);
-
-          const response = await fetch(`${backendServer}/addThirdCurrency`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              email: localStorage.getItem('userEmail'),
-              third_name: newCurrencyName,
-              third_format: newCurrencyFormat,
-              third_tag: newCurrencyTag,
-            })
-          });
-          if (!response.ok) {
-            throw new Error('HTTP error ' + response.status);
-          }
-        }
-      
-      setShowAddCurrencyModal(false);
-    }
-    else{
-      errorModalCurrency.current?.classList.remove("d-none");
-      errorModalCurrency.current?.classList.add("d-block");
-    }
-  }
   const handleDeleteData = () => {
     setShowAreYouSureModal(true);
     setShowSettingsModal(false);
@@ -685,7 +677,7 @@ function App() {
         if (!response.ok) {
           throw new Error('HTTP error ' + response.status);
         }
-        console.log('Data deleted!'); // Replace with appropriate success handling
+        ('Data deleted!'); // Replace with appropriate success handling
         setShowSettingsModal(false);
         setShowAreYouSureModal(false);
         fetchData(monthNames[currentDate.getMonth()]);
@@ -708,7 +700,7 @@ function App() {
         if (!response1.ok) {
           throw new Error('HTTP error ' + response1.status);
         }
-        console.log('Data deleted!'); // Replace with appropriate success handling
+        ('Data deleted!'); // Replace with appropriate success handling
         setShowSettingsModal(false);
         setShowAreYouSureModal(false);
         fetchData(monthNames[currentDate.getMonth()]);
@@ -721,7 +713,7 @@ function App() {
         if (!response2.ok) {
           throw new Error('HTTP error ' + response2.status);
         }
-        console.log('Profile deleted!'); // Replace with appropriate success handling
+        ('Profile deleted!'); // Replace with appropriate success handling
         authContext.logOut(); // Assuming this logs out the user
       } catch (error) {
         console.error('Error deleting profile:', error); // Handle errors appropriately
@@ -750,17 +742,180 @@ function App() {
       CurrencyRef.current?.classList.add("d-none");
     }
   }
-  const handleCurrencyChange: () => void = () => {
-    console.log("Currency Change");
+  const handleCurrencyChange: () => void = async () => {
+    //Update DB Table: users. Send Post method to the Server
+    setPrimaryCurrency(primaryCurrency === null ? "" : primaryCurrency);
+    setSecondaryCurrency(secondaryCurrency === null ? "" : secondaryCurrency);
+    setThirdCurrency(thirdCurrency === null ? "" : thirdCurrency);
+    setPrimaryFormat(primaryFormat === null ? "" : primaryFormat);
+    setSecondaryFormat(secondaryFormat === null ? "" : secondaryFormat);
+    setThirdFormat(thirdFormat === null ? "" : thirdFormat);
+    setPrimaryTag(primaryTag === null ? "" : primaryTag);
+    setSecondaryTag(secondaryTag === null ? "" : secondaryTag);
+    setThirdTag(thirdTag === null ? "" : thirdTag);
+    localStorage.setItem("primary_name", primaryCurrency);
+    localStorage.setItem("secondary_name", secondaryCurrency);
+    localStorage.setItem("third_name", thirdCurrency);
+    localStorage.setItem("primary_format", primaryFormat);
+    localStorage.setItem("secondary_format", secondaryFormat);
+    localStorage.setItem("third_format", thirdFormat);
+    localStorage.setItem("primary_tag", primaryTag);
+    localStorage.setItem("secondary_tag", secondaryTag);
+    localStorage.setItem("third_tag", thirdTag);
+    
+    const response = await fetch(`${backendServer}/addPrimaryCurrency`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: localStorage.getItem('userEmail'),
+        primary_name: primaryCurrency,
+        primary_format: primaryFormat,
+        primary_tag: primaryTag,
+      })
+    });
+    if (!response.ok) {
+      throw new Error('HTTP error ' + response.status);
+    }
+    const response2 = await fetch(`${backendServer}/addSecondaryCurrency`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: localStorage.getItem('userEmail'),
+        secondary_name: secondaryCurrency,
+        secondary_format: secondaryFormat,
+        secondary_tag: secondaryTag,
+      })
+    });
+    if (!response.ok) {
+      throw new Error('HTTP error ' + response2.status);
+    }
+    const response3 = await fetch(`${backendServer}/addThirdCurrency`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: localStorage.getItem('userEmail'),
+        third_name: thirdCurrency,
+        third_format: thirdFormat,
+        third_tag: thirdTag,
+      })
+    });
+    if (!response.ok) {
+      throw new Error('HTTP error ' + response3.status);
+    }
+    
+    setShowSettingsModal(false);
+    setChoosenCurrency(primaryCurrency || secondaryCurrency || thirdCurrency);
+    setChoosenFormat(getFormatNumber(primaryFormat || secondaryFormat || thirdFormat));
+    setChoosenTag(primaryTag || secondaryTag || thirdTag);
+    fetchData(monthNames[currentDate.getMonth()]);
+
   }
   const deleteCurrency: (currency: string) => void = async (currency) => {
-    console.log("Delete Currency: " + currency);
+    if(currency === "" || currency === 'null' || currency === null){
+      if(warningRefEmptyDelete.current)
+      {
+        warningRefEmptyDelete.current.classList.remove("d-none");
+        warningRefEmptyDelete.current.classList.add("d-block");
+        setTimeout(() => {
+          if (warningRefEmptyDelete.current) {
+            warningRefEmptyDelete.current.classList.remove("d-block");
+            warningRefEmptyDelete.current.classList.add("d-none");
+          }
+        }, 7500);
+      }
+    }
+    else if(currency === primaryCurrency){
+      setPrimaryCurrency("");
+      setPrimaryFormat("");
+      setPrimaryTag("");
+      localStorage.removeItem("primary_name");
+      localStorage.removeItem("primary_format");
+      localStorage.removeItem("primary_tag");
+    }
+    else if(currency === secondaryCurrency){
+      setSecondaryCurrency("");
+      setSecondaryFormat("");
+      setSecondaryTag("");
+      localStorage.removeItem("secondary_name");
+      localStorage.removeItem("secondary_format");
+      localStorage.removeItem("secondary_tag");
+    }
+    else if(currency === thirdCurrency){
+      setThirdCurrency("");
+      setThirdFormat("");
+      setThirdTag("");
+      localStorage.removeItem("third_name");
+      localStorage.removeItem("third_format");
+      localStorage.removeItem("third_tag");
+    }
+  }
+  const handlePrimaryCurrencyChange: InputEvent = (event) => {
+    const newSecondaryCurrency = event.target.value;
+    const isValid = newSecondaryCurrency === '' || /^[a-zA-Z]+$/.test(newSecondaryCurrency);
+    if (isValid) {
+      setPrimaryCurrency(newSecondaryCurrency);
+    } 
+  }
+  const handlePrimaryFormatChange: InputEvent = (event) => {
+    const newSecondaryFormat = event.target.value.replace(',', '.');
+    const isValid = newSecondaryFormat === '' || /^(0+([.,]0{0,2})?)?$/.test(newSecondaryFormat);
+    if (isValid) {
+      setPrimaryFormat(newSecondaryFormat);
+    } 
+  }
+  const handlePrimaryTagChange: InputEvent = (event) => {
+    const newSecondaryTag = event.target.value;
+    const isValid = newSecondaryTag === '' || /^[a-zA-Z$£€¥₹₩₽元ლ₦₫₡ƒ]+$/.test(newSecondaryTag);
+    if (isValid) {
+      setPrimaryTag(newSecondaryTag);
+    } 
   }
   const handleSecondCurrencyChange: InputEvent = (event) => {
-    const newSecondaryCurrency = event.target.value.replace(',', '.');
-    const isValid = /^-?(\d+([.,]\d{0,2})?)?$/.test(newSecondaryCurrency);
+    const newSecondaryCurrency = event.target.value;
+    const isValid = newSecondaryCurrency === '' || /^[a-zA-Z]+$/.test(newSecondaryCurrency);
     if (isValid) {
       setSecondaryCurrency(newSecondaryCurrency);
+    } 
+  }
+  const handleSecondFormatChange: InputEvent = (event) => {
+    const newSecondaryFormat = event.target.value.replace(',', '.');
+    const isValid = newSecondaryFormat === '' || /^(0+([.,]0{0,2})?)?$/.test(newSecondaryFormat);
+    if (isValid) {
+      setSecondaryFormat(newSecondaryFormat);
+    } 
+  }
+  const handleSecondTagChange: InputEvent = (event) => {
+    const newSecondaryTag = event.target.value;
+    const isValid = newSecondaryTag === '' || /^[a-zA-Z$£€¥₹₩₽元ლ₦₫₡ƒ]+$/.test(newSecondaryTag);
+    if (isValid) {
+      setSecondaryTag(newSecondaryTag);
+    } 
+  }
+  const handleThirdCurrencyChange: InputEvent = (event) => {
+    const newSecondaryCurrency = event.target.value;
+    const isValid = newSecondaryCurrency === '' || /^[a-zA-Z]+$/.test(newSecondaryCurrency);
+    if (isValid) {
+      setThirdCurrency(newSecondaryCurrency);
+    } 
+  }
+  const handleThirdFormatChange: InputEvent = (event) => {
+    const newSecondaryFormat = event.target.value.replace(',', '.');
+    const isValid = newSecondaryFormat === '' || /^(0+([.,]0{0,2})?)?$/.test(newSecondaryFormat);
+    if (isValid) {
+      setThirdFormat(newSecondaryFormat);
+    } 
+  }
+  const handleThirdTagChange: InputEvent = (event) => {
+    const newSecondaryTag = event.target.value;
+    const isValid = newSecondaryTag === '' || /^[a-zA-Z$£€¥₹₩₽元ლ₦₫₡ƒ]+$/.test(newSecondaryTag);
+    if (isValid) {
+      setThirdTag(newSecondaryTag);
     } 
   }
   //Functions and Event handlers END
@@ -774,14 +929,11 @@ function App() {
       {/* Navbar */}
       <nav className="navbar fixed-top mx-2">
         <div className="currency d-flex flex-row gap-2">
-        {primaryCurrency !== 'null' && (
-            <> 
-              <p key={primaryCurrency} onClick={() => {setChoosenCurrency(primaryCurrency); setChoosenFormat(getFormatNumber(primaryFormat)); setChoosenTag(primaryTag)}}>{primaryCurrency}</p>
-              {secondaryCurrency !== 'null' && <p key={secondaryCurrency} onClick={() => {setChoosenCurrency(secondaryCurrency); setChoosenFormat(getFormatNumber(secondaryFormat)); setChoosenTag(secondaryTag)}}>{secondaryCurrency}</p>}
-              {thirdCurrency !== 'null' && <p key={thirdCurrency} onClick={() => {setChoosenCurrency(thirdCurrency); setChoosenFormat(getFormatNumber(thirdFormat)); setChoosenTag(thirdTag)}}>{thirdCurrency}</p>}
-              {thirdCurrency === 'null' && <span key={"+"} className="" onClick={()=> setShowAddCurrencyModal(true)}>+</span>}
-            </>
-        )}
+          <> 
+            {primaryCurrency !== 'null' && <p key={primaryCurrency} onClick={() => {setChoosenCurrency(primaryCurrency); setChoosenFormat(getFormatNumber(primaryFormat)); setChoosenTag(primaryTag)}}>{primaryCurrency}</p>}
+            {secondaryCurrency !== 'null' && <p key={secondaryCurrency} onClick={() => {setChoosenCurrency(secondaryCurrency); setChoosenFormat(getFormatNumber(secondaryFormat)); setChoosenTag(secondaryTag)}}>{secondaryCurrency}</p>}
+            {thirdCurrency !== 'null' && <p key={thirdCurrency} onClick={() => {setChoosenCurrency(thirdCurrency); setChoosenFormat(getFormatNumber(thirdFormat)); setChoosenTag(thirdTag)}}>{thirdCurrency}</p>}
+          </>
         </div>
         {/* Settings Icon */}
         <div className="user d-flex flex-row gap-2" >
@@ -842,38 +994,139 @@ function App() {
                 </div>
               </div>
               <div className="d-none" ref={CurrencyRef}>
-                <div className="text-center">
-                  <div className="d-flex flex-column gap-2">
+                <div className="d-flex flex-column justify-content-center align-items-md-start gap-2">
                     <div className="d-flex flex-row align-items-center gap-3">
                       <span>1.</span> 
                       <div className="simpleInputs py-1 px-1 col-11 col-md-8 d-flex flex-row gap-3 justify-content-center">
-                        <input defaultValue={primaryCurrency} placeholder="EUR" id="currencyName" className="currencyInput" type="text" /> 
-                        <input defaultValue={primaryFormat} placeholder="0.00" id="currencyFormat" className="currencyInput"  type="text" /> 
-                        <input defaultValue={primaryTag} placeholder="€" id="currencyTag" className="currencyInput"  type="text" />
-                        <i className="btn-bin-disabled bi bi-trash-fill"></i>
+                        <input id={primaryCurrency} value={primaryCurrency !== 'null' ? primaryCurrency : ''} onChange={handlePrimaryCurrencyChange}  placeholder="EUR" className="currencyName currencyInput" type="text" /> 
+                        <input id={primaryFormat} value={primaryFormat !== 'null' ? primaryFormat : ''} onChange={handlePrimaryFormatChange} placeholder="0.00" className="currencyFormat currencyInput"  type="text" /> 
+                        <input id={primaryTag} value={primaryTag !== 'null' ? primaryTag : ''} onChange={handlePrimaryTagChange} placeholder="€" className="currencyTag currencyInput"  type="text" />
+                        <i className="btn-bin bi bi-trash-fill" onClick={() => {
+                          if ((secondaryCurrency && secondaryCurrency !== 'null') || (thirdCurrency && thirdCurrency !== 'null')) {
+                            deleteCurrency(primaryCurrency);
+                            if (warningRefPrimaryDelete.current) {
+                              warningRefPrimaryDelete.current.classList.remove('d-flex'); 
+                              warningRefPrimaryDelete.current.classList.add('d-none'); 
+                            }
+                          } else {
+                            if (warningRefPrimaryDelete.current) {
+                              warningRefPrimaryDelete.current.classList.remove('d-none'); 
+                              warningRefPrimaryDelete.current.classList.add('d-flex'); 
+                            }
+                            setTimeout(() => {
+                              if (warningRefPrimaryDelete.current) {
+                                warningRefPrimaryDelete.current.classList.remove('d-flex'); 
+                                warningRefPrimaryDelete.current.classList.add('d-none');
+                              }
+                            }, 25000);
+                          }
+                          }}>
+                        </i>
                       </div>
                     </div>
                     <div className="d-flex flex-row align-items-center gap-3">
                       <span>2.</span> 
                       <div className="simpleInputs py-1 px-1 col-11 col-md-8 d-flex flex-row gap-3 justify-content-center">
-                        <input defaultValue={secondaryCurrency !== 'null' ? secondaryCurrency : ''} value={secondaryCurrency !== 'null' ? secondaryCurrency : ''} onChange={handleSecondCurrencyChange} placeholder="EUR" id="currencyName" className="currencyInput" type="text" /> 
-                        <input defaultValue={secondaryFormat !== 'null' ? secondaryFormat : ''} value={secondaryFormat !== 'null' ? secondaryFormat : ''} placeholder="0.00" id="currencyFormat" className="currencyInput"  type="text" /> 
-                        <input defaultValue={secondaryTag !== 'null' ? secondaryTag : ''} value={secondaryTag !== 'null' ? secondaryTag : ''} placeholder="€" id="currencyTag" className="currencyInput"  type="text" />
-                        <i className="btn-bin bi bi-trash-fill" onClick={() => deleteCurrency(secondaryCurrency)}></i>
+                        <input id={secondaryCurrency}
+                         value={secondaryCurrency !== 'null' ? secondaryCurrency : ''} 
+                         onChange={handleSecondCurrencyChange} placeholder="EUR" className="currencyName currencyInput" type="text" /> 
+                        <input 
+                        id={secondaryFormat}
+                        value={secondaryFormat !== 'null' ? secondaryFormat : ''} 
+                        onChange={handleSecondFormatChange} placeholder="0.00" className="currencyFormat currencyInput"  type="text" /> 
+                        <input 
+                        id={secondaryTag}
+                        value={secondaryTag !== 'null' ? secondaryTag : ''} 
+                        onChange={handleSecondTagChange} placeholder="€" className="currencyTag currencyInput"  type="text" />
+                        <i className="btn-bin bi bi-trash-fill" onClick={() => {
+                          if ((primaryCurrency && primaryCurrency !== 'null') || (thirdCurrency && thirdCurrency !== 'null')) {
+                            deleteCurrency(secondaryCurrency);
+                            if (warningRefPrimaryDelete.current) {
+                              warningRefPrimaryDelete.current.classList.remove('d-flex'); 
+                              warningRefPrimaryDelete.current.classList.add('d-none'); 
+                            }
+                          } else {
+                            if (warningRefPrimaryDelete.current) {
+                              warningRefPrimaryDelete.current.classList.remove('d-none'); 
+                              warningRefPrimaryDelete.current.classList.add('d-flex'); 
+                            }
+                            setTimeout(() => {
+                              if (warningRefPrimaryDelete.current) {
+                                warningRefPrimaryDelete.current.classList.remove('d-flex'); 
+                                warningRefPrimaryDelete.current.classList.add('d-none');
+                              }
+                            }, 25000);
+                          }
+                          }}>
+                        </i>
                       </div>
                     </div>
                     <div className="d-flex flex-row align-items-center gap-3">
                       <span>3.</span> 
                       <div className="simpleInputs py-1 px-1 col-11 col-md-8 d-flex flex-row gap-3 justify-content-center">
-                        <input defaultValue={thirdCurrency !== 'null' ? thirdCurrency : ''} value={thirdCurrency !== 'null' ? thirdCurrency : ''} placeholder="EUR" id="currencyName" className="currencyInput" type="text" /> 
-                        <input defaultValue={thirdFormat !== 'null' ? thirdFormat : ''} value={thirdFormat !== 'null' ? thirdFormat : ''} placeholder="0.00" id="currencyFormat" className="currencyInput"  type="text" /> 
-                        <input defaultValue={thirdTag !== 'null' ? thirdTag : ''} value={thirdTag !== 'null' ? thirdTag : ''} placeholder="€" id="currencyTag" className="currencyInput"  type="text" />
-                        <i className="btn-bin bi bi-trash-fill" onClick={() => deleteCurrency(thirdCurrency)}></i>
+                        <input id={thirdCurrency} value={thirdCurrency !== 'null' ? thirdCurrency : ''} onChange={handleThirdCurrencyChange} placeholder="EUR" className="currencyName currencyInput" type="text" /> 
+                        <input id={thirdFormat} value={thirdFormat !== 'null' ? thirdFormat : ''} onChange={handleThirdFormatChange} placeholder="0.00" className="currencyFormat currencyInput"  type="text" /> 
+                        <input id={thirdTag} value={thirdTag !== 'null' ? thirdTag : ''} onChange={handleThirdTagChange} placeholder="€" className="currencyTag currencyInput"  type="text" />
+                        <i className="btn-bin bi bi-trash-fill" onClick={() => {
+                          if ((secondaryCurrency && secondaryCurrency !== 'null') || (primaryCurrency && primaryCurrency !== 'null')) {
+                            deleteCurrency(thirdCurrency);
+                            if (warningRefPrimaryDelete.current) {
+                              warningRefPrimaryDelete.current.classList.remove('d-flex'); 
+                              warningRefPrimaryDelete.current.classList.add('d-none'); 
+                            }
+                          } else {
+                            if (warningRefPrimaryDelete.current) {
+                              warningRefPrimaryDelete.current.classList.remove('d-none'); 
+                              warningRefPrimaryDelete.current.classList.add('d-flex'); 
+                            }
+                            setTimeout(() => {
+                              if (warningRefPrimaryDelete.current) {
+                                warningRefPrimaryDelete.current.classList.remove('d-flex'); 
+                                warningRefPrimaryDelete.current.classList.add('d-none');
+                              }
+                            }, 25000);
+                          }
+                          }}>
+                        </i>
                       </div>
                     </div>
-                  </div>
                 </div>
-                  <button className="mt-5" onClick={handleCurrencyChange}>Save</button>                
+                <div className="info warning">
+                  <p className="d-none flex-column text-center col-12 mt-5" ref={warningRefPrimaryDelete}>
+                  <span>Action Required:</span><br />
+                    To maintain a functional currency system, at least one currency must be designated as the primary currency. <br />
+                    Currently, the action to remove the existing primary currency cannot be completed because it necessitates the presence of an alternative currency to take over as the new primary currency. <br />
+                    Please designate a secondary or tertiary currency as the new primary currency before proceeding with the removal of the current primary currency.
+                  </p>
+                  <p className="d-none flex-column text-center col-12 mt-5" ref={warningRefEmptyDelete}>
+                  <span>Whoops!</span><br />
+                    The Currency Profile is Empty: You can't delete an empty currency profile. 
+                  </p>
+                </div>
+                <div className="info d-flex flex-column justify-content-center align-items-center">
+                  <p className="mt-4 text-center">Click on any of the symbols below to copy it to your clipboard.</p>
+                  <div className="copyItems text-center">
+                    <ul className="d-flex justify-content-center align-items-center gap-1 gap-md-2 px-2 px-md-4 pt-3"> 
+                      <li onClick={() => copyTextToClipboard('$', '1')} style={itemStyle('1') as React.CSSProperties}>$</li>
+                      <li onClick={() => copyTextToClipboard('£', '2')} style={itemStyle('2') as React.CSSProperties}>£</li>
+                      <li onClick={() => copyTextToClipboard('€', '3')} style={itemStyle('3') as React.CSSProperties}>€</li>
+                      <li onClick={() => copyTextToClipboard('¥', '4')} style={itemStyle('4') as React.CSSProperties}>¥</li>
+                      <li onClick={() => copyTextToClipboard('₹', '5')} style={itemStyle('5') as React.CSSProperties}>₹</li>
+                      <li onClick={() => copyTextToClipboard('₩', '6')} style={itemStyle('6') as React.CSSProperties}>₩</li>
+                      <li onClick={() => copyTextToClipboard('₽', '7')} style={itemStyle('7') as React.CSSProperties}>₽</li>
+                      <li onClick={() => copyTextToClipboard('元', '8')} style={itemStyle('8') as React.CSSProperties}>元</li>
+                      <li onClick={() => copyTextToClipboard('ლ', '9')} style={itemStyle('9') as React.CSSProperties}>ლ</li>
+                      <li onClick={() => copyTextToClipboard('₦', '10')} style={itemStyle('10') as React.CSSProperties}>₦</li>
+                      <li onClick={() => copyTextToClipboard('₫', '11')} style={itemStyle('11') as React.CSSProperties}>₫</li>
+                      <li onClick={() => copyTextToClipboard('₡', '12')} style={itemStyle('12') as React.CSSProperties}>₡</li>
+                      <li onClick={() => copyTextToClipboard('ƒ', '13')} style={itemStyle('13') as React.CSSProperties}>ƒ</li>
+                    </ul>
+                    <p className="mb-2">
+                      {copyEffect && 'Copied!' }
+                    </p>
+                  </div>
+                  <button className="mt-5 col-3 col-md-2" onClick={handleCurrencyChange}>Save</button>           
+                </div>
               </div>
             </div>
           </Modal.Body>
@@ -893,32 +1146,7 @@ function App() {
           </Modal.Body>
         </Modal>
       </nav>
-      {/* Currency Modal */}
-      {showAddCurrencyModal && (
-        <Modal className="modal-lg" show={showAddCurrencyModal} onHide={() => setShowAddCurrencyModal(false)}>
-          <Modal.Header className="modal-header" >
-            <Modal.Title>Add New Currency</Modal.Title>
-            <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={() => setShowAddCurrencyModal(false)}></button>
-          </Modal.Header>
-          <Modal.Body className="text-center d-flex flex-column px-5 py-5">
-            
-            <p className="d-none error" ref={errorModalCurrency}>Please fill out all the fields!</p>
-            <input className="my-2" placeholder="Name (EUR, HUF, ...)" type="text" onChange={e => setNewCurrencyName(e.target.value)} title="Choose a clear and recognizable name for your currency profile. This name will be displayed within the app to help you easily identify the currency."/>
-            <input className="my-2" placeholder="Format (0.00, 0, ...)" type="text" onChange={e => setNewCurrencyFormat(e.target.value)} title="Specify how you want numbers to be formatted within this currency profile. For example, some currencies use two decimal places (0.00), while others might not use any decimals (0)."/>
-            <input className="my-2" placeholder="Tag (€, Ft, ...)" type="text"  onChange={e => setNewCurrencyTag(e.target.value)} title="Define a symbol or tag to visually represent your chosen currency. This tag will be displayed alongside the amount when viewing transactions in this currency profile."/>
-            
-          </Modal.Body>
-          <Modal.Footer className="footer gap-3">
-            <a onClick={() => setShowAddCurrencyModal(false)}>
-              Close 
-            </a>
-            <button className="button" onClick={() => handleAddCurrency()}>
-              Save
-            </button>
-          </Modal.Footer>
-        </Modal>
-      )}
-
+      
       {/* Header - Month & Income */}
       <header className="d-flex flex-column flex-md-row justify-content-center justify-content-md-evenly mt-5 pt-5">
         {/* Month */}
@@ -943,13 +1171,28 @@ function App() {
 
         {/* Income */}
         <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row"> 
-          <span className="income mx-3 mx-md-1">
-          {income ? (
-            Number(income).toFixed(choosenFormat)+""+choosenTag
-          ) : (Number(income) + "" + choosenTag)}
+        <span className="income mx-3 mx-md-1">
+          {isLoading ? (
+            <div className="loader"></div>
+          ) : (
+            <>
+                {income ? (
+                  Number(income).toFixed(choosenFormat) + "" + choosenTag
+                ) : (
+                  Number(income) + "" + choosenTag
+                )}
+            </>
+          )} 
           </span>
           {isCurrentMonth && (
-            <input className="mx-5 mx-md-1" value={incomeInput} onChange={handleIncomeChange} onKeyDown={handleIncomeSubmit} type="text" placeholder="income"/>
+            <input
+              className="mx-5 mx-md-1"
+              value={incomeInput}
+              onChange={handleIncomeChange}
+              onKeyDown={handleIncomeSubmit}
+              type="text"
+              placeholder="income"
+            />
           )}
         </h5>
       </header>
