@@ -1,0 +1,67 @@
+@use "../utils/colors";
+$topo: url("../assets/topo-second.png");
+$topo: url("../assets/topo.png");
+$topo: url("../assets/topo-third.png");
+$topo: url("../assets/topo-purple-second.png");
+$topo: url("../assets/topo-purple-third.png");
+// $topo: url("../assets/topo-white.png");
+// $topo: url("../assets/topo-blue.png");
+// $topo: url("../assets/topo-red.png");
+// $topo: url("../assets/topo-dark-orange.png");
+
+nav, .navbar{
+    background-color: transparent;
+    max-height: 30svh;
+    height: 3svh;   
+}
+
+.loader {
+    width: 20px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 8px solid;
+    border-color: colors.$color colors.$background-light;
+    animation: l1 1s infinite;
+}
+
+
+.currency p {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-top: 0.4em;
+    cursor: pointer;
+}
+.activeCurrency{
+    color: colors.$accent-orange;
+}
+.app{
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    background-image: $topo;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.pointer{
+    cursor: pointer;
+}
+
+
+
+
+footer, .footer{
+    background: rgba( 51, 55, 59, 0.35 );
+    box-shadow: 0 8px 32px 0 rgba(115, 116, 131, 0.37);
+    backdrop-filter: blur( 4.5px );
+    -webkit-backdrop-filter: blur( 4.5px );
+}
+.footer a, .header div{
+    background-color: colors.$background-light;
+}
+.footer button .header button{
+    color: colors.$background;
+    background-color: colors.$accent-orange;
+}
+footer h5 span, footer h5{ 
+    background-color: transparent;
+    font-size: 1.2em;
+} 

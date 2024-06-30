@@ -1,0 +1,159 @@
+@use "../utils/colors";
+
+.dropdown {
+    max-height: 30svh;
+    height: auto;
+}
+
+.drop-toggle:focus {
+    outline: none;
+    border: none;
+}
+
+.drop-toggle i {
+    color: colors.$color;
+    font-size: 1.2rem;
+}
+
+.drop-toggle::after {
+    display: none;
+}
+
+.dropdown-menu {
+    background-color: colors.$background-light;
+    color: colors.$color;
+    transition: all 1s ease;
+}
+
+.drop-item {
+    color: colors.$color;
+    transition: all 0.5s ease;
+}
+
+.drop-item:hover {
+    background-color: colors.$background-lightest;
+    color: colors.$color;
+}
+
+
+
+.modal-header {
+    background-color: colors.$background-light;
+    border-radius: 0;
+}
+
+.modal {
+    background-color: transparent;
+}
+
+.modal-lg {
+    background-color: transparent;
+}
+
+.modal-lg .body {
+    border: none;
+    border-radius: 1.5em;
+    background-color: colors.$background-light;
+}
+
+.modal-body {
+    background-color: colors.$background;
+}
+
+.btn-close {
+    background-color: transparent;
+    color: colors.$color;
+    font-size: 1.5em;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+
+
+#ProfilePIC {
+    border-radius: 50%;
+    width: 5em;
+    height: 5em;
+    margin: 0 auto;
+    display: block;
+}
+
+.btn-close:hover {
+    background-color: transparent;
+}
+
+.btn-bin {
+    background-color: transparent;
+    color: colors.$color;
+    font-size: 1.1em;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+
+
+
+
+
+
+.currencyInput {
+    text-align: center;
+    color: colors.$color;
+    letter-spacing: 0.1em;
+    border: none;
+    outline: none;
+}
+
+.currencyName {
+    max-width: 30%;
+}
+
+.currencyFormat {
+    max-width: 30%;
+}
+
+.currencyTag {
+    max-width: 18%;
+}
+
+.currencyInput::placeholder {
+    text-align: center;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: colors.$color-darker;
+}
+
+.simpleInputs {
+    border-radius: 0.5em;
+    background-color: colors.$background;
+}
+
+.copyItems-initial {
+    background-color: transparent;
+    transition: all 0.3s ease-in-out;
+
+}
+.copyItems{
+    background-color: colors.$background-light;
+    border-radius: 1.5em;
+    transition: all 0.3s ease-in-out;
+}
+.copyItems-initial li, .copyItems li{
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    color: colors.$color;
+    list-style: none;
+    font-size: 1.1em;
+    font-weight: 500;
+    padding: 0.3em;
+    border-radius: 1em;
+}
+
+  .warning{
+    transition: display 1s ease-in-out;
+  }
+  .error {
+    color: colors.$accent-orange;
+    font-weight: 700;
+    font-size: 1.1em;
+}

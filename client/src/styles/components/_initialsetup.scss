@@ -1,0 +1,18 @@
+@use "../utils/colors";
+
+.box-ui{
+    border-radius: 1.5em;
+    color: colors.$color;
+    padding: 1em;
+    margin: 1em;
+    // background-color: colors.$background-light;
+    background: rgba( 51, 55, 59, 0.35 );
+    box-shadow: 0 8px 32px 0 rgba(115, 116, 131, 0.37);
+    backdrop-filter: blur( 4.5px );
+    -webkit-backdrop-filter: blur( 4.5px );
+    border-radius: 10px;
+}
+  .box-ui {
+    // background-color: colors.$background-light;
+    color: colors.$color;
+  }

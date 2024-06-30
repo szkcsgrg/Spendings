@@ -1,0 +1,48 @@
+@use "../utils/colors";
+
+h1 {
+    font-size: 3.8em;
+    line-height: 1.1;
+    margin: 0;
+    padding: 7.5px;
+    overflow: hidden;
+}
+
+p{
+    font-size: 1.4em;
+    line-height: 1.5;
+    margin: 0;
+    padding: 7.5px;
+    overflow: hidden;
+}
+
+.info p{
+    font-size: 0.95em;
+    color: colors.$color-dark;
+  }
+  .info p span{
+    color: colors.$accent-orange;
+    font-weight: 700;
+  }
+  a, link{
+    font-size: 1.1em;
+    font-weight: 500;
+    text-decoration: none;
+    color: colors.$color;
+    transition: all 0.5s;
+  }
+  .info{
+    font-size: 1.1em;
+  }
+  .info .link{
+    font-size: 1.1em;
+    font-weight: 500;
+    text-decoration: underline;
+    color: colors.$color;
+    transition: all 0.5s;
+  }
+  .info .link:hover{
+    cursor: pointer;
+    color: colors.$accent-orange;
+    text-decoration: underline;
+  }

@@ -25,6 +25,8 @@ interface Spending {
 }
 
 function App() {
+  /*  @collapsed */
+
   //Inital Values START
   //Defualt
   const authContext = useContext(AuthContext);
@@ -113,29 +115,52 @@ function App() {
 
 
   // Months Related
-  const monthNames = ["January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
-  ];
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const currentDate = new Date();
   const [choosenMonth, setChoosenMonth] = useState(monthNames[currentDate.getMonth()])
   const [uniqueMonths, setUniqueMonths] = useState<string[]>([]);
   const isCurrentMonth = choosenMonth === monthNames[new Date().getMonth()];
 
   // Styles
-  const tableHeader = {backgroundColor: '#424769', color: '#f9b17a', fontWeight: '1000'};
-  const table = {backgroundColor: '#676f9d', color: 'white', borderColor: '#525252', fontWeight: '400'};
-  const radius = {width: "90%", margin: "auto"};
+  const tableStyle = {
+    background: 'rgba( 51, 55, 59, 0.35 )',
+    boxShadow: '0 8px 32px 0 rgba(115, 116, 131, 0.37)',
+    backdropFilter: 'blur( 4.5px )',
+    webkitBackdropFilter: 'blur( 4.5px )',
+  };
+  const tableHeaderStyle = {
+    background: 'rgba( 51, 55, 59, 0.35 )',
+    // boxShadow: '0 8px 32px 0 rgba(115, 116, 131, 0.37)',
+    backdropFilter: 'blur( 4.5px )',
+    webkitBackdropFilter: 'blur( 4.5px )',
+    fontWeight: 'bold',
+    fontSize: '1.1rem',
+    color: '#e0e4e8',
+  };
+
+  const tableBodyStyle = {
+    background: 'rgba( 51, 55, 59, 0.35 )',
+    // boxShadow: '0 8px 32px 0 rgba(115, 116, 131, 0.37)',
+    backdropFilter: 'blur( 4.5px )',
+    webkitBackdropFilter: 'blur( 4.5px )',
+    borderColor: '#525252',
+    fontWeight: '400',
+    color: '#e0e4e8',
+    fontSize: '1.1rem',
+    border: 0,
+  };
+  // const tableHeader = {backgroundColor: '#33373b', color: '#e0e4e8', fontWeight: '1000', fontSize: '1.1rem'};
+  // const table = {backgroundColor: '#3a4048', color: 'white', borderColor: '#525252', fontWeight: '400'};
   const itemStyle = (itemId: string) => ({
     color: clickedItemId === itemId && '#2d3250',
-    backgroundColor: clickedItemId === itemId && '#f9b17a',
+    backgroundColor: clickedItemId === itemId && '#daa4fc',
   });
-  //Inital Values END
+  
   let uniqueCurrencies: any[] = [];
+  //Inital Values END
 
 
   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------\\
-
-  
 
 
   //Fetching the Data from the DB START
@@ -921,18 +946,20 @@ function App() {
   //Functions and Event handlers END
 
 
+  /*  @end */
+
   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------\\
 
 
   return (
-    <section className="container-fluid">  
+    <section className="container-fluid">    
       {/* Navbar */}
       <nav className="navbar fixed-top mx-2">
-        <div className="currency d-flex flex-row gap-2">
+        <div className="currency d-flex flex-row">
           <> 
-            {primaryCurrency !== 'null' && <p key={primaryCurrency} onClick={() => {setChoosenCurrency(primaryCurrency); setChoosenFormat(getFormatNumber(primaryFormat)); setChoosenTag(primaryTag)}}>{primaryCurrency}</p>}
-            {secondaryCurrency !== 'null' && <p key={secondaryCurrency} onClick={() => {setChoosenCurrency(secondaryCurrency); setChoosenFormat(getFormatNumber(secondaryFormat)); setChoosenTag(secondaryTag)}}>{secondaryCurrency}</p>}
-            {thirdCurrency !== 'null' && <p key={thirdCurrency} onClick={() => {setChoosenCurrency(thirdCurrency); setChoosenFormat(getFormatNumber(thirdFormat)); setChoosenTag(thirdTag)}}>{thirdCurrency}</p>}
+            {primaryCurrency !== 'null' && <p className={choosenCurrency === primaryCurrency ? 'activeCurrency' : ''} key={primaryCurrency} onClick={() => {setChoosenCurrency(primaryCurrency); setChoosenFormat(getFormatNumber(primaryFormat)); setChoosenTag(primaryTag)}}>{primaryCurrency}</p>}
+            {secondaryCurrency !== 'null' && <p className={choosenCurrency === secondaryCurrency ? 'activeCurrency' : ''} key={secondaryCurrency} onClick={() => {setChoosenCurrency(secondaryCurrency); setChoosenFormat(getFormatNumber(secondaryFormat)); setChoosenTag(secondaryTag)}}>{secondaryCurrency}</p>}
+            {thirdCurrency !== 'null' && <p className={choosenCurrency === thirdCurrency ? 'activeCurrency' : ''} key={thirdCurrency} onClick={() => {setChoosenCurrency(thirdCurrency); setChoosenFormat(getFormatNumber(thirdFormat)); setChoosenTag(thirdTag)}}>{thirdCurrency}</p>}
           </>
         </div>
         {/* Settings Icon */}
@@ -951,30 +978,28 @@ function App() {
         
         </div> 
         {/* Settings */}
-        <Modal className="modal-lg" show={showSettingsModal} onHide={() => setShowSettingsModal(false)}>
+        <Modal className="modal-xl" show={showSettingsModal} onHide={() => setShowSettingsModal(false)}>
           <Modal.Header className="modal-header">
             <Modal.Title>Settings</Modal.Title>
             <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={() => setShowSettingsModal(false)}></button>
           </Modal.Header>
-          <Modal.Body className="modal-body d-flex flex-column flex-md-row px-3 py-3 px-lg-5 py-lg-5 gap-1 gap-lg-5">
-             <aside className="menu d-flex flex-row gap-3 gap-md-0 flex-md-column col-3 col-md-4 col-lg-2">
+          <Modal.Body className="modal-body d-flex flex-column flex-lg-row px-3 py-3 px-lg-5 py-lg-5 gap-1 gap-lg-5">
+             <aside className="menu d-flex flex-row gap-3 gap-md-0 flex-lg-column col-12 col-lg-2">
               <p onClick={handleProfileShow}>Profile</p>
               <p onClick={handleCurrencyShow}>Currency</p>
             </aside> 
             {/* Change it back to 8 from md */}
-            <div className="col-12 col-md-8">
+            <div className="col-12 col-lg-9">
               <div className="d-block" ref={ProfileRef}>
                 <div className="text-center">
                   <img id="ProfilePIC" src={localStorage.getItem("userPhoto") || ''} alt="" />
                   <p className="name">{localStorage.getItem("userName")}</p>
                 </div>
                 <div className="text-center">
-                  <div className="my-3 py-3 info">
-                  {isCurrentMonth && (
-                      <>
-                      <a onClick={resetSpendings}>Reset Monthly Spending</a>
-                      </>
-                  )}
+                  <div className="my-3 py-3">
+                    {isCurrentMonth && (
+                      <p className="pointer" onClick={resetSpendings}>Reset Monthly Spending</p>     
+                    )}
                   </div>
                   <hr />
                   <div className="my-3 my-lg-5 info">
@@ -997,7 +1022,7 @@ function App() {
                 <div className="d-flex flex-column justify-content-center align-items-md-start gap-2">
                     <div className="d-flex flex-row align-items-center gap-3">
                       <span>1.</span> 
-                      <div className="simpleInputs py-1 px-1 col-11 col-md-8 d-flex flex-row gap-3 justify-content-center">
+                      <div className="simpleInputs py-1 px-1 col-11 col-md-7 col-lg-8 col-xl-12 d-flex flex-row gap-3 justify-content-center">
                         <input id={primaryCurrency} value={primaryCurrency !== 'null' ? primaryCurrency : ''} onChange={handlePrimaryCurrencyChange}  placeholder="EUR" className="currencyName currencyInput" type="text" /> 
                         <input id={primaryFormat} value={primaryFormat !== 'null' ? primaryFormat : ''} onChange={handlePrimaryFormatChange} placeholder="0.00" className="currencyFormat currencyInput"  type="text" /> 
                         <input id={primaryTag} value={primaryTag !== 'null' ? primaryTag : ''} onChange={handlePrimaryTagChange} placeholder="€" className="currencyTag currencyInput"  type="text" />
@@ -1026,7 +1051,7 @@ function App() {
                     </div>
                     <div className="d-flex flex-row align-items-center gap-3">
                       <span>2.</span> 
-                      <div className="simpleInputs py-1 px-1 col-11 col-md-8 d-flex flex-row gap-3 justify-content-center">
+                      <div className="simpleInputs py-1 px-1 col-11 col-md-7 col-lg-8 col-xl-12 d-flex flex-row gap-3 justify-content-center">
                         <input id={secondaryCurrency}
                          value={secondaryCurrency !== 'null' ? secondaryCurrency : ''} 
                          onChange={handleSecondCurrencyChange} placeholder="EUR" className="currencyName currencyInput" type="text" /> 
@@ -1063,7 +1088,7 @@ function App() {
                     </div>
                     <div className="d-flex flex-row align-items-center gap-3">
                       <span>3.</span> 
-                      <div className="simpleInputs py-1 px-1 col-11 col-md-8 d-flex flex-row gap-3 justify-content-center">
+                      <div className="simpleInputs py-1 px-1 col-11 col-md-7 col-lg-8 col-xl-12 d-flex flex-row gap-3 justify-content-center">
                         <input id={thirdCurrency} value={thirdCurrency !== 'null' ? thirdCurrency : ''} onChange={handleThirdCurrencyChange} placeholder="EUR" className="currencyName currencyInput" type="text" /> 
                         <input id={thirdFormat} value={thirdFormat !== 'null' ? thirdFormat : ''} onChange={handleThirdFormatChange} placeholder="0.00" className="currencyFormat currencyInput"  type="text" /> 
                         <input id={thirdTag} value={thirdTag !== 'null' ? thirdTag : ''} onChange={handleThirdTagChange} placeholder="€" className="currencyTag currencyInput"  type="text" />
@@ -1106,7 +1131,7 @@ function App() {
                 <div className="info d-flex flex-column justify-content-center align-items-center">
                   <p className="mt-4 text-center">Click on any of the symbols below to copy it to your clipboard.</p>
                   <div className="copyItems text-center">
-                    <ul className="d-flex justify-content-center align-items-center gap-1 gap-md-2 px-2 px-md-4 pt-3"> 
+                    <ul className="d-flex justify-content-center align-items-center flex-wrap gap-1 gap-md-2 px-2 px-md-4 pt-3"> 
                       <li onClick={() => copyTextToClipboard('$', '1')} style={itemStyle('1') as React.CSSProperties}>$</li>
                       <li onClick={() => copyTextToClipboard('£', '2')} style={itemStyle('2') as React.CSSProperties}>£</li>
                       <li onClick={() => copyTextToClipboard('€', '3')} style={itemStyle('3') as React.CSSProperties}>€</li>
@@ -1121,16 +1146,17 @@ function App() {
                       <li onClick={() => copyTextToClipboard('₡', '12')} style={itemStyle('12') as React.CSSProperties}>₡</li>
                       <li onClick={() => copyTextToClipboard('ƒ', '13')} style={itemStyle('13') as React.CSSProperties}>ƒ</li>
                     </ul>
-                    <p className="mb-2">
-                      {copyEffect && 'Copied!' }
-                    </p>
                   </div>
+                  <p className="mb-2">
+                    {copyEffect && 'Copied!' }
+                  </p>
                   <button className="mt-5 col-3 col-md-2" onClick={handleCurrencyChange}>Save</button>           
                 </div>
               </div>
             </div>
           </Modal.Body>
         </Modal>
+        {/* Are you sure Modal */}
         <Modal className="modal" show={showAreYouSureModal} onHide={() => setShowAreYouSureModal(false)} >
           <Modal.Header>
             <Modal.Title>Are you sure?</Modal.Title>
@@ -1150,7 +1176,7 @@ function App() {
       {/* Header - Month & Income */}
       <header className="d-flex flex-column flex-md-row justify-content-center justify-content-md-evenly mt-5 pt-5">
         {/* Month */}
-        <h5 className="text-center">
+        <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row align-items-center">
         {uniqueMonths.length > 0 ? (
           <select className="month" onChange={handleSelectChange} defaultValue={monthNames[currentDate.getMonth()]}>
             {uniqueMonths.filter(month => month !== 'initial').map((month, index) => (
@@ -1170,29 +1196,32 @@ function App() {
         </h5>
 
         {/* Income */}
-        <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row"> 
+        <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row align-items-center"> 
         <span className="income mx-3 mx-md-1">
           {isLoading ? (
             <div className="loader"></div>
           ) : (
             <>
-                {income ? (
-                  Number(income).toFixed(choosenFormat) + "" + choosenTag
-                ) : (
-                  Number(income) + "" + choosenTag
-                )}
+              {income ? (
+                Number(income).toFixed(choosenFormat) + "" + choosenTag
+              ) : (
+                Number(income) + "" + choosenTag
+              )}
             </>
           )} 
           </span>
           {isCurrentMonth && (
-            <input
-              className="mx-5 mx-md-1"
-              value={incomeInput}
-              onChange={handleIncomeChange}
-              onKeyDown={handleIncomeSubmit}
-              type="text"
-              placeholder="income"
-            />
+            <div className="d-flex align-items-center gap-1">
+              <input
+                className="mx-md-1 my-2"
+                value={incomeInput}
+                onChange={handleIncomeChange}
+                onKeyDown={handleIncomeSubmit}
+                type="text"
+                placeholder="income"
+              />
+              <span>{choosenTag}</span>
+            </div>
           )}
         </h5>
       </header>
@@ -1201,7 +1230,10 @@ function App() {
       <section className="d-flex justify-content-center align-items-center mt-5 flex-column">
         <h3 className="mb-4 mb-md-2">
         {isCurrentMonth && (
-          <input value={amount} onChange={handleAmountChange} onKeyDown={handleAmountSubmit} type="text" placeholder="spent" />
+          <>
+            <input value={amount} onChange={handleAmountChange} onKeyDown={handleAmountSubmit} type="text" placeholder="spent"className="mx-2"/> 
+            <span>{choosenTag}</span>
+          </>
         )}
         </h3>
         <h3 className="mt-3 mt-md-5 mb-4 mb-md-2 d-none d-flex flex-column justify-content-center align-items-center" ref={exchangedRef}>
@@ -1219,60 +1251,67 @@ function App() {
       </section>
       
 
-      {/* Types, Categories */}
-      <section className="d-flex flex-row justify-content-evenly">
-        {showTypes && (
-          <div>
-            {initialSpendings.sort((a, b) => a.position - b.position).map((spending) => (
-              <button className="button-secondary" key={spending.position} onClick={() => handleTypeClick(spending.type, spending.id)}>
-                {spending.emoji+" "+spending.type}
-              </button>
-            ))}
-          </div>
-        )}  
+      {/* Types, Categories */} 
+      <section className="d-flex justify-content-center">
+        <div className="col-12 col-md-10 col-lg-10 col-xl-8 col-xxl-6">
+          {showTypes && (
+            <div className="text-center">
+              {initialSpendings.sort((a, b) => a.position - b.position).map((spending) => (
+                <button className="button-secondary p-3 m-1" key={spending.position} onClick={() => handleTypeClick(spending.type, spending.id)}>
+                  <span className="d-block d-xl-none">{spending.emoji+" "+spending.type}</span>
+                  <p className="d-none d-xl-block">{spending.emoji+" "+spending.type}</p>
+                </button>
+              ))}
+            </div>
+          )}  
+        </div>
       </section>
 
       {/* Spendings */}
-      <section className="mt-lg-5 my-1 mb-5 pb-5">
-        <div className="row justify-content-evenly">
-          {spendings.sort((a, b) => a.position - b.position).map((spending, index) => (
-            <div className="col-6 col-md-4 col-lg-2 my-2 text-center" key={index}>
-              <h1>{spending.emoji}</h1>
-              <span>{spending.type}</span>
-              <h2>{Number(spending.amount || 0).toFixed(choosenFormat)}{choosenTag}</h2>
-            </div>
-          ))}
+      <section className="mt-md-5 my-1 mb-5 pb-5 d-flex justify-content-center">
+        <div className="col-12 col-md-10 col-lg-10 col-xl-8 col-xxl-6 box-ui p-md-5">
+          <div className="row justify-content-evenly">
+            {spendings.sort((a, b) => a.position - b.position).map((spending, index) => (
+              <div className="col-6 col-md-4 col-lg-2 my-2 text-center" key={index}>
+                <h1>{spending.emoji}</h1>
+                <span>{spending.type}</span>
+                <h2>{Number(spending.amount || 0).toFixed(choosenFormat)}{choosenTag}</h2>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       <hr />
 
       {/* Log */}
-      <section className="row mt-lg-5 my-1 mb-5 pb-5">
-        <h2 className="text-center mb-5">Previous Entries</h2>
-        <table style={radius} className="col-11 col-md-8 col-lg-6 table table-hover">
-          <thead>
-            <tr>
-              <th scope="col" style={tableHeader}>Income After</th>
-              <th scope="col" style={tableHeader}>Category</th>
-              <th scope="col" style={tableHeader}>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-          {logEntries.slice().reverse().map((entry, index) => (
-              <tr key={index}>
-                <th style={table}>{Number(entry.income).toFixed(choosenFormat)}{choosenTag}</th>
-                <th style={table}>{entry.emoji +' '+ entry.type}</th>
-                <th style={table}>{Number(entry.amount || 0).toFixed(choosenFormat)}{choosenTag}</th>
+      <section className="row mt-lg-5 my-1 mb-5 pb-5 d-flex justify-content-center">
+        <div className="col-12 col-md-10 col-lg-10 col-xl-8 col-xxl-6"> 
+          <h2 className="text-center mb-5">Previous Entries</h2>
+          <table style={tableStyle} className="col-11 col-md-8 col-lg-6 table table-hover">
+            <thead>
+              <tr>
+                <th style={tableHeaderStyle} scope="col">Income After</th>
+                <th style={tableHeaderStyle} scope="col">Category</th>
+                <th style={tableHeaderStyle} scope="col">Amount</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+            {logEntries.slice().reverse().map((entry, index) => (
+              <tr key={index}>
+                  <th style={tableBodyStyle}>{Number(entry.income).toFixed(choosenFormat)}{choosenTag}</th>
+                  <th style={tableBodyStyle}>{entry.emoji +' '+ entry.type}</th>
+                  <th style={tableBodyStyle}>{Number(entry.amount || 0).toFixed(choosenFormat)}{choosenTag}</th>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
 
       {/* Footer */}
-      <footer className="fixed-bottom d-flex justify-content-center gap-5 py-3">
+      <footer className="fixed-bottom d-flex justify-content-center gap-5 py-3 alig">
         <h5 className="text-center">
           <span>Spent this month: {Number(totalSpent).toFixed(choosenFormat)}{choosenTag}</span>  
         </h5>

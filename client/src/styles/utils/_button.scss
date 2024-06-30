@@ -1,0 +1,53 @@
+@use "../utils/colors";
+
+.button-secondary {
+    background-color: colors.$background-light;
+    color: colors.$color;
+    transition: all 0.5s;
+    cursor: pointer;
+    border-radius: 8px;
+    border: none;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    p{
+      font-size: 1.3em;
+    }
+}
+button {
+  border-radius: 8px;
+  border: none;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  color: colors.$background;
+  background-color: colors.$accent-orange;
+  cursor: pointer;
+  transition: all 0.5s;
+  i{
+    font-size: 0.9em;
+    transition: all 0.5s;
+    color: colors.$background;
+  }
+}
+button:hover {
+  background-color: colors.$background-light;
+  color: colors.$color;
+  * {
+    color: colors.$color;
+  }
+}
+.button-secondary:hover {
+  background-color: colors.$background-lightest;
+  color: colors.$color;
+  outline: 3px solid colors.$accent-orange;
+}
+button:focus,
+button:focus-visible {
+  outline: 3px solid colors.$background-light;
+}
+.button-secondary:focus,
+.button-secondary:focus-visible {
+  outline: 3px solid colors.$accent-orange;
+  background-color: colors.$background-lightest;
+}

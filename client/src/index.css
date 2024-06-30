@@ -1,4 +1,4 @@
- :root {
+ /* :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -44,6 +44,7 @@ nav, .navbar{
   max-height: 30svh;
   height: 3svh;
   /* border-bottom: 1px solid var(--background-light); */
+  /*
 }
 .dropdown{ 
   max-height: 30svh;
@@ -72,7 +73,7 @@ nav, .navbar{
   background-color: var(--background-lightest);
 }
 /* Hide the line for screens smaller than 768px */
-@media screen and (max-width: 768px) {
+/* @media screen and (max-width: 768px) {
   .blob{
     width: 97svw;
   }
@@ -82,6 +83,7 @@ nav, .navbar{
 }
 
 /* Show the line for screens larger than or equal to 768px */
+/*
 @media screen and (min-width: 768px) {
   .blob{
     width: 100svw;
@@ -202,8 +204,9 @@ input[type="text"]:focus{
 .simpleInputs{
   border-radius: 0.5em;
   cursor: pointer;
-  /* background-color: var(--background); */
-}
+
+  background-color: var(--background); 
+} 
 
 
 ::placeholder {
@@ -390,4 +393,4 @@ footer h5 span, footer h5{
   font-weight: 500;
   padding: 0.3em;
   border-radius: 1em;
-}
+} */

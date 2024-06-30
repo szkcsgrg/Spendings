@@ -22,10 +22,12 @@ function ReleaseNotes() {
           <p className="mt-5">We're excited to announce the latest update to the Spendings App version <span> 1.2.3</span>! <br />
            This update brings new features, improvements, and bug fixes to enhance your financial management experience.</p>
            <Link to={"https://github.com/szkcsgrg/Spendings"} target="_blank">Source Code</Link>
+            <br />
         </div>
       </header>
-      <section className="row">
-        <aside className="d-flex flex-column col-12 col-md-3 col-lg-3 col-xl-2 px-lg-5">
+      
+      <section className="row justify-content-center">
+        {/* <aside className="d-flex flex-column col-12 col-md-3 col-lg-3 col-xl-2 px-lg-5">
           <h2 className="my-3">Versions</h2>
           <ul>
             <li>1.2.3 - 2024-06-26</li>
@@ -36,8 +38,8 @@ function ReleaseNotes() {
               1.2.1 - 2024-06-12
             </li>
           </ul>
-        </aside>
-        <div className="col-12 col-md-7 d-flex flex-column jusitify-content-center px-lg-5 mx-lg-5">
+        </aside> */}
+        <div className="col-12 col-md-6 d-flex flex-column jusitify-content-center px-lg-5 mx-lg-5 py-lg-5 my-lg-5 box-ui">
           <section className="info my-3 px-1 px-lg-5 mx-lg-5">
             <h2>New Features</h2>
             <p>Enhanced Currency Management: We've added a dedicated "Currency" section in Settings. <br /> Now you can easily create, edit, and delete your currency profiles, making it simpler to track your finances across different currencies.</p>

@@ -1,0 +1,25 @@
+@use "../utils/colors";
+
+.header-login{
+    height: 75svh;
+}
+
+
+.income{
+    color: colors.$accent-orange;
+    font-weight: 700;
+  }
+
+footer p{
+    font-size: 1em;
+    color: colors.$color-dark;
+    text-decoration: none;
+    Link, a{
+        transition: all 0.5s;
+        text-decoration: none;
+        color: colors.$accent-orange;
+    };
+    Link:hover, a:hover{
+        color: colors.$color;
+    }
+}

@@ -12,7 +12,7 @@ import ReleaseNotes from "./components/ReleaseNotes";
 import Login from './components/Login';
 
 
-import "./index.css";
+import "./styles/index.css";
 
 const Main: React.FC = () => {
   const {isLoggedIn, isFirstLogin} = useContext(AuthContext);
