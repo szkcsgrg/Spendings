@@ -15,14 +15,16 @@ nav, .navbar{
     height: 3svh;   
 }
 
+
 .loader {
-    width: 20px;
+    width: 30px;
     aspect-ratio: 1;
     border-radius: 50%;
     border: 8px solid;
-    border-color: colors.$color colors.$background-light;
+    border-color: colors.$accent-orange transparent;
     animation: l1 1s infinite;
-}
+  }
+  @keyframes l1 {to{transform: rotate(.5turn)}}
 
 
 .currency p {

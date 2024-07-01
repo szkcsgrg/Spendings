@@ -12,14 +12,14 @@ function ReleaseNotes() {
       <header className="row d-flex justify-content-center my-lg-5">
         <div className="text-center col-12">
           <h1 className="mt-5">
-            Version: 1.2.3
+            Version: 1.2.4
           </h1>
           <h3>
-            Release Date: 2024-06-26
+            Release Date: 2024-07-01
           </h3>
         </div>
         <div className="info text-center col-12 col-md-4">
-          <p className="mt-5">We're excited to announce the latest update to the Spendings App version <span> 1.2.3</span>! <br />
+          <p className="mt-5">We're excited to announce the latest update to the Spendings App version <span> 1.2.4</span>! <br />
            This update brings new features, improvements, and bug fixes to enhance your financial management experience.</p>
            <Link to={"https://github.com/szkcsgrg/Spendings"} target="_blank">Source Code</Link>
             <br />
@@ -39,19 +39,22 @@ function ReleaseNotes() {
             </li>
           </ul>
         </aside> */}
-        <div className="col-12 col-md-6 d-flex flex-column jusitify-content-center px-lg-5 mx-lg-5 py-lg-5 my-lg-5 box-ui">
+        <div className="col-11 col-md-10 col-lg-8 col-xl-6 col-xxl-4 d-flex flex-column jusitify-content-center px-lg-5 mx-lg-5 py-lg-5 my-lg-5 box-ui">
           <section className="info my-3 px-1 px-lg-5 mx-lg-5">
             <h2>New Features</h2>
-            <p>Enhanced Currency Management: We've added a dedicated "Currency" section in Settings. <br /> Now you can easily create, edit, and delete your currency profiles, making it simpler to track your finances across different currencies.</p>
+            <p>Enhanced Payment Tracking within Currency Profiles: We've completely revamped how you manage spending within your currency profiles. Now, you can assign each transaction to a specific payment method, like cash or card, providing a more granular view of your finances.</p>
+            <p>Improved Spending Type Selection: Selecting spending types is now even more convenient. Simply press the escape button on your keyboard to close the selection menu when entering a new expense.</p>
+            <p>Streamlined UI Refresh: We've implemented a significant UI redesign, making the app more user-friendly and professional. Based on user research, this update provides a more visually appealing and intuitive experience.</p>
           </section>
           <section className="info my-3 px-1 px-lg-5 mx-lg-5">
             <h2>Improvements</h2>
-            <p>Introducing Release Notes: We've created a brand new "What's New" section! Easily access release notes directly within the app to stay informed about all the latest changes and updates.
+            <p>Previous Month Income Accuracy: Fixed a bug that caused inaccurate updates to previous month income data.
             </p>
+            <p>Simplified Single-Currency Exchange: Resolved an issue where users with only one currency profile were prompted to select an account when trying to exchange currencies. The app will now prompt you to either create a new currency profile or directly add the exchange value as a spending entry.</p>
           </section>
           <section className="info my-3 px-1 px-lg-5 mx-lg-5">
             <h2>Bug Fixes</h2>
-            <p>Smoother Multi-Currency Experience: We've fixed an issue that caused problems when switching between currency profiles while viewing past data (like previous months). Now you can seamlessly manage your finances in different currencies.</p>
+            <p>Fixed a minor bug related to closing the spending type selection menu.</p>
           </section>
           <section className="info my-3 px-1 px-lg-5 mx-lg-5">
             <h2>Known Issues</h2>
@@ -64,7 +67,10 @@ function ReleaseNotes() {
             <p>Customizable Interface: Take control of your app experience! A future update will allow you to toggle specific UI elements on or off to personalize your view.</p>
             <p>Detailed Reports: Gain deeper insights into your finances with the upcoming report generation feature. Generate reports for a comprehensive financial analysis.</p>
             <p>Focus on User Comfort: We're continuously working on improving the user experience. Stay tuned for additional features designed to make managing your finances even easier.</p>
-            <p>More Login Options: We're exploring the possibility of adding more login options beyond Google to provide greater flexibility in the future.</p>
+            <p>More Login Options: We're exploring the possibility of adding more login options beyond Google and Github to provide greater flexibility in the future.</p>
+          </section>
+          <section className="mt-3 px-1 px-lg-5 mx-lg-5 text-center">
+            Explore previous versions on the <Link to={"https://github.com/szkcsgrg/Spendings/releases"}>Github</Link> repo.
           </section>
         </div>
       </section>

@@ -54,7 +54,7 @@ function App() {
     {id: 12, position: 17, amount: 0, type: 'Missing & Error', emoji: '❌'},
     {id: 13, position: 12, amount: 0, type: 'Donation & Gift', emoji: '🎁'},
     {id: 14, position: 13, amount: 0, type: 'Transfer', emoji: '💸'},
-    {id: 15, position: 14, amount: 0, type: 'Withdraw', emoji: '💶'},
+    {id: 15, position: 14, amount: 0, type: 'Withdraw & Deposit', emoji: '💶'},
     {id: 16, position: 16, amount: 0, type: 'Savings', emoji: '🔐'},
     {id: 17, position: 15, amount: 0, type: 'Exchange', emoji: '🪙'}
     ];
@@ -71,9 +71,9 @@ function App() {
   const [secondaryTag, setSecondaryTag ]= useState<string>(localStorage.getItem("secondary_tag") ?? "");
   const [thirdTag, setThirdTag ]= useState<string>(localStorage.getItem("third_tag") ?? "");
 
-  const [choosenCurrency, setChoosenCurrency] = useState<string>(primaryCurrency || secondaryCurrency || thirdCurrency);
-  const [choosenFormat, setChoosenFormat] = useState<number>(getFormatNumber(primaryFormat));
-  const [choosenTag, setChoosenTag] = useState<string>(primaryTag);
+  const [choosenCurrency, setChoosenCurrency] = useState<string>(primaryCurrency !=='null' || secondaryCurrency !== 'null' || thirdCurrency !== 'null' ? primaryCurrency || secondaryCurrency || thirdCurrency : "");
+  const [choosenFormat, setChoosenFormat] = useState<number>(getFormatNumber(primaryFormat) || getFormatNumber(secondaryFormat) || getFormatNumber(thirdFormat));
+  const [choosenTag, setChoosenTag] = useState<string>(primaryTag || secondaryTag || thirdTag);
   const [exchangeAmount, setExchangeAmount] = useState<string>("");
 
   const [incomeOfPrimaryAccount, setIncomeOfPrimaryAccount] = useState<string>("");
@@ -81,8 +81,12 @@ function App() {
   const [incomeOfThirdAccount, setIncomeOfThirdAccount] = useState<string>("");
   const [initialIncome, setInitialIncome] = useState<number>(0);
 
+  const [choosenPaymentMethod, setChoosenPaymentMethod] = useState<string>("card");
+  const [otherPaymentMethodsIncome, setOtherPaymentMethodsIncome] = useState<string>("");
+
 
   const exchangedRef = useRef<HTMLDivElement>(null);
+  const exchangeNewRef = useRef<HTMLDivElement>(null);
   const ProfileRef = useRef<HTMLImageElement>(null);
   const CurrencyRef = useRef<HTMLDivElement>(null);
   const warningRefPrimaryDelete = useRef<HTMLParagraphElement>(null);
@@ -111,6 +115,7 @@ function App() {
   const [clickedItemId, setClickedItemId] = useState<string | null>(null);
   const [copyEffect, setCopyEffect] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [dontAskAgainCurrencyAdd, setDontAskAgainCurrencyAdd] = useState(localStorage.getItem("dontAskAgainCurrencyAdd") || "false");
 
 
 
@@ -126,31 +131,28 @@ function App() {
     background: 'rgba( 51, 55, 59, 0.35 )',
     boxShadow: '0 8px 32px 0 rgba(115, 116, 131, 0.37)',
     backdropFilter: 'blur( 4.5px )',
-    webkitBackdropFilter: 'blur( 4.5px )',
+    WebkitBackdropFilter: 'blur( 4.5px )',
   };
   const tableHeaderStyle = {
     background: 'rgba( 51, 55, 59, 0.35 )',
     // boxShadow: '0 8px 32px 0 rgba(115, 116, 131, 0.37)',
     backdropFilter: 'blur( 4.5px )',
-    webkitBackdropFilter: 'blur( 4.5px )',
+    WebkitBackdropFilter: 'blur( 4.5px )',
     fontWeight: 'bold',
     fontSize: '1.1rem',
     color: '#e0e4e8',
   };
-
   const tableBodyStyle = {
     background: 'rgba( 51, 55, 59, 0.35 )',
     // boxShadow: '0 8px 32px 0 rgba(115, 116, 131, 0.37)',
     backdropFilter: 'blur( 4.5px )',
-    webkitBackdropFilter: 'blur( 4.5px )',
+    WebkitBackdropFilter: 'blur( 4.5px )',
     borderColor: '#525252',
     fontWeight: '400',
     color: '#e0e4e8',
     fontSize: '1.1rem',
     border: 0,
   };
-  // const tableHeader = {backgroundColor: '#33373b', color: '#e0e4e8', fontWeight: '1000', fontSize: '1.1rem'};
-  // const table = {backgroundColor: '#3a4048', color: 'white', borderColor: '#525252', fontWeight: '400'};
   const itemStyle = (itemId: string) => ({
     color: clickedItemId === itemId && '#2d3250',
     backgroundColor: clickedItemId === itemId && '#daa4fc',
@@ -166,7 +168,7 @@ function App() {
   //Fetching the Data from the DB START
   //Fetch Data based on User and currentMonth
   const fetchData = async (choosenMonth: string | number | boolean) => {
-    const response = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${encodeURIComponent(choosenMonth)}&currency=${encodeURIComponent(choosenCurrency)}`, {
+    const response = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${encodeURIComponent(choosenMonth)}&currency=${encodeURIComponent(choosenCurrency)}&payment=${encodeURIComponent(choosenPaymentMethod)}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -179,6 +181,15 @@ function App() {
     const fetchedData: any[] = await response.json();
 
     const filteredData = filterByCurrency(fetchedData, choosenCurrency)
+
+    const initialIncomeEntry = filteredData.find(row => row.user_email === localStorage.getItem('userEmail') && row.currency === choosenCurrency && row.month === choosenMonth && row.type_id === null);
+    if(initialIncomeEntry){
+      setInitialIncome(initialIncomeEntry.income);
+    }
+    else{
+      setInitialIncome(0);
+    }
+    // setInitialIncome(initialIncomeEntry?.income || 0);
 
     const userEntries = filteredData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === choosenMonth).map(entry => {
       //If the userRows has only an income value. Not type_id no amount, then set the initalIncome to that income.
@@ -229,7 +240,7 @@ function App() {
     });
 
     // Get all rows of the fetched data for the specific user and month
-    const userRows = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === choosenMonth)
+    const userRows = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === choosenMonth && row.currency === choosenCurrency && row.payment === choosenPaymentMethod);
     if (userRows.length > 0) {  
       let totalSavings = 0;
       userRows.forEach(row => {
@@ -240,12 +251,11 @@ function App() {
       if (savingsIndex !== -1) {
         mergedData[savingsIndex].amount = totalSavings;
       }
-      setIncome(userRows[userRows.length - 1].income);
-    } else {
-      setIncome(0);
-    }
+    } 
     setSpendings(mergedData);
     
+    // const incomeToSet = userRows.length > 0 ? userRows[userRows.length - 1].income : 0;
+    // setIncome(incomeToSet);
   };
   
   //Fetch Data - The full spendings of the user
@@ -274,17 +284,18 @@ function App() {
 
     const filteredData = filterByCurrency(fetchedData, choosenCurrency);
 
-    const initialIncomeEntry = filteredData.find(row => row.user_email === localStorage.getItem('userEmail') && row.month === choosenMonth && row.currency === choosenCurrency && row.type_id === null);
-    setInitialIncome(initialIncomeEntry ? initialIncomeEntry.income : 0);
-
+    // const initialIncomeEntry = filteredData.find(row => row.user_email === localStorage.getItem('userEmail') && row.currency === choosenCurrency && row.month === choosenMonth && row.type_id === null);
+    // console.log(initialIncomeEntry)
+    // setInitialIncome(initialIncomeEntry);
+    
     // Sort the fetched data by month in ascending order
     fetchedData.sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
-
+    
     // Filter data for the user
     const userData = fetchedData.filter(row => row.user_email === localStorage.getItem('userEmail'));
     userData.sort((a, b) => b.id - a.id); // Sort by ID in descending order (highest ID first)
     (userData)
-
+    
     for (const row of userData.reverse()) {
       if (row.currency === primaryCurrency) {
         setIncomeOfPrimaryAccount(row.income); // Update state with income value
@@ -293,26 +304,58 @@ function App() {
       } else if (row.currency === thirdCurrency) {
         setIncomeOfThirdAccount(row.income); // Update state with income value
       }
+      if(row.payment !== choosenPaymentMethod){
+        setOtherPaymentMethodsIncome(row.income);
+      }
     }
-
     // Sort the fetched data by month in ascending order
-    fetchedData.sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
-    const lastMonthData = filteredData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[new Date().getMonth() - 1]);
-    const currentMonthData = filteredData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[new Date().getMonth()]);
+    // fetchedData.sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
+    // const lastMonthData = filteredData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[new Date().getMonth() - 1]);
+    // const currentMonthData = filteredData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === monthNames[new Date().getMonth()]);
+    // const lastMonthIncome = lastMonthData[lastMonthData.length - 1];
+    // const currentMonthIncome = currentMonthData[currentMonthData.length - 1];
+    // if(!lastMonthIncome && !currentMonthIncome){
+    //   setIncome(0);
+    // }
+    // else if (lastMonthIncome && currentMonthIncome) {
+    //   setIncome(currentMonthIncome.income);
+    // } 
+    // else if(currentMonthIncome === undefined && lastMonthIncome){  
+    //   setIncome(lastMonthIncome.income);     
+    // }
+    // else if(currentMonthIncome && !lastMonthIncome){
+    //   setIncome(currentMonthIncome.income);
+    // }
+    // console.log(income)
+    
+    const lastMonthData = filteredData.filter(row => 
+      row.user_email === localStorage.getItem('userEmail') && 
+      row.currency === choosenCurrency &&
+      row.payment === choosenPaymentMethod &&
+      row.month === monthNames[new Date().getMonth() - 1] || 
+      (new Date().getMonth() === 0 && row.month === monthNames[11]) // Handle January case
+    );
+    
+    // Filter data for the current month
+    const currentMonthData = filteredData.filter(row => 
+      row.user_email === localStorage.getItem('userEmail') && 
+      row.month === monthNames[new Date().getMonth()]
+    );
+    
+    // Get the last entry for last month and current month
     const lastMonthIncome = lastMonthData[lastMonthData.length - 1];
     const currentMonthIncome = currentMonthData[currentMonthData.length - 1];
-    if(!lastMonthIncome && !currentMonthIncome){
-      setIncome(0);
+    
+    // Set income based on available data
+    if (!lastMonthIncome && !currentMonthIncome) {
+      setIncome(0); // No data available
+    } else if (currentMonthIncome) {
+      setIncome(currentMonthIncome.income); // Current month data available
+    } else if (lastMonthIncome) {
+      setIncome(lastMonthIncome.income); // Only last month data available
     }
-    if (lastMonthIncome && currentMonthIncome) {
-      setIncome(currentMonthIncome.income);
-    } 
-    if(!currentMonthIncome && lastMonthIncome){
-      setIncome(lastMonthIncome.income);
-    }
-    if(currentMonthIncome && !lastMonthIncome){
-      setIncome(currentMonthIncome.income);
-    }
+
+    
 
     const savingsData = filteredData.map(item => Number(item.saving));
     setAllSavings(savingsData);
@@ -322,17 +365,38 @@ function App() {
   useEffect(() => {
     // (choosenMonth, monthNames[currentDate.getMonth()]);
     if(choosenMonth === monthNames[currentDate.getMonth()]){
-      setIncome("");
-      setPrimaryCurrency(localStorage.getItem("primary_name") ?? "");
-      setSecondaryCurrency(localStorage.getItem("secondary_name") ?? "");
-      setThirdCurrency(localStorage.getItem("third_name") ?? "");
-      setPrimaryTag(localStorage.getItem("primary_tag") ?? "");
-      setSecondaryTag(localStorage.getItem("secondary_tag") ?? "");
-      setThirdTag(localStorage.getItem("third_tag") ?? "");
-      setPrimaryFormat(localStorage.getItem("primary_format") ?? "");
-      setSecondaryFormat(localStorage.getItem("secondary_format") ?? "");
-      setThirdFormat(localStorage.getItem("third_format") ?? "");
-      fetchData(monthNames[currentDate.getMonth()]);
+      setIsLoading(true);
+      setTimeout(() => {
+        Promise.all([fetchData(monthNames[currentDate.getMonth()])])
+        .then(() => {
+          // setIncome("");
+          setPrimaryCurrency(localStorage.getItem("primary_name") ?? "");
+          setSecondaryCurrency(localStorage.getItem("secondary_name") ?? "");
+          setThirdCurrency(localStorage.getItem("third_name") ?? "");
+          setPrimaryTag(localStorage.getItem("primary_tag") ?? "");
+          setSecondaryTag(localStorage.getItem("secondary_tag") ?? "");
+          setThirdTag(localStorage.getItem("third_tag") ?? "");
+          setPrimaryFormat(localStorage.getItem("primary_format") ?? "");
+          setSecondaryFormat(localStorage.getItem("secondary_format") ?? "");
+          setThirdFormat(localStorage.getItem("third_format") ?? "");
+
+          if(primaryCurrency === 'null') {
+            setChoosenCurrency(secondaryCurrency);
+            setChoosenFormat(getFormatNumber(secondaryFormat));
+            setChoosenTag(secondaryTag);
+          } else if (primaryCurrency === 'null' && secondaryCurrency === 'null') {
+            setChoosenCurrency(thirdCurrency);
+            setChoosenFormat(getFormatNumber(thirdFormat));
+            setChoosenTag(thirdTag);
+          }
+          setIsLoading(false);
+          setIsDataFetched(true);
+        })
+        .catch((error) => {
+          console.error("Error fetching data: ", error);
+          setIsLoading(false); // Stop loading in case of error
+        });
+      }, 500);
       fetchAllDataFromUser();
     }
     else{
@@ -350,6 +414,9 @@ function App() {
           setPrimaryFormat("0.00");
           setSecondaryFormat("0.00");
           setThirdFormat("0.00");
+
+          setChoosenFormat(0.00);
+          setChoosenTag("");
           
           setIsLoading(false); // Stop loading once data is fetched
         })
@@ -359,7 +426,7 @@ function App() {
         });
       }, 1500);
     }
-  }, [choosenMonth, isDataFetched, choosenCurrency]);
+  }, [choosenMonth, isDataFetched, choosenCurrency, choosenPaymentMethod]);
   
 
 
@@ -489,6 +556,7 @@ function App() {
           month: monthNames[currentDate.getMonth()],
           income: newIncome,
           currency: choosenCurrency,
+          payment: choosenPaymentMethod,
         }),
       });
       if (!postResponse.ok) {
@@ -506,7 +574,7 @@ function App() {
   }
   const handleAmountSubmit: KeyboardEvent = (event) => {
     //&& choosenCategory
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' || event.key === 'Escape') {
       setShowTypes(false);
       //handleTypeClick(, );
     }
@@ -649,6 +717,7 @@ function App() {
           income: newIncome,
           saving: Number(currentAmount),
           currency: choosenCurrency,
+          payment: choosenPaymentMethod,
         })
       });
       if (!response.ok) {
@@ -657,9 +726,80 @@ function App() {
       setAllSavings(prevSavings => [...prevSavings, Number(currentAmount)]);
       setAmount('');
     }
+    else if(type === 'Exchange' && (secondaryCurrency === 'null' || secondaryCurrency === 'undefined' || secondaryCurrency === '') && dontAskAgainCurrencyAdd === "true"){
+      const response = await fetch(`${backendServer}/changespendings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: localStorage.getItem('userEmail'),
+          type_id: id,
+          month: monthNames[currentDate.getMonth()],
+          income: newIncome,
+          amount: Number(currentAmount),
+          currency: choosenCurrency,
+          payment: choosenPaymentMethod,
+        })
+      });
+      if (!response.ok) {
+        throw new Error('HTTP error ' + response.status);
+      }
+      setAmount('');
+    
+      setShowTypes(false);
+      setIsDataFetched(false);
+    }
+    else if(type === 'Exchange' && (secondaryCurrency === 'null' || secondaryCurrency === 'undefined' || secondaryCurrency === '')){
+      exchangeNewRef.current?.classList.remove("d-none");
+      exchangeNewRef.current?.classList.add("d-block");
+    }
     else if(type === 'Exchange'){
       exchangedRef.current?.classList.remove("d-none");
       exchangedRef.current?.classList.add("d-block");
+    }
+    else if(type === 'Withdraw & Deposit'){
+      //Send a post method to the server with choosenPayment to the other not the current as income and keep the widraw here as it is. 
+      //First send a simple post method as usualy to the currenct payment method.
+      const response = await fetch(`${backendServer}/changespendings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: localStorage.getItem('userEmail'),
+          type_id: id,
+          month: monthNames[currentDate.getMonth()],
+          income: newIncome,
+          amount: Number(currentAmount),
+          currency: choosenCurrency,
+          payment: choosenPaymentMethod,
+        })
+      })
+      if (!response.ok) {
+        throw new Error('HTTP error ' + response.status);
+      }
+      //Secondly send the post method to the other payment method with the amount as income.
+      //We need to get the other payment methods income value to add to it the currentAmount. 
+      let newIncomeForWithdraw = Number(otherPaymentMethodsIncome) + currentAmount;
+      const response2 = await fetch(`${backendServer}/changespendings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: localStorage.getItem('userEmail'),
+          type_id: id,
+          month: monthNames[currentDate.getMonth()],
+          income: Number(newIncomeForWithdraw),
+          currency: choosenCurrency,
+          payment: choosenPaymentMethod === 'card' ? 'cash' : 'card',
+        })
+      })
+      if (!response2.ok) {
+        throw new Error('HTTP error ' + response.status);
+      }
+      setAmount("");
     }
     else{
       const response = await fetch(`${backendServer}/changespendings`, {
@@ -674,6 +814,7 @@ function App() {
           income: newIncome,
           amount: Number(currentAmount),
           currency: choosenCurrency,
+          payment: choosenPaymentMethod,
         })
       });
       if (!response.ok) {
@@ -714,6 +855,8 @@ function App() {
   const handleDeleteProfile = () => {
     setShowAreYouSureModal(true);
     setShowSettingsModal(false);
+    setDontAskAgainCurrencyAdd("false")
+    localStorage.removeItem("dontAskAgainCurrencyAdd");
     setConfirmFunction(() => async () => {
       try {
         const response1 = await fetch(`${backendServer}/deleteAllData?userId=${encodeURIComponent(localStorage.getItem("userEmail") || "")}`, {
@@ -758,14 +901,14 @@ function App() {
   };
   const handleCurrencyShow = () => {
     if(CurrencyRef.current?.classList.contains("d-none")){
-    CurrencyRef.current?.classList.remove("d-none");
-    CurrencyRef.current?.classList.add("d-block");
-    ProfileRef.current?.classList.remove("d-block");
-    ProfileRef.current?.classList.add("d-none");
+      CurrencyRef.current?.classList.remove("d-none");
+      CurrencyRef.current?.classList.add("d-block");
+      ProfileRef.current?.classList.remove("d-block");
+      ProfileRef.current?.classList.add("d-none");
     } else {
       CurrencyRef.current?.classList.remove("d-block");
       CurrencyRef.current?.classList.add("d-none");
-    }
+    } 
   }
   const handleCurrencyChange: () => void = async () => {
     //Update DB Table: users. Send Post method to the Server
@@ -957,9 +1100,31 @@ function App() {
       <nav className="navbar fixed-top mx-2">
         <div className="currency d-flex flex-row">
           <> 
-            {primaryCurrency !== 'null' && <p className={choosenCurrency === primaryCurrency ? 'activeCurrency' : ''} key={primaryCurrency} onClick={() => {setChoosenCurrency(primaryCurrency); setChoosenFormat(getFormatNumber(primaryFormat)); setChoosenTag(primaryTag)}}>{primaryCurrency}</p>}
-            {secondaryCurrency !== 'null' && <p className={choosenCurrency === secondaryCurrency ? 'activeCurrency' : ''} key={secondaryCurrency} onClick={() => {setChoosenCurrency(secondaryCurrency); setChoosenFormat(getFormatNumber(secondaryFormat)); setChoosenTag(secondaryTag)}}>{secondaryCurrency}</p>}
-            {thirdCurrency !== 'null' && <p className={choosenCurrency === thirdCurrency ? 'activeCurrency' : ''} key={thirdCurrency} onClick={() => {setChoosenCurrency(thirdCurrency); setChoosenFormat(getFormatNumber(thirdFormat)); setChoosenTag(thirdTag)}}>{thirdCurrency}</p>}
+            {primaryCurrency !== 'null' && 
+            <div className="text-center">
+              <p 
+                className={choosenCurrency === primaryCurrency ? 'activeCurrency' : ''} 
+                key={primaryCurrency} 
+                onClick={() => {
+                  setChoosenCurrency(primaryCurrency); 
+                  setChoosenFormat(getFormatNumber(primaryFormat)); 
+                  setChoosenTag(primaryTag);
+                  setChoosenPaymentMethod("card");
+                }}>
+                  {primaryCurrency}
+                </p>
+            </div>
+            }
+            {secondaryCurrency !== 'null' &&
+              <div className="text-center">
+                <p className={choosenCurrency === secondaryCurrency ? 'activeCurrency' : '' } key={secondaryCurrency} onClick={() => {setChoosenCurrency(secondaryCurrency); setChoosenFormat(getFormatNumber(secondaryFormat)); setChoosenTag(secondaryTag); setChoosenPaymentMethod("card");}}>{secondaryCurrency}</p>
+              </div> 
+            }
+            {thirdCurrency !== 'null' && 
+              <div className="text-center">
+                <p className={choosenCurrency === thirdCurrency ? 'activeCurrency' : ''} key={thirdCurrency} onClick={() => {setChoosenCurrency(thirdCurrency); setChoosenFormat(getFormatNumber(thirdFormat)); setChoosenTag(thirdTag); setChoosenPaymentMethod("card");}}>{thirdCurrency}</p>
+              </div>
+            }
           </>
         </div>
         {/* Settings Icon */}
@@ -972,7 +1137,7 @@ function App() {
             <Dropdown.Menu>
               <Link className="drop-item dropdown-item" to="/whatisnew">What is New?</Link>
               <Dropdown.Item className="drop-item" onClick={() => setShowSettingsModal(true)}>Settings</Dropdown.Item>
-              <Dropdown.Item className="drop-item" onClick={authContext.logOut}>Logout</Dropdown.Item>
+              <Dropdown.Item className="drop-item" onClick={() => {authContext.logOut(); setChoosenCurrency(""); setChoosenFormat(0.00); setChoosenTag("")}}>Logout</Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
         
@@ -1174,56 +1339,60 @@ function App() {
       </nav>
       
       {/* Header - Month & Income */}
-      <header className="d-flex flex-column flex-md-row justify-content-center justify-content-md-evenly mt-5 pt-5">
+      <header className="mt-5 pt-5">
+        <h4 onClick={() => setChoosenPaymentMethod(choosenPaymentMethod === "cash" ? "card" : "cash")} className="text-center mb-2 mb-lg-5 pointer">{choosenPaymentMethod.toUpperCase()}</h4>
+        
         {/* Month */}
-        <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row align-items-center">
-        {uniqueMonths.length > 0 ? (
-          <select className="month" onChange={handleSelectChange} defaultValue={monthNames[currentDate.getMonth()]}>
-            {uniqueMonths.filter(month => month !== 'initial').map((month, index) => (
-              <option key={index} value={month}>
-                {month}
-              </option>
-            ))}
-          </select>
-          ) : (
-            <span className="month">{monthNames[currentDate.getMonth()]}</span> 
-          )}
-          {isCurrentMonth && (
-              <>
-              {" "} - <a onClick={resetSpendings}>Reset Monthly Spending</a>
-              </>
-          )}
-        </h5>
+        <div className="d-flex flex-column flex-md-row justify-content-center justify-content-md-evenly">
+          <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row align-items-center">
+          {uniqueMonths.length > 0 ? (
+            <select className="month" onChange={handleSelectChange} defaultValue={monthNames[currentDate.getMonth()]}>
+              {uniqueMonths.filter(month => month !== 'initial').map((month, index) => (
+                <option key={index} value={month}>
+                  {month}
+                </option>
+              ))}
+            </select>
+            ) : (
+              <span className="month">{monthNames[currentDate.getMonth()]}</span> 
+            )}
+            {isCurrentMonth && (
+                <>
+                {" "} - <a className="pointer" onClick={resetSpendings}>Reset Monthly Spending</a>
+                </>
+            )}
+          </h5>
 
-        {/* Income */}
-        <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row align-items-center"> 
-        <span className="income mx-3 mx-md-1">
-          {isLoading ? (
-            <div className="loader"></div>
-          ) : (
-            <>
-              {income ? (
-                Number(income).toFixed(choosenFormat) + "" + choosenTag
-              ) : (
-                Number(income) + "" + choosenTag
-              )}
-            </>
-          )} 
-          </span>
-          {isCurrentMonth && (
-            <div className="d-flex align-items-center gap-1">
-              <input
-                className="mx-md-1 my-2"
-                value={incomeInput}
-                onChange={handleIncomeChange}
-                onKeyDown={handleIncomeSubmit}
-                type="text"
-                placeholder="income"
-              />
-              <span>{choosenTag}</span>
-            </div>
-          )}
-        </h5>
+          {/* Income */}
+          <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row align-items-center"> 
+          <span className="income mx-3 mx-md-1">
+            {isLoading ? (
+              <div className="loader"></div>
+            ) : (
+              <>
+                {income ? (
+                  Number(income).toFixed(choosenFormat) + "" + choosenTag
+                ) : (
+                  Number(income) + "" + choosenTag
+                )}
+              </>
+            )} 
+            </span>
+            {isCurrentMonth && (
+              <div className="d-flex align-items-center gap-1">
+                <input
+                  className="mx-md-1 my-2"
+                  value={incomeInput}
+                  onChange={handleIncomeChange}
+                  onKeyDown={handleIncomeSubmit}
+                  type="text"
+                  placeholder="income"
+                />
+                <span>{choosenTag}</span>
+              </div>
+            )}
+          </h5>
+        </div>
       </header>
 
       {/* Spent */}
@@ -1236,12 +1405,24 @@ function App() {
           </>
         )}
         </h3>
+        <span className="mt-3 mt-md-5 mb-4 mb-md-2 d-none d-flex flex-column justify-content-center align-items-center text-center" ref={exchangeNewRef}>
+          It looks like you haven't added a secondary currency yet. <br /> We can help you set it up!
+          <div className="d-flex gap-2 mt-2">
+            <button onClick={() => {setShowSettingsModal(true); setTimeout(() => {
+              handleCurrencyShow();
+              setAmount('');
+              exchangeNewRef.current?.classList.remove("d-block");
+              exchangeNewRef.current?.classList.add("d-none");
+            }, 400);}}>Yes</button>
+            <button className="button-secondary" onClick={() => {setDontAskAgainCurrencyAdd("true"); exchangeNewRef.current?.classList.remove("d-block"); exchangeNewRef.current?.classList.add("d-none"); setShowTypes(true); localStorage.setItem("dontAskAgainCurrencyAdd", "true");}}>No</button>
+          </div>
+        </span>
         <h3 className="mt-3 mt-md-5 mb-4 mb-md-2 d-none d-flex flex-column justify-content-center align-items-center" ref={exchangedRef}>
           <input type="text" value={exchangeAmount} onChange={handleExchangeChange} placeholder="Exchanged Value" />
           <div className="currency d-flex flex-row gap-2 my-2 my-lg-3">
           {primaryCurrency !== 'null' && (
             <> 
-              {choosenCurrency !== primaryCurrency && <button onClick={() => {handleExchangeSubmit(primaryCurrency)}}>{primaryCurrency}</button>}
+              {choosenCurrency !== primaryCurrency &&  <button onClick={() => {handleExchangeSubmit(primaryCurrency)}}>{primaryCurrency}</button>}
               {choosenCurrency !== secondaryCurrency && secondaryCurrency !== 'null' && <button onClick={() => {handleExchangeSubmit(secondaryCurrency)}}>{secondaryCurrency}</button>}
               {choosenCurrency !== thirdCurrency && thirdCurrency !== 'null' && <button onClick={() => {handleExchangeSubmit(thirdCurrency)}}>{thirdCurrency}</button>}
             </>
@@ -1324,3 +1505,4 @@ function App() {
 }
 
 export default App
+

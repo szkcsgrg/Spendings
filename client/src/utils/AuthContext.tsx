@@ -57,28 +57,33 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
             user_id: localStorage.getItem("userEmail"),
           }
         });
-
-        if (response.data.existingUser) {
-          const confirmation = confirm('An account already exists with this email address. Link your account?');
-          if (confirmation) {
-            // Handle account linking logic using Firebase Authentication (refer to previous responses)
-          } else {
-            // Redirect user to the existing sign-in flow based on the existing provider (refer to previous responses)
-          }
-        }
         if (!response || !response.data || response.data.length === 0) {
           setIsFirstLogin(true);
           localStorage.setItem("isFirstLogin", "true");
         } else {
-          localStorage.setItem("primary_name", response.data[0].primary_name);
-          localStorage.setItem("secondary_name", response.data[0].secondary_name);
-          localStorage.setItem("third_name", response.data[0].third_name);
-          localStorage.setItem("primary_format", response.data[0].primary_format);
-          localStorage.setItem("secondary_format", response.data[0].secondary_format);
-          localStorage.setItem("third_format", response.data[0].third_format);
-          localStorage.setItem("primary_tag", response.data[0].primary_tag);
-          localStorage.setItem("secondary_tag", response.data[0].secondary_tag);
-          localStorage.setItem("third_tag", response.data[0].third_tag);
+            const primaryName = response.data[0].primary_name === "" ? "null" : response.data[0].primary_name;
+            const secondaryName = response.data[0].secondary_name === "" ? "null" : response.data[0].secondary_name;
+            const thirdName = response.data[0].third_name === "" ? "null" : response.data[0].third_name;
+          
+            const primaryFormat = response.data[0].primary_format === "" ? "null" : response.data[0].primary_format;
+            const secondaryFormat = response.data[0].secondary_format === "" ? "null" : response.data[0].secondary_format;
+            const thirdFormat = response.data[0].third_format === "" ? "null" : response.data[0].third_format;
+          
+            const primaryTag = response.data[0].primary_tag === "" ? "null" : response.data[0].primary_tag;
+            const secondaryTag = response.data[0].secondary_tag === "" ? "null" : response.data[0].secondary_tag;
+            const thirdTag = response.data[0].third_tag === "" ? "null" : response.data[0].third_tag;
+          
+            localStorage.setItem("primary_name", primaryName);
+            localStorage.setItem("secondary_name", secondaryName);
+            localStorage.setItem("third_name", thirdName);
+          
+            localStorage.setItem("primary_format", primaryFormat);
+            localStorage.setItem("secondary_format", secondaryFormat);
+            localStorage.setItem("third_format", thirdFormat);
+          
+            localStorage.setItem("primary_tag", primaryTag);
+            localStorage.setItem("secondary_tag", secondaryTag);
+            localStorage.setItem("third_tag", thirdTag);
           setIsFirstLogin(false);
           localStorage.setItem("isFirstLogin", "false");
         }
