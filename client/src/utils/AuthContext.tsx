@@ -1,25 +1,27 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { 
-  signInWithEmailAndPassword,
+  // signInWithEmailAndPassword,
   // createUserWithEmailAndPassword,
   GoogleAuthProvider, 
   GithubAuthProvider,
   signOut, 
   onAuthStateChanged, 
-  signInWithPopup, 
+  signInWithPopup,
   // signInWithRedirect
 } from "firebase/auth";
 import {auth} from "./firebase";
 import axios from "axios";
+
+
 
 interface AuthContextProps {
   isLoggedIn: boolean;
   setIsLoggedIn: (isLoggedIn: boolean) => void;
   isFirstLogin: boolean;
   setIsFirstLogin: (isFirstLogin: boolean) => void;
-  registerPassword: (email: string, password: string) => void;
-  loginPassword: (email: string, password: string) => void;
-  logIn: () => void;
+  // registerPassword: (email: string, password: string) => void;
+  // loginPassword: (email: string, password: string) => void;
+  logInGoogle: () => void;
   logInGithub: () => void;
   logOut: () => void;
 }
@@ -29,9 +31,9 @@ export const AuthContext = createContext<AuthContextProps>({
   setIsLoggedIn: () => {},
   isFirstLogin: true,
   setIsFirstLogin: () => {},
-  registerPassword: () => {},
-  loginPassword: () => {},
-  logIn: () => {},
+  // registerPassword: () => {},
+  // loginPassword: () => {},
+  logInGoogle: () => {},
   logInGithub: () => {},
   logOut: () => {},
 });
@@ -45,9 +47,18 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async user => {
       setIsLoggedIn(user !== null);
-      localStorage.setItem("isLoggedIn", user !== null ? "true" : "false");
       if(user && user.displayName && user.email && user.photoURL)
-        {
+      {
+        // const storedToken = await getStoredToken(); // Implement getStoredToken function (see below)
+        // if (storedToken) {
+        //   try {
+        //     const decoded = jwt.verify(storedToken, process.env.JWT_SECRET);
+        //     const userId = decoded.userId;
+        //   } catch (error) {
+        //     console.log(error);
+        //   }
+        // }
+
         localStorage.setItem("userName", user.displayName);
         localStorage.setItem("userEmail", user.email);
         localStorage.setItem("userPhoto", user.photoURL);
@@ -59,7 +70,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
         });
         if (!response || !response.data || response.data.length === 0) {
           setIsFirstLogin(true);
-          localStorage.setItem("isFirstLogin", "true");
         } else {
             const primaryName = response.data[0].primary_name === "" ? "null" : response.data[0].primary_name;
             const secondaryName = response.data[0].secondary_name === "" ? "null" : response.data[0].secondary_name;
@@ -85,7 +95,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
             localStorage.setItem("secondary_tag", secondaryTag);
             localStorage.setItem("third_tag", thirdTag);
           setIsFirstLogin(false);
-          localStorage.setItem("isFirstLogin", "false");
         }
       }
     })
@@ -93,127 +102,179 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
     return () => unsubscribe();
   }, []);
 
-  const registerPassword = async (email: string, password: string) => {
-    console.log(email, password);
-    // await createUserWithEmailAndPassword(auth, email, password)
-    // .then(async (userCredential) => {
-    //   setIsLoggedIn(email !== null);
-    //   localStorage.setItem("isLoggedIn", email !== null ? "true" : "false");
-    //   if(email && password){
-    //     localStorage.setItem("userName", "");
-    //     localStorage.setItem("userEmail", email);
-    //     localStorage.setItem("password", password);
-    //     localStorage.setItem("userPhoto", "");
-    //     // Send a GET request to the server to check if the user exists
-    //     const response = await axios.get(`${backendServer}/checkUser`, {
-    //       params: {
-    //         user_id: localStorage.getItem("userEmail"),
-    //       }
-    //     });
+  // const registerPassword = async (email: string, password: string) => {
+  //   console.log(email, password);
+  //   // await createUserWithEmailAndPassword(auth, email, password)
+  //   // .then(async (userCredential) => {
+  //   //   setIsLoggedIn(email !== null);
+  //   //   localStorage.setItem("isLoggedIn", email !== null ? "true" : "false");
+  //   //   if(email && password){
+  //   //     localStorage.setItem("userName", "");
+  //   //     localStorage.setItem("userEmail", email);
+  //   //     localStorage.setItem("password", password);
+  //   //     localStorage.setItem("userPhoto", "");
+  //   //     // Send a GET request to the server to check if the user exists
+  //   //     const response = await axios.get(`${backendServer}/checkUser`, {
+  //   //       params: {
+  //   //         user_id: localStorage.getItem("userEmail"),
+  //   //       }
+  //   //     });
   
-    //     if (!response || !response.data || response.data.length === 0) {
-    //       setIsFirstLogin(true);
-    //       localStorage.setItem("isFirstLogin", "true");
-    //     } 
-    //   }     
-    // })
-    // .catch ((error) => {
-    //   alert(error);
-    // })
-  }
-  const loginPassword = async (email: string, password: string) => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      setIsLoggedIn(email !== null);
-      localStorage.setItem("isLoggedIn", email !== null ? "true" : "false");
-      if(email && password)
-        {
-        localStorage.setItem("userName", "");
-        localStorage.setItem("userEmail", email);
-        localStorage.setItem("userPhoto", "user.photoURL");
-        // Send a GET request to the server to check if the user exists
-        const response = await axios.get(`${backendServer}/checkUser`, {
-          params: {
-            user_id: localStorage.getItem("userEmail"),
-          }
-        });
+  //   //     if (!response || !response.data || response.data.length === 0) {
+  //   //       setIsFirstLogin(true);
+  //   //       localStorage.setItem("isFirstLogin", "true");
+  //   //     } 
+  //   //   }     
+  //   // })
+  //   // .catch ((error) => {
+  //   //   alert(error);
+  //   // })
+  // }
+  // const loginPassword = async (email: string, password: string) => {
+  //   try {
+  //     await signInWithEmailAndPassword(auth, email, password);
+  //     setIsLoggedIn(email !== null);
+  //     localStorage.setItem("isLoggedIn", email !== null ? "true" : "false");
+  //     if(email && password)
+  //       {
+  //       localStorage.setItem("userName", "");
+  //       localStorage.setItem("userEmail", email);
+  //       localStorage.setItem("userPhoto", "user.photoURL");
+  //       // Send a GET request to the server to check if the user exists
+  //       const response = await axios.get(`${backendServer}/checkUser`, {
+  //         params: {
+  //           user_id: localStorage.getItem("userEmail"),
+  //         }
+  //       });
 
-        if (!response || !response.data || response.data.length === 0) {
-          setIsFirstLogin(true);
-          localStorage.setItem("isFirstLogin", "true");
-        }      
-      }
-    } catch (error) {
-      alert(error);
+  //       if (!response || !response.data || response.data.length === 0) {
+  //         setIsFirstLogin(true);
+  //         localStorage.setItem("isFirstLogin", "true");
+  //       }      
+  //     }
+  //   } catch (error) {
+  //     alert(error);
+  //   }
+  // }
+
+  const logInGoogle = async () => {
+    const googleProvider = new GoogleAuthProvider();
+    try {  
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      return userCredential;
     }
-  }
-  const logIn = async () => {
-      const googleProvider = new GoogleAuthProvider();
-      try {  
-        // alert(navigator.userAgent);
-        // if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
-        // if(navigator.userAgent.match('GSA')){
-        
-        // await signInWithRedirect(auth, googleProvider);
-        // }
-        // else{
-         await signInWithPopup(auth, googleProvider);
-        // }
-      }
-      catch(error:any) {
-        if (error.code === 'auth/account-exists-with-different-credential') {
-          return;
+    catch(error:any) {
+      if (error.code === 'auth/account-exists-with-different-credential') {        
+        // console.log(error.customData.email);
+        // console.log(error.customData._tokenResponse.photoUrl);
+        // console.log(error.customData._tokenResponse.displayName);
+
+        const user = { email: error.customData.email, photoURL: error.customData._tokenResponse.photoUrl, displayName: error.customData._tokenResponse.displayName };
+
+        setIsLoggedIn(user !== null);
+        if(user && user.displayName && user.email && user.photoURL)
+          {
+          localStorage.setItem("userName", user.displayName);
+          localStorage.setItem("userEmail", user.email);
+          localStorage.setItem("userPhoto", user.photoURL);
+          // Send a GET request to the server to check if the user exists
+          const response = await axios.get(`${backendServer}/checkUser`, {
+            params: {
+              user_id: localStorage.getItem("userEmail"),
+            }
+          });
+          if (!response || !response.data || response.data.length === 0) {
+            setIsFirstLogin(true);
+          } else {
+              const primaryName = response.data[0].primary_name === "" ? "null" : response.data[0].primary_name;
+              const secondaryName = response.data[0].secondary_name === "" ? "null" : response.data[0].secondary_name;
+              const thirdName = response.data[0].third_name === "" ? "null" : response.data[0].third_name;
+            
+              const primaryFormat = response.data[0].primary_format === "" ? "null" : response.data[0].primary_format;
+              const secondaryFormat = response.data[0].secondary_format === "" ? "null" : response.data[0].secondary_format;
+              const thirdFormat = response.data[0].third_format === "" ? "null" : response.data[0].third_format;
+            
+              const primaryTag = response.data[0].primary_tag === "" ? "null" : response.data[0].primary_tag;
+              const secondaryTag = response.data[0].secondary_tag === "" ? "null" : response.data[0].secondary_tag;
+              const thirdTag = response.data[0].third_tag === "" ? "null" : response.data[0].third_tag;
+            
+              localStorage.setItem("primary_name", primaryName);
+              localStorage.setItem("secondary_name", secondaryName);
+              localStorage.setItem("third_name", thirdName);
+            
+              localStorage.setItem("primary_format", primaryFormat);
+              localStorage.setItem("secondary_format", secondaryFormat);
+              localStorage.setItem("third_format", thirdFormat);
+            
+              localStorage.setItem("primary_tag", primaryTag);
+              localStorage.setItem("secondary_tag", secondaryTag);
+              localStorage.setItem("third_tag", thirdTag);
+
+              setIsFirstLogin(false);
+          }
         }
       }
+      else{
+        alert(error);
+      }
+    }
   }
   const logInGithub = async () => {
     const githubProvider = new GithubAuthProvider();
     try {  
-      await signInWithPopup(auth, githubProvider);
+      const userCredential = await signInWithPopup(auth, githubProvider);
+      return userCredential;
     }
     catch(error:any) {
-      if (error.code === 'auth/account-exists-with-different-credential') {
-      //     setIsLoggedIn(user !== null);
-      //     localStorage.setItem("isLoggedIn", user !== null ? "true" : "false");
-      //     if(user && user.displayName && user.email && user.photoURL)
-      //       {
-      //       localStorage.setItem("userName", user.displayName);
-      //       localStorage.setItem("userEmail", user.email);
-      //       localStorage.setItem("userPhoto", user.photoURL);
-      //       // Send a GET request to the server to check if the user exists
-      //       const response = await axios.get(`${backendServer}/checkUser`, {
-      //         params: {
-      //           user_id: localStorage.getItem("userEmail"),
-      //         }
-      //       });
-    
-      //       if (response.data.existingUser) {
-      //         const confirmation = confirm('An account already exists with this email address. Link your account?');
-      //         if (confirmation) {
-      //           // Handle account linking logic using Firebase Authentication (refer to previous responses)
-      //         } else {
-      //           // Redirect user to the existing sign-in flow based on the existing provider (refer to previous responses)
-      //         }
-      //       }
-      //       if (!response || !response.data || response.data.length === 0) {
-      //         setIsFirstLogin(true);
-      //         localStorage.setItem("isFirstLogin", "true");
-      //       } else {
-      //         localStorage.setItem("primary_name", response.data[0].primary_name);
-      //         localStorage.setItem("secondary_name", response.data[0].secondary_name);
-      //         localStorage.setItem("third_name", response.data[0].third_name);
-      //         localStorage.setItem("primary_format", response.data[0].primary_format);
-      //         localStorage.setItem("secondary_format", response.data[0].secondary_format);
-      //         localStorage.setItem("third_format", response.data[0].third_format);
-      //         localStorage.setItem("primary_tag", response.data[0].primary_tag);
-      //         localStorage.setItem("secondary_tag", response.data[0].secondary_tag);
-      //         localStorage.setItem("third_tag", response.data[0].third_tag);
-      //         setIsFirstLogin(false);
-      //         localStorage.setItem("isFirstLogin", "false");
-      //       }
-      //     }
-      //   })
-      alert(error);
+      if (error.code === 'auth/account-exists-with-different-credential') {        
+        // console.log(error.customData.email);
+        // console.log(error.customData._tokenResponse.photoUrl);
+        // console.log(error.customData._tokenResponse.displayName);
+
+        const user = { email: error.customData.email, photoURL: error.customData._tokenResponse.photoUrl, displayName: error.customData._tokenResponse.displayName };
+
+        setIsLoggedIn(user !== null);
+        if(user && user.displayName && user.email && user.photoURL)
+          {
+          localStorage.setItem("userName", user.displayName);
+          localStorage.setItem("userEmail", user.email);
+          localStorage.setItem("userPhoto", user.photoURL);
+          // Send a GET request to the server to check if the user exists
+          const response = await axios.get(`${backendServer}/checkUser`, {
+            params: {
+              user_id: localStorage.getItem("userEmail"),
+            }
+          });
+          if (!response || !response.data || response.data.length === 0) {
+            setIsFirstLogin(true);
+          } else {
+              const primaryName = response.data[0].primary_name === "" ? "null" : response.data[0].primary_name;
+              const secondaryName = response.data[0].secondary_name === "" ? "null" : response.data[0].secondary_name;
+              const thirdName = response.data[0].third_name === "" ? "null" : response.data[0].third_name;
+            
+              const primaryFormat = response.data[0].primary_format === "" ? "null" : response.data[0].primary_format;
+              const secondaryFormat = response.data[0].secondary_format === "" ? "null" : response.data[0].secondary_format;
+              const thirdFormat = response.data[0].third_format === "" ? "null" : response.data[0].third_format;
+            
+              const primaryTag = response.data[0].primary_tag === "" ? "null" : response.data[0].primary_tag;
+              const secondaryTag = response.data[0].secondary_tag === "" ? "null" : response.data[0].secondary_tag;
+              const thirdTag = response.data[0].third_tag === "" ? "null" : response.data[0].third_tag;
+            
+              localStorage.setItem("primary_name", primaryName);
+              localStorage.setItem("secondary_name", secondaryName);
+              localStorage.setItem("third_name", thirdName);
+            
+              localStorage.setItem("primary_format", primaryFormat);
+              localStorage.setItem("secondary_format", secondaryFormat);
+              localStorage.setItem("third_format", thirdFormat);
+            
+              localStorage.setItem("primary_tag", primaryTag);
+              localStorage.setItem("secondary_tag", secondaryTag);
+              localStorage.setItem("third_tag", thirdTag);
+
+              setIsFirstLogin(false);
+          }
+        }
       }
       else{
         alert(error);
@@ -237,15 +298,14 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
       localStorage.removeItem("primary_tag");
       localStorage.removeItem("secondary_tag");
       localStorage.removeItem("third_tag");
-      localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("isFirstLogin");
     } catch (error) {
       alert(error);
     }
   };
 
   return (
-      <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, isFirstLogin, setIsFirstLogin, registerPassword, loginPassword, logIn, logInGithub, logOut }}>
+    // registerPassword, loginPassword,
+      <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, isFirstLogin, setIsFirstLogin,  logInGoogle, logInGithub, logOut }}>
         {children}
       </AuthContext.Provider>
     );

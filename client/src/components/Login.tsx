@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 function Login() {
   const {
     // loginPassword,
-     logIn, logInGithub } = useContext(AuthContext);
+    logInGoogle, logInGithub } = useContext(AuthContext);
 
   // const [email, setEmail] = useState("");
   // const [password, setPassword] = useState("");
@@ -37,8 +37,8 @@ function Login() {
         {/* <input placeholder="Email" value={email} onChange={handleEmailChange} type="text" />
         <input placeholder="Password" value={password} onChange={handlePasswordChange} type="text" />
         <button className="my-2 d-flex gap-1" onClick={() => loginPassword(email, password)}>Login</button> */}
-        <div className="d-flex gap-2 flex-column flex-md-row">
-          <button className="my-2 d-flex gap-1" onClick={logIn}><i className="bi bi-google"></i>Login with Google</button>
+        <div className="d-flex gap-1 gap-md-2 flex-column flex-md-row">
+          <button className="my-2 d-flex gap-1" onClick={logInGoogle}><i className="bi bi-google"></i>Login with Google</button>
           <button className="my-2 d-flex gap-1" onClick={logInGithub}><i className="bi bi-github"></i>Login with Github</button>
         </div>
       </header>                     

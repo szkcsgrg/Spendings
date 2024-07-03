@@ -159,6 +159,8 @@ function App() {
   });
   
   let uniqueCurrencies: any[] = [];
+  // let uniqueFormats: any[] = [];
+  // let uniqueTags: any[] = [];
   //Inital Values END
 
 
@@ -254,8 +256,8 @@ function App() {
     } 
     setSpendings(mergedData);
     
-    // const incomeToSet = userRows.length > 0 ? userRows[userRows.length - 1].income : 0;
-    // setIncome(incomeToSet);
+    const incomeToSet = userRows.length > 0 ? userRows[userRows.length - 1].income : 0;
+    setIncome(incomeToSet);
   };
   
   //Fetch Data - The full spendings of the user
@@ -273,6 +275,8 @@ function App() {
     const fetchedData: any[] = await response.json();
 
     uniqueCurrencies = [...new Set(fetchedData.map(item => item.currency).filter(currency => currency))]; // filter out falsy values
+    // uniqueFormats = [...new Set(fetchedData.map(item => item.format).filter(format => format))]; // filter out falsy values
+    // uniqueTags = [...new Set(fetchedData.map(item => item.tag).filter(tag => tag))]; // filter out falsy values
 
     const currentMonth = monthNames[new Date().getMonth()];
     let uniqueMonthsFromData = [...new Set(fetchedData.map(item => item.month))] as string[];
@@ -339,6 +343,8 @@ function App() {
     // Filter data for the current month
     const currentMonthData = filteredData.filter(row => 
       row.user_email === localStorage.getItem('userEmail') && 
+      row.currency === choosenCurrency &&
+      row.payment === choosenPaymentMethod &&
       row.month === monthNames[new Date().getMonth()]
     );
     
@@ -380,6 +386,7 @@ function App() {
           setSecondaryFormat(localStorage.getItem("secondary_format") ?? "");
           setThirdFormat(localStorage.getItem("third_format") ?? "");
 
+          
           if(primaryCurrency === 'null') {
             setChoosenCurrency(secondaryCurrency);
             setChoosenFormat(getFormatNumber(secondaryFormat));
@@ -397,7 +404,9 @@ function App() {
           setIsLoading(false); // Stop loading in case of error
         });
       }, 500);
-      fetchAllDataFromUser();
+      setTimeout(() => {
+        fetchAllDataFromUser();
+      }, 1000);
     }
     else{
       setIsLoading(true); // Start loading
@@ -408,14 +417,14 @@ function App() {
           setPrimaryCurrency(uniqueCurrencies[0] || '');
           setSecondaryCurrency(uniqueCurrencies[1] || '');
           setThirdCurrency(uniqueCurrencies[2] || '');
-          setPrimaryTag("");
-          setSecondaryTag("");
-          setThirdTag("");  
+          setPrimaryTag('');
+          setSecondaryTag('');
+          setThirdTag('');  
           setPrimaryFormat("0.00");
-          setSecondaryFormat("0.00");
-          setThirdFormat("0.00");
+          setSecondaryFormat('0.00');
+          setThirdFormat('0.00');
 
-          setChoosenFormat(0.00);
+          setChoosenFormat(getFormatNumber("0.00"));
           setChoosenTag("");
           
           setIsLoading(false); // Stop loading once data is fetched
@@ -529,21 +538,10 @@ function App() {
     }  
   }
   const handleIncomeSubmit: KeyboardEvent = async (event) => {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' || event.keyCode === 13) {
       const newIncome = (Number(income) + Number(incomeInput.replace(',', '.'))).toFixed(choosenFormat);
       setIncome(newIncome);
       setIncomeInput('');
-
-      //First a delete
-      // const response = await fetch(`${backendServer}/deleteIncomesUserMonth?userId=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${encodeURIComponent(monthNames[currentDate.getMonth()])}&currency=${encodeURIComponent(choosenCurrency)}`, {
-      //   method: "DELETE",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-      // if (!response.ok) {
-      //   throw new Error('HTTP error ' + response.status);
-      // }
 
       // Here we need a PUT 
       const postResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
@@ -563,6 +561,9 @@ function App() {
         throw new Error('HTTP error ' + postResponse.status);
       }
       fetchData(monthNames[currentDate.getMonth()]);
+    }
+    if(event.key === 'Escape'){
+      setIncomeInput('');
     }
   }
   const handleAmountChange: InputEvent = (event)  => {
@@ -827,7 +828,6 @@ function App() {
   }
   const handleSelectChange = (event: { target: { value: any; }; }) => {
       setChoosenMonth(event.target.value);
-      // fetchData(event.target.value);
   };
   const handleDeleteData = () => {
     setShowAreYouSureModal(true);
@@ -1340,10 +1340,12 @@ function App() {
       
       {/* Header - Month & Income */}
       <header className="mt-5 pt-5">
-        <h4 onClick={() => setChoosenPaymentMethod(choosenPaymentMethod === "cash" ? "card" : "cash")} className="text-center mb-2 mb-lg-5 pointer">{choosenPaymentMethod.toUpperCase()}</h4>
+        <div className="col-12 d-flex justify-content-center align-items-center mb-2 mb-lg-5">
+          <h4 onClick={() => setChoosenPaymentMethod(choosenPaymentMethod === "cash" ? "card" : "cash")} className="text-center pointer">{choosenPaymentMethod.toUpperCase()}</h4>
+        </div>
         
-        {/* Month */}
         <div className="d-flex flex-column flex-md-row justify-content-center justify-content-md-evenly">
+          {/* Month */}
           <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row align-items-center">
           {uniqueMonths.length > 0 ? (
             <select className="month" onChange={handleSelectChange} defaultValue={monthNames[currentDate.getMonth()]}>
@@ -1381,7 +1383,7 @@ function App() {
             {isCurrentMonth && (
               <div className="d-flex align-items-center gap-1">
                 <input
-                  className="mx-md-1 my-2"
+                  className="mx-1 my-2"
                   value={incomeInput}
                   onChange={handleIncomeChange}
                   onKeyDown={handleIncomeSubmit}
@@ -1396,14 +1398,14 @@ function App() {
       </header>
 
       {/* Spent */}
-      <section className="d-flex justify-content-center align-items-center mt-5 flex-column">
-        <h3 className="mb-4 mb-md-2">
-        {isCurrentMonth && (
-          <>
-            <input value={amount} onChange={handleAmountChange} onKeyDown={handleAmountSubmit} type="text" placeholder="spent"className="mx-2"/> 
-            <span>{choosenTag}</span>
-          </>
-        )}
+      <section className="d-flex justify-content-center align-items-center mt-3 mt-md-5 flex-column">
+        <h3 className="mb-4 mb-md-2 ">
+          {isCurrentMonth && (
+            <div className="d-flex align-items-center gap-1">
+              <input value={amount} onChange={handleAmountChange} onKeyDown={handleAmountSubmit} type="text" placeholder="spent" className="mx-1"/> 
+              <span>{choosenTag}</span>
+            </div>
+          )}
         </h3>
         <span className="mt-3 mt-md-5 mb-4 mb-md-2 d-none d-flex flex-column justify-content-center align-items-center text-center" ref={exchangeNewRef}>
           It looks like you haven't added a secondary currency yet. <br /> We can help you set it up!
@@ -1453,7 +1455,7 @@ function App() {
         <div className="col-12 col-md-10 col-lg-10 col-xl-8 col-xxl-6 box-ui p-md-5">
           <div className="row justify-content-evenly">
             {spendings.sort((a, b) => a.position - b.position).map((spending, index) => (
-              <div className="col-6 col-md-4 col-lg-2 my-2 text-center" key={index}>
+              <div className="col-6 col-md-4 col-lg-2 my-2 text-center d-flex flex-column justify-content-around" key={index}>
                 <h1>{spending.emoji}</h1>
                 <span>{spending.type}</span>
                 <h2>{Number(spending.amount || 0).toFixed(choosenFormat)}{choosenTag}</h2>
