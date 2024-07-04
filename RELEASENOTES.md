@@ -1,21 +1,17 @@
 ## Spendings App - Release Notes
 
-### Version <span style="color: #f9b17a;">1.2.4</span> (Release Date: 2024-07-01)
+### Version <span style="color: #f9b17a;">1.2.5</span> (Release Date: 2024-07-04)
 
 **New Features:**
 
-* **Enhanced Payment Tracking within Currency Profiles:** We've completely revamped how you manage spending within your currency profiles. Now, you can assign each transaction to a specific payment method, like cash or card, providing a more granular view of your finances.
-* **Improved Spending Type Selection:** Selecting spending types is now even more convenient. Simply press the escape button on your keyboard to close the selection menu when entering a new expense.
-* **Streamlined UI Refresh:** We've implemented a significant UI redesign, making the app more user-friendly and professional. Based on user research, this update provides a more visually appealing and intuitive experience.
+* **Customizable Spending Categories:** You now have more control over your spending view! In the settings panel, you can hide and show existing spending categories to personalize your experience.
 
 **Improvements:**
 
-* **Previous Month Income Accuracy:** Fixed a bug that caused inaccurate updates to previous month income data.
-* **Simplified Single-Currency Exchange:** Resolved an issue where users with only one currency profile were prompted to select an account when trying to exchange currencies. The app will now prompt you to either create a new currency profile or directly add the exchange value as a spending entry.
-
-**Bug Fixes:**
-
-* **Fixed a minor bug related to closing the spending type selection menu.**  (This can be merged with the improvement section for a cleaner look)
+* **Data Accuracy:** We've resolved an issue that caused data retrieval problems. Your financial information should now be displayed accurately.
+* **Login Enhancements:** Using different login providers (like Google or Github) with the same email address should now work seamlessly.
+* **UI Refinements:** We've made some minor adjustments to improve the app's visual alignment and overall look.
+* **Security Update:** We've implemented a security improvement to better protect your data.
 
 **Known Issues:**
 
@@ -24,8 +20,6 @@
 **Upcoming Features:**
 
 * Budgeting Support: Set spending limits and stay on track with your financial goals. (Details coming soon!)
-* Enhanced Security: Rest assured, your data is protected with strong security measures. We'll be providing more details about these measures in a future update.
-* Customizable Interface: Take control of your app experience! A future update will allow you to toggle specific UI elements on or off to personalize your view.
 * Detailed Reports: Gain deeper insights into your finances with the upcoming report generation feature. Generate reports for a comprehensive financial analysis.
 * Focus on User Comfort: We're continuously working on improving the user experience. Stay tuned for additional features designed to make managing your finances even easier.
 * More Login Options: We're exploring the possibility of adding more login options beyond Google and Github to provide greater flexibility in the future.

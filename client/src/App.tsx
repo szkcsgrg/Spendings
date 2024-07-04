@@ -14,6 +14,7 @@ interface Log{
   amount: number;
   emoji: string;
   type: string;
+  visible: boolean;
 }
 
 interface Spending {
@@ -22,6 +23,7 @@ interface Spending {
   amount: number;
   type: string;
   emoji: string;
+  visible: boolean;
 }
 
 function App() {
@@ -40,25 +42,26 @@ function App() {
   const [allSavings, setAllSavings] = useState<number[]>([]);
   const [totalSavings, setTotalSavings] = useState('0.00'); 
   const initialSpendings: Spending[] = [
-    {id: 1, position: 1, amount: 0, type: 'Wages & Subscriptions', emoji: '💰'},
-    {id: 2, position: 2, amount: 0, type: 'Transport', emoji: '🚆'},
-    {id: 3, position: 3, amount: 0, type: 'Gas & Roads', emoji: '🚗'},
-    {id: 4, position: 4, amount: 0, type: 'Occupations & Travel', emoji: '🏨'},
-    {id: 5, position: 5, amount: 0, type: 'Health & Beauty', emoji: '💊'},
-    {id: 6, position: 6, amount: 0, type: 'Shopping', emoji: '🛍️'},
-    {id: 7, position: 7, amount: 0, type: 'Food & Delivery', emoji: '🍔'},
-    {id: 8, position: 8, amount: 0, type: 'Clothes', emoji: '👕'},
-    {id: 9, position: 9, amount: 0, type: 'Education', emoji: '🎓'},
-    {id: 10, position: 10, amount: 0, type: 'Fun & Games', emoji: '🎮'},
-    {id: 11, position: 11, amount: 0, type: 'Technologies', emoji: '🖥️'},
-    {id: 12, position: 17, amount: 0, type: 'Missing & Error', emoji: '❌'},
-    {id: 13, position: 12, amount: 0, type: 'Donation & Gift', emoji: '🎁'},
-    {id: 14, position: 13, amount: 0, type: 'Transfer', emoji: '💸'},
-    {id: 15, position: 14, amount: 0, type: 'Withdraw & Deposit', emoji: '💶'},
-    {id: 16, position: 16, amount: 0, type: 'Savings', emoji: '🔐'},
-    {id: 17, position: 15, amount: 0, type: 'Exchange', emoji: '🪙'}
-    ];
+    {id: 1, position: 1, amount: 0, type: 'Wages & Subscriptions', emoji: '💰', visible: true},
+    {id: 2, position: 2, amount: 0, type: 'Transport', emoji: '🚆', visible: true},
+    {id: 3, position: 3, amount: 0, type: 'Gas & Roads', emoji: '🚗', visible: true},
+    {id: 4, position: 4, amount: 0, type: 'Occupations & Travel', emoji: '🏨', visible: true},
+    {id: 5, position: 5, amount: 0, type: 'Health & Beauty', emoji: '💊', visible: true},
+    {id: 6, position: 6, amount: 0, type: 'Shopping', emoji: '🛍️', visible: true},
+    {id: 7, position: 7, amount: 0, type: 'Food & Delivery', emoji: '🍔', visible: true},
+    {id: 8, position: 8, amount: 0, type: 'Clothes', emoji: '👕', visible: true},
+    {id: 9, position: 9, amount: 0, type: 'Education', emoji: '🎓', visible: true},
+    {id: 10, position: 10, amount: 0, type: 'Fun & Games', emoji: '🎮', visible: true},
+    {id: 11, position: 11, amount: 0, type: 'Technologies', emoji: '🖥️', visible: true},
+    {id: 12, position: 17, amount: 0, type: 'Missing & Error', emoji: '❌', visible: true},
+    {id: 13, position: 12, amount: 0, type: 'Donation & Gift', emoji: '🎁', visible: true},
+    {id: 14, position: 13, amount: 0, type: 'Transfer', emoji: '💸', visible: true},
+    {id: 15, position: 14, amount: 0, type: 'Withdraw & Deposit', emoji: '💶', visible: true},
+    {id: 16, position: 16, amount: 0, type: 'Savings', emoji: '🔐', visible: true},
+    {id: 17, position: 15, amount: 0, type: 'Exchange', emoji: '🪙', visible: true}
+  ];
   const [spendings, setSpendings] = useState<Spending[]>(initialSpendings);
+  const [updatedSpendings, setUpdatedSpendings] = useState<Spending[]>(initialSpendings);
   const [logEntries, setLogEntries] = useState<Log[]>([]);
 
   const [primaryCurrency, setPrimaryCurrency] = useState<string>(localStorage.getItem("primary_name") ?? ""); 
@@ -89,6 +92,7 @@ function App() {
   const exchangeNewRef = useRef<HTMLDivElement>(null);
   const ProfileRef = useRef<HTMLImageElement>(null);
   const CurrencyRef = useRef<HTMLDivElement>(null);
+  const SpendingsRef = useRef<HTMLDivElement>(null);
   const warningRefPrimaryDelete = useRef<HTMLParagraphElement>(null);
   const warningRefEmptyDelete = useRef<HTMLParagraphElement>(null);
 
@@ -116,7 +120,8 @@ function App() {
   const [copyEffect, setCopyEffect] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [dontAskAgainCurrencyAdd, setDontAskAgainCurrencyAdd] = useState(localStorage.getItem("dontAskAgainCurrencyAdd") || "false");
-
+  const [settingsData] = useState(localStorage.getItem("settings"));
+  //setSettingsData
 
 
   // Months Related
@@ -125,6 +130,7 @@ function App() {
   const [choosenMonth, setChoosenMonth] = useState(monthNames[currentDate.getMonth()])
   const [uniqueMonths, setUniqueMonths] = useState<string[]>([]);
   const isCurrentMonth = choosenMonth === monthNames[new Date().getMonth()];
+  
 
   // Styles
   const tableStyle = {
@@ -170,6 +176,22 @@ function App() {
   //Fetching the Data from the DB START
   //Fetch Data based on User and currentMonth
   const fetchData = async (choosenMonth: string | number | boolean) => {
+
+    // Parse settingsData to get the spendings array
+    const settings = JSON.parse(settingsData || '{}');
+    const spendingsFromSettings = settings.spendings || [];
+
+    // Update initialSpendings with values from spendingsFromSettings
+    const updatedInitialSpendings = initialSpendings.map(initialSpending => {
+      const spendingUpdate = spendingsFromSettings.find((s: { id: number; }) => s.id === initialSpending.id);
+      return {
+        ...initialSpending,
+        // Override properties from spendingsFromSettings if available
+        ...(spendingUpdate ? { emoji: spendingUpdate.emoji, visible: spendingUpdate.visible } : {}),
+      };
+    });
+    setUpdatedSpendings(updatedInitialSpendings);
+
     const response = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${encodeURIComponent(choosenMonth)}&currency=${encodeURIComponent(choosenCurrency)}&payment=${encodeURIComponent(choosenPaymentMethod)}`, {
       method: "GET",
       headers: {
@@ -208,10 +230,11 @@ function App() {
           amount: entry.saving,
           emoji: '🔐',
           type: 'Savings',
+          visible: true,
         };
       } else {
         //Here we need to add everything else based on initialSpendings types.
-        const initialItem = initialSpendings.find(item => item.id === entry.type_id);
+        const initialItem = updatedInitialSpendings.find(item => item.id === entry.type_id);
         return {
           id: entry.id,
           income: entry.income,
@@ -219,6 +242,7 @@ function App() {
           amount: entry.amount,
           emoji: initialItem?.emoji || '💳',
           type: initialItem?.type || 'Income',
+          visible: true,
         };
       }
 
@@ -227,7 +251,7 @@ function App() {
     setIsDataFetched(true);
 
     // Merge fetched data with initial spendings
-    const mergedData = initialSpendings.map(initialItem => {
+    const mergedData = updatedInitialSpendings.map(initialItem => {
       // Find all fetched items of this type
       const fetchedItems = fetchedData.filter(item => item.type_id === initialItem.id);
 
@@ -625,7 +649,7 @@ function App() {
 
     
     setSpendings(prevSpendings => {
-      return [...prevSpendings, { id: 17, amount: currentAmount, type: 'Exchange', emoji: '🪙', position: 15 }];
+      return [...prevSpendings, { id: 17, amount: currentAmount, type: 'Exchange', emoji: '🪙', position: 15, visible: true}];
     });
     exchangedRef.current?.classList.remove("d-block");
     exchangedRef.current?.classList.add("d-none");
@@ -692,14 +716,15 @@ function App() {
           amount: Number((newSpendings[existingSpendingIndex].amount + currentAmount).toFixed(choosenFormat)),
           // Ensure emoji preservation
           emoji: newSpendings[existingSpendingIndex].emoji,
-          position: newSpendings[existingSpendingIndex].position
+          position: newSpendings[existingSpendingIndex].position,
+          visible: newSpendings[existingSpendingIndex].visible
         };
         return newSpendings;
       } else {
         // Retrieve emoji from initialSpendings for consistency
         const initialSpendingItem = initialSpendings.find(item => item.id === id);
         const emoji = initialSpendingItem?.emoji || ''; // Use '?.' for optional chaining
-        return [...prevSpendings, { id, amount: currentAmount, type, emoji, position: id }];
+        return [...prevSpendings, { id, amount: currentAmount, type, emoji, position: id, visible: true }];
       }
     });
     
@@ -894,6 +919,8 @@ function App() {
       ProfileRef.current?.classList.add("d-block");
       CurrencyRef.current?.classList.remove("d-block");
       CurrencyRef.current?.classList.add("d-none");
+      SpendingsRef.current?.classList.remove("d-block");
+      SpendingsRef.current?.classList.add("d-none");
     } else{
       ProfileRef.current?.classList.remove("d-block");
       ProfileRef.current?.classList.add("d-none");
@@ -905,10 +932,25 @@ function App() {
       CurrencyRef.current?.classList.add("d-block");
       ProfileRef.current?.classList.remove("d-block");
       ProfileRef.current?.classList.add("d-none");
+      SpendingsRef.current?.classList.remove("d-block");
+      SpendingsRef.current?.classList.add("d-none");
     } else {
       CurrencyRef.current?.classList.remove("d-block");
       CurrencyRef.current?.classList.add("d-none");
     } 
+  }
+  const handleSpendingsShow = () => {
+    if(SpendingsRef.current?.classList.contains("d-none")){
+      SpendingsRef.current?.classList.remove("d-none");
+      SpendingsRef.current?.classList.add("d-block");
+      ProfileRef.current?.classList.remove("d-block");
+      ProfileRef.current?.classList.add("d-none");
+      CurrencyRef.current?.classList.remove("d-block");
+      CurrencyRef.current?.classList.add("d-none");
+    } else {
+      SpendingsRef.current?.classList.remove("d-block");
+      SpendingsRef.current?.classList.add("d-none");
+    }
   }
   const handleCurrencyChange: () => void = async () => {
     //Update DB Table: users. Send Post method to the Server
@@ -1086,6 +1128,55 @@ function App() {
       setThirdTag(newSecondaryTag);
     } 
   }
+  const updateSpendingVisibility: (id: number) => void = (id) => {
+
+    setUpdatedSpendings(prevSpendings => {
+      return prevSpendings.map(spending => {
+        if (spending.id === id) {
+          return {...spending, visible: !spending.visible};
+        }
+        return spending;
+      });
+    });
+    setSpendings(prevSpendings => {
+      return prevSpendings.map(spending => {
+        if (spending.id === id) {
+          return {...spending, visible: !spending.visible};
+        }
+        return spending;
+      });
+    });
+  }
+  const handleSpendingChange: () => void = async () => {
+    const settingsJson = JSON.stringify({
+      spendings: spendings.map(spending => ({
+        id: spending.id,
+        position: spending.position,
+        amount: spending.amount,
+        type: spending.type,
+        emoji: spending.emoji,
+        visible: spending.visible
+      })),
+      otherSettings: {}
+    });
+    
+
+    //Send post method to update the users table in the DB
+    const response = await fetch(`${backendServer}/updateSettings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: localStorage.getItem('userEmail'),
+        settings: settingsJson
+      })
+    })
+    if (!response.ok) {
+      throw new Error('HTTP error ' + response.status);
+    }
+    setShowSettingsModal(false);
+  }
   //Functions and Event handlers END
 
 
@@ -1098,6 +1189,7 @@ function App() {
     <section className="container-fluid">    
       {/* Navbar */}
       <nav className="navbar fixed-top mx-2">
+        {/* Currency */}
         <div className="currency d-flex flex-row">
           <> 
             {primaryCurrency !== 'null' && 
@@ -1152,6 +1244,7 @@ function App() {
              <aside className="menu d-flex flex-row gap-3 gap-md-0 flex-lg-column col-12 col-lg-2">
               <p onClick={handleProfileShow}>Profile</p>
               <p onClick={handleCurrencyShow}>Currency</p>
+              <p onClick={handleSpendingsShow}>Spendings</p>
             </aside> 
             {/* Change it back to 8 from md */}
             <div className="col-12 col-lg-9">
@@ -1318,6 +1411,29 @@ function App() {
                   <button className="mt-5 col-3 col-md-2" onClick={handleCurrencyChange}>Save</button>           
                 </div>
               </div>
+              <div className="d-none" ref={SpendingsRef}>
+                <div className="text-center my-5 mx-3">
+                  {updatedSpendings.sort((a, b) => a.position - b.position).map((spending, index) => (
+                    <>     
+                      <div className="d-flex flex-row justify-content-center" key={index}>
+                        <div className="d-flex flex-row col-8 col-md-6 col-xl-4 justify-content-start align-items-center gap-2">
+                          <h3>{spending.emoji}</h3>
+                          <span>{spending.type}</span>
+                        </div>
+                        <div className="d-flex flex-row col-4 justify-content-end">
+                          <label className="switch">
+                            <input type="checkbox" hidden defaultChecked={spending.visible}  onChange={() => {updateSpendingVisibility(spending.id)}} /> 
+                              <div className="switch__wrapper">
+                                <div className="switch__toggle"></div>
+                              </div>
+                            </label>
+                        </div>
+                      </div>
+                    </>
+                  ))}
+                  <button className="mt-5 col-3 col-md-2" onClick={handleSpendingChange}>Save</button>    
+                </div>
+              </div>
             </div>
           </Modal.Body>
         </Modal>
@@ -1439,11 +1555,15 @@ function App() {
         <div className="col-12 col-md-10 col-lg-10 col-xl-8 col-xxl-6">
           {showTypes && (
             <div className="text-center">
-              {initialSpendings.sort((a, b) => a.position - b.position).map((spending) => (
-                <button className="button-secondary p-3 m-1" key={spending.position} onClick={() => handleTypeClick(spending.type, spending.id)}>
-                  <span className="d-block d-xl-none">{spending.emoji+" "+spending.type}</span>
-                  <p className="d-none d-xl-block">{spending.emoji+" "+spending.type}</p>
-                </button>
+              {spendings.sort((a, b) => a.position - b.position).map((spending) => (
+                <>
+                  {spending.visible && (
+                    <button className="button-secondary p-3 m-1" key={spending.position} onClick={() => handleTypeClick(spending.type, spending.id)}>
+                    <span className="d-block d-xl-none">{spending.emoji+" "+spending.type}</span>
+                    <p className="d-none d-xl-block">{spending.emoji+" "+spending.type}</p>
+                    </button>
+                  )}
+                </>
               ))}
             </div>
           )}  
@@ -1455,11 +1575,15 @@ function App() {
         <div className="col-12 col-md-10 col-lg-10 col-xl-8 col-xxl-6 box-ui p-md-5">
           <div className="row justify-content-evenly">
             {spendings.sort((a, b) => a.position - b.position).map((spending, index) => (
-              <div className="col-6 col-md-4 col-lg-2 my-2 text-center d-flex flex-column justify-content-around" key={index}>
-                <h1>{spending.emoji}</h1>
-                <span>{spending.type}</span>
-                <h2>{Number(spending.amount || 0).toFixed(choosenFormat)}{choosenTag}</h2>
-              </div>
+              <>
+                {spending.visible && (
+                  <div className="col-6 col-md-4 col-lg-2 my-2 text-center d-flex flex-column justify-content-around" key={index}>
+                    <h1>{spending.emoji}</h1>
+                    <span>{spending.type}</span>
+                    <h2>{Number(spending.amount || 0).toFixed(choosenFormat)}{choosenTag}</h2>
+                  </div>
+                )}
+              </>
             ))}
           </div>
         </div>

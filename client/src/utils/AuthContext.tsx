@@ -94,6 +94,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
             localStorage.setItem("primary_tag", primaryTag);
             localStorage.setItem("secondary_tag", secondaryTag);
             localStorage.setItem("third_tag", thirdTag);
+            
+            localStorage.setItem("settings", JSON.stringify(response.data[0].settings_json));
           setIsFirstLogin(false);
         }
       }
@@ -210,6 +212,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
               localStorage.setItem("secondary_tag", secondaryTag);
               localStorage.setItem("third_tag", thirdTag);
 
+              localStorage.setItem("settings", JSON.stringify(response.data[0].settings_json));
+
               setIsFirstLogin(false);
           }
         }
@@ -271,6 +275,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
               localStorage.setItem("primary_tag", primaryTag);
               localStorage.setItem("secondary_tag", secondaryTag);
               localStorage.setItem("third_tag", thirdTag);
+
+              localStorage.setItem("settings", JSON.stringify(response.data[0].settings_json));
 
               setIsFirstLogin(false);
           }
