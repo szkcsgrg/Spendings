@@ -121,6 +121,149 @@ function InitialSetup() {
 
 
       // Prepare data for the backend (only include set values)
+      const settings_json = JSON.stringify({
+        "spendings":[
+           {
+              "id":1,
+              "type":"Wages & Subscriptions",
+              "emoji":"💰",
+              "amount":0,
+              "visible":true,
+              "position":1
+           },
+           {
+              "id":2,
+              "type":"Transport",
+              "emoji":"🚆",
+              "amount":0,
+              "visible":true,
+              "position":2
+           },
+           {
+              "id":3,
+              "type":"Gas & Roads",
+              "emoji":"🚗",
+              "amount":0,
+              "visible":true,
+              "position":3
+           },
+           {
+              "id":4,
+              "type":"Occupations & Travel",
+              "emoji":"🏨",
+              "amount":0,
+              "visible":true,
+              "position":4
+           },
+           {
+              "id":5,
+              "type":"Health & Beauty",
+              "emoji":"💊",
+              "amount":0,
+              "visible":true,
+              "position":5
+           },
+           {
+              "id":6,
+              "type":"Shopping",
+              "emoji":"️🛍️",
+              "amount":0,
+              "visible":true,
+              "position":6
+           },
+           {
+              "id":7,
+              "type":"Food & Delivery",
+              "emoji":"🍔",
+              "amount":0,
+              "visible":true,
+              "position":7
+           },
+           {
+              "id":8,
+              "type":"Clothes",
+              "emoji":"👕",
+              "amount":0,
+              "visible":true,
+              "position":8
+           },
+           {
+              "id":9,
+              "type":"Education",
+              "emoji":"🎓",
+              "amount":0,
+              "visible":true,
+              "position":9
+           },
+           {
+              "id":10,
+              "type":"Fun & Games",
+              "emoji":"🎮",
+              "amount":0,
+              "visible":true,
+              "position":10
+           },
+           {
+              "id":11,
+              "type":"Technologies",
+              "emoji":"️🖥️",
+              "amount":0,
+              "visible":true,
+              "position":11
+           },
+           {
+              "id":12,
+              "type":"Missing & Error",
+              "emoji":"❌",
+              "amount":0,
+              "visible":true,
+              "position":17
+           },
+           {
+              "id":13,
+              "type":"Donation & Gift",
+              "emoji":"🎁",
+              "amount":0,
+              "visible":true,
+              "position":12
+           },
+           {
+              "id":14,
+              "type":"Transfer",
+              "emoji":"💸",
+              "amount":0,
+              "visible":true,
+              "position":13
+           },
+           {
+              "id":15,
+              "type":"Withdraw & Deposit",
+              "emoji":"💶",
+              "amount":0,
+              "visible":true,
+              "position":14
+           },
+           {
+              "id":16,
+              "type":"Savings",
+              "emoji":"🔐",
+              "amount":0,
+              "visible":true,
+              "position":16
+           },
+           {
+              "id":17,
+              "type":"Exchange",
+              "emoji":"🪙",
+              "amount":0,
+              "visible":true,
+              "position":15
+           }
+        ],
+        "otherSettings":{
+           
+        }
+     })
       const data = {
         email: localStorage.getItem("userEmail"),
         displayName: localStorage.getItem("userName"),
@@ -134,6 +277,7 @@ function InitialSetup() {
         third_name: thirdName || null, 
         third_format: thirdFormat || null, 
         third_tag: thirdTag || null, 
+        settings_json: settings_json,
       };
         
       if (currencySetupRef.current && savingsSetupRef.current) {

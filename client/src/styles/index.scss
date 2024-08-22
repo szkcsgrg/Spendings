@@ -34,3 +34,15 @@ body{
     min-height: 100vh;
     overflow-x: hidden;
 }
+.custom-tooltip{
+    background-color: colors.$background;
+    color: colors.$color;
+    border: 1px solid colors.$accent-orange;
+    border-radius: 5px;
+    padding: 5px;
+    font-size: 0.9em;
+    box-shadow: 0 0 5px 0 rgba(0,0,0,0.2);
+}
+// .tooltip-inner {
+    
+// }

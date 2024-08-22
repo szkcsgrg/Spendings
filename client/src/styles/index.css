@@ -586,6 +586,21 @@ input:checked + .switch__wrapper .switch__toggle {
     transform: translateX(calc(-1 * var(--fPos)));
   }
 }
+.logEntry {
+  background-color: rgba(51, 55, 59, 0.35);
+  box-shadow: 0 8px 32px 0 rgba(115, 116, 131, 0.37);
+  backdrop-filter: blur(4.5px);
+  -webkit-backdrop-filter: blur(4.5px);
+  border-radius: 1em;
+}
+.logEntry span {
+  font-size: 0.9em;
+}
+
+.no-wrap {
+  white-space: nowrap;
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -611,4 +626,14 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+.custom-tooltip {
+  background-color: #212529;
+  color: #e0e4e8;
+  border: 1px solid #daa4fc;
+  border-radius: 5px;
+  padding: 5px;
+  font-size: 0.9em;
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.2);
 }
