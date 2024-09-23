@@ -1,4 +1,4 @@
-import { useRef, useContext, useState } from "react";
+import { useRef, useContext, useState, ChangeEventHandler } from "react";
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -217,7 +217,7 @@ function InitialSetup() {
               "emoji":"❌",
               "amount":0,
               "visible":true,
-              "position":17
+              "position":18
            },
            {
               "id":13,
@@ -258,10 +258,19 @@ function InitialSetup() {
               "amount":0,
               "visible":true,
               "position":15
-           }
+           },
+             {
+                "id":18,
+                "type":"Investment",
+                "emoji":"💼",
+                "amount":0,
+                "visible":true,
+                "position":17
+             }
         ],
-        "otherSettings":{
-           
+        "visibility": {
+          "income": true,
+          "note": true 
         }
      })
       const data = {
@@ -376,6 +385,27 @@ function InitialSetup() {
       console.error('Failed to copy: ', err);
     }
   };
+  const handlePrimaryFormatChange: ChangeEventHandler<HTMLInputElement> = (event) => {
+    const newFormat = event.target.value.replace(',', '.');
+    const isValid = newFormat === '' || /^(0+([.,]0{0,2})?)?$/.test(newFormat);
+    if (isValid) {
+      setPrimaryFormat(newFormat);
+    } 
+  }
+  const handleSecondaryFormatChange: ChangeEventHandler<HTMLInputElement> = (event) => {
+    const newFormat = event.target.value.replace(',', '.');
+    const isValid = newFormat === '' || /^(0+([.,]0{0,2})?)?$/.test(newFormat);
+    if (isValid) {
+      setSecondaryFormat(newFormat);
+    } 
+  }
+  const handleThirdFormatChange: ChangeEventHandler<HTMLInputElement> = (event) => {
+    const newFormat = event.target.value.replace(',', '.');
+    const isValid = newFormat === '' || /^(0+([.,]0{0,2})?)?$/.test(newFormat);
+    if (isValid) {
+      setThirdFormat(newFormat);
+    } 
+  }
 
 
   return (
@@ -443,14 +473,14 @@ function InitialSetup() {
         <div id="mandatory" className="currencyProfile d-flex flex-column my-2 mx-5">
           <h4>Primary Currency Profile</h4>
           <input className="currencyInput my-2" name="mandatoryname" placeholder="Name (EUR, HUF, ...)" type="text" onChange={e => setPrimaryName(e.target.value)} title="Choose a clear and recognizable name for your currency profile. This name will be displayed within the app to help you easily identify the currency."/>
-          <input className="currencyInput my-2" name="mandatoryformat" placeholder="Format (0.00, 0, ...)" type="text" onChange={e => setPrimaryFormat(e.target.value)} title="Specify how you want numbers to be formatted within this currency profile. For example, some currencies use two decimal places (0.00), while others might not use any decimals (0)."/>
+          <input className="currencyInput my-2" name="mandatoryformat" placeholder="Format (0.00, 0, ...)" type="text" value={primaryFormat !== 'null' ? primaryFormat : ''} onChange={handlePrimaryFormatChange} title="Specify how you want numbers to be formatted within this currency profile. For example, some currencies use two decimal places (0.00), while others might not use any decimals (0)."/>
           <input className="currencyInput my-2" name="mandatorytag" placeholder="Tag (€, Ft, ...)" type="text" onChange={e => setPrimaryTag(e.target.value)} title="Define a symbol or tag to visually represent your chosen currency. This tag will be displayed alongside the amount when viewing transactions in this currency profile."/>
           <span className="link my-3" onClick={showSecondary}>Add More</span>
         </div>
         <div id="secondary" ref={secondaryRef} className="currencyProfile d-flex flex-column my-2 mx-5 d-none">
           <h4>Secondary Currency Profile</h4>
           <input className="currencyInput my-2" name="secondaryname" placeholder="Name (EUR, HUF, ...)" type="text" onChange={e => setSecondaryName(e.target.value)} title="Choose a clear and recognizable name for your currency profile. This name will be displayed within the app to help you easily identify the currency."/>
-          <input className="currencyInput my-2" name="secondaryformat" placeholder="Format (0.00, 0, ...)" type="text" onChange={e => setSecondaryFormat(e.target.value)} title="Specify how you want numbers to be formatted within this currency profile. For example, some currencies use two decimal places (0.00), while others might not use any decimals (0)."/>
+          <input className="currencyInput my-2" name="secondaryformat" placeholder="Format (0.00, 0, ...)" type="text" value={secondaryFormat !== 'null' ? secondaryFormat : ''} onChange={handleSecondaryFormatChange} title="Specify how you want numbers to be formatted within this currency profile. For example, some currencies use two decimal places (0.00), while others might not use any decimals (0)."/>
           <input className="currencyInput my-2" name="secondarytag" placeholder="Tag (€, Ft, ...)" type="text"  onChange={e => setSecondaryTag(e.target.value)} title="Define a symbol or tag to visually represent your chosen currency. This tag will be displayed alongside the amount when viewing transactions in this currency profile."/>
           <span className="link my-2" ref={secondaryBRef} onClick={hideSecondary}>Remove</span>
           <span className="link my-1" onClick={showThird}>Add More</span>
@@ -458,7 +488,7 @@ function InitialSetup() {
         <div id="third" ref={thirdRef} className="currencyProfile d-flex flex-column my-2 mx-5 d-none">
           <h4>Tertiary Currency Profile</h4>
           <input className="currencyInput my-2" name="thirdname" placeholder="Name (EUR, HUF, ...)" type="text" onChange={e => setThirdName(e.target.value)} title="Choose a clear and recognizable name for your currency profile. This name will be displayed within the app to help you easily identify the currency."/>
-          <input className="currencyInput my-2" name="thirdformat" placeholder="Format (0.00, 0, ...)" type="text" onChange={e => setThirdFormat(e.target.value)} title="Specify how you want numbers to be formatted within this currency profile. For example, some currencies use two decimal places (0.00), while others might not use any decimals (0)."/>
+          <input className="currencyInput my-2" name="thirdformat" placeholder="Format (0.00, 0, ...)" type="text" value={thirdFormat !== 'null' ? thirdFormat : ''} onChange={handleThirdFormatChange} title="Specify how you want numbers to be formatted within this currency profile. For example, some currencies use two decimal places (0.00), while others might not use any decimals (0)."/>
           <input className="currencyInput my-2" name="thirdtag" placeholder="Tag (€, Ft, ...)" type="text" onChange={e => setThirdTag(e.target.value)} title="Define a symbol or tag to visually represent your chosen currency. This tag will be displayed alongside the amount when viewing transactions in this currency profile."/>
           <span className="link my-3" ref={thirdBRef} onClick={hideThird}>Remove</span>
         </div>

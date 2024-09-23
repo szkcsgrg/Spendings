@@ -12,7 +12,7 @@ $topo: url("../assets/topo-purple-third.png");
 nav, .navbar{
     background-color: transparent;
     max-height: 30svh;
-    height: 3svh;   
+    height: 3svh;
 }
 
 
@@ -26,12 +26,15 @@ nav, .navbar{
   }
   @keyframes l1 {to{transform: rotate(.5turn)}}
 
-
+.currency{
+	margin-top: 0.4em;
+}
 .currency p {
     font-weight: 600;
     font-size: 1.1rem;
-    margin-top: 0.4em;
     cursor: pointer;
+	padding: 0;
+	// margin-top: 0.4em;
 }
 .activeCurrency{
     color: colors.$accent-orange;
@@ -256,3 +259,11 @@ footer h5 span, footer h5{
 .no-wrap{
 	white-space: nowrap;
 }
+.incomeANDspending{
+	margin-top: 8em;
+}
+
+// .apexcharts-tooltip-active{
+// 	background-color: colors.$background-light;
+// 	border-radius: 1em;
+// }

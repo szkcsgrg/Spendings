@@ -34,6 +34,14 @@ body{
     min-height: 100vh;
     overflow-x: hidden;
 }
+@keyframes fadeOut {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
 .custom-tooltip{
     background-color: colors.$background;
     color: colors.$color;
@@ -42,7 +50,9 @@ body{
     padding: 5px;
     font-size: 0.9em;
     box-shadow: 0 0 5px 0 rgba(0,0,0,0.2);
+    opacity: 1;
+    animation: fadeOut 7.5s ease-out;
+} 
+.tooltip-inner {
+    background-color: transparent;
 }
-// .tooltip-inner {
-    
-// }

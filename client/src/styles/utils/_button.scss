@@ -13,6 +13,21 @@
       font-size: 1.3em;
     }
 }
+.button-round{
+  background-color: rgba( 51, 55, 59, 0.35 );
+	box-shadow: 0 8px 32px 0 rgba(115, 116, 131, 0.37);
+  backdrop-filter: blur( 4.5px );
+  -webkit-backdrop-filter: blur( 4.5px );
+  border-radius: 50%;
+  // border: 1px solid colors.$accent-orange;
+  padding: 0.6em;
+  width: 2.5em;
+  transition: all 0.5s;
+  i {
+    color: colors.$color;
+    font-size: 1.1rem; 
+  }
+}
 button {
   border-radius: 8px;
   border: none;
@@ -41,6 +56,10 @@ button:hover {
   background-color: colors.$background-lightest;
   color: colors.$color;
   outline: 3px solid colors.$accent-orange;
+}
+.button-round:hover{
+  background-color: colors.$background-light;
+  border: 1.5px solid colors.$accent-orange;
 }
 button:focus,
 button:focus-visible {

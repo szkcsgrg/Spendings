@@ -64,6 +64,21 @@ a, link {
   font-size: 1.3em;
 }
 
+.button-round {
+  background-color: rgba(51, 55, 59, 0.35);
+  box-shadow: 0 8px 32px 0 rgba(115, 116, 131, 0.37);
+  backdrop-filter: blur(4.5px);
+  -webkit-backdrop-filter: blur(4.5px);
+  border-radius: 50%;
+  padding: 0.6em;
+  width: 2.5em;
+  transition: all 0.5s;
+}
+.button-round i {
+  color: #e0e4e8;
+  font-size: 1.1rem;
+}
+
 button {
   border-radius: 8px;
   border: none;
@@ -94,6 +109,11 @@ button:hover * {
   background-color: #5c5c5c;
   color: #e0e4e8;
   outline: 3px solid #daa4fc;
+}
+
+.button-round:hover {
+  background-color: #33373b;
+  border: 1.5px solid #daa4fc;
 }
 
 button:focus,
@@ -152,12 +172,18 @@ option:focus {
   color: #e0e4e8;
 }
 
+.input-tag {
+  position: absolute;
+  right: 1em;
+}
+
 ::-moz-placeholder {
   text-align: center;
   letter-spacing: 0.1em;
   font-weight: bold;
   text-transform: uppercase;
   color: #e0e4e8;
+  font-size: 0.9em;
 }
 
 ::placeholder {
@@ -166,6 +192,7 @@ option:focus {
   font-weight: bold;
   text-transform: uppercase;
   color: #e0e4e8;
+  font-size: 0.9em;
 }
 
 ::-webkit-input-placeholder {
@@ -182,6 +209,20 @@ option:focus {
 
 :-ms-input-placeholder {
   text-align: center;
+}
+
+.smallerInput {
+  width: 90%;
+}
+
+.smallerI .pre-tag {
+  position: absolute;
+  right: 8.5em;
+  z-index: 1000;
+}
+.smallerI .input-tag {
+  position: absolute;
+  right: 2em;
 }
 
 .header-login {
@@ -400,11 +441,15 @@ nav, .navbar {
     transform: rotate(0.5turn);
   }
 }
+.currency {
+  margin-top: 0.4em;
+}
+
 .currency p {
   font-weight: 600;
   font-size: 1.1rem;
-  margin-top: 0.4em;
   cursor: pointer;
+  padding: 0;
 }
 
 .activeCurrency {
@@ -601,6 +646,10 @@ input:checked + .switch__wrapper .switch__toggle {
   white-space: nowrap;
 }
 
+.incomeANDspending {
+  margin-top: 8em;
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -628,6 +677,14 @@ body {
   overflow-x: hidden;
 }
 
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 .custom-tooltip {
   background-color: #212529;
   color: #e0e4e8;
@@ -636,4 +693,10 @@ body {
   padding: 5px;
   font-size: 0.9em;
   box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.2);
+  opacity: 1;
+  animation: fadeOut 7.5s ease-out;
+}
+
+.tooltip-inner {
+  background-color: transparent;
 }

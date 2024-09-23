@@ -43,10 +43,10 @@ option:focus{
 }
 
 
-
-
-
-
+.input-tag{
+    position: absolute;
+    right: 1em;
+}
 
 
 ::placeholder {
@@ -55,6 +55,7 @@ option:focus{
     font-weight: bold;
     text-transform: uppercase;
     color: colors.$color;
+    font-size: 0.9em;
 }
 
 ::-webkit-input-placeholder {
@@ -71,4 +72,18 @@ option:focus{
 
 :-ms-input-placeholder {  
     text-align: center; 
+}
+.smallerInput{
+    width: 90%;
+}
+.smallerI{
+    .pre-tag{
+        position: absolute;
+        right: 8.5em;
+        z-index: 1000;
+    }
+    .input-tag{
+        position: absolute;
+        right: 2em;
+    }
 }

@@ -1,0 +1,101 @@
+{/* Header - Month & Income */}
+      <header className="mt-5 pt-5">
+        <div className="col-12 d-flex justify-content-center align-items-center mb-2 mb-lg-3">
+          <h4 onClick={() => setChoosenPaymentMethod(choosenPaymentMethod === "cash" ? "card" : "cash")} className="text-center pointer">{choosenPaymentMethod.toUpperCase()}</h4>
+        </div>
+        
+        <div className="d-flex flex-column flex-md-row justify-content-center justify-content-md-evenly">
+          {/* Month */}
+          <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row align-items-center">
+          {uniqueMonths.length > 0 ? (
+            <select className="month" onChange={handleSelectChange} defaultValue={monthNames[currentDate.getMonth()]}>
+              {uniqueMonths.filter(month => month !== 'initial').map((month, index) => (
+                <option key={index} value={month}>
+                  {month}
+                </option>
+              ))}
+            </select>
+            ) : (
+              <span className="month">{monthNames[currentDate.getMonth()]}</span> 
+            )}
+            {isCurrentMonth && (
+                <>
+                 {" - "}  <a className="pointer" onClick={resetSpendings}>Reset Monthly Spending</a>
+                </>
+            )}
+          </h5>
+
+          {/* Income */}
+          {incomeVisibility && (
+            <h5 className="text-center my-3 my-md-0 d-flex flex-column flex-md-row align-items-center"> 
+            <span className="income mx-3 mx-md-1">
+              {isLoading ? (
+                <div className="loader"></div>
+              ) : (
+                <>
+                  {income ? (
+                    Number(income).toFixed(choosenFormat) + "" + choosenTag
+                  ) : (
+                    Number(income) + "" + choosenTag
+                  )}
+                </>
+              )} 
+              </span>
+              {isCurrentMonth && (
+                <div className="d-flex align-items-center gap-1">
+                  <input
+                    className="mx-1 my-2"
+                    value={incomeInput}
+                    onChange={handleIncomeChange}
+                    onKeyDown={handleIncomeSubmit}
+                    type="text"
+                    placeholder="income"
+                  />
+                  <span>{choosenTag}</span>
+                </div>
+              )}
+            </h5>
+          )}
+        </div>
+      </header>
+
+      {/* Spent Input */}
+      <section className="d-flex justify-content-center align-items-center mt-3 mt-md-5 flex-column">
+        <h3 className="mb-4 mb-md-2 ">
+          {isCurrentMonth && (
+            <div className="d-flex align-items-center gap-1">
+              <input value={amount} onChange={handleAmountChange} onKeyDown={handleAmountSubmit} type="text" placeholder="spent" className="mx-1"/> 
+              <span>{choosenTag}</span>
+            </div>
+          )}
+        </h3>
+        {(noteVisibility && showNote) && (
+          <h5>
+            <input value={noteValue} onChange={handleNoteChange} type="text" placeholder="note" className="mx-1"/> 
+          </h5>
+        )}
+        <span className="mt-3 mt-md-5 mb-4 mb-md-2 d-none d-flex flex-column justify-content-center align-items-center text-center" ref={exchangeNewRef}>
+          It looks like you haven't added a secondary currency yet. <br /> We can help you set it up!
+          <div className="d-flex gap-2 mt-2">
+            <button onClick={() => {setShowSettingsModal(true); setTimeout(() => {
+              handleCurrencyShow();
+              setAmount('');
+              exchangeNewRef.current?.classList.remove("d-block");
+              exchangeNewRef.current?.classList.add("d-none");
+            }, 400);}}>Yes</button>
+            <button className="button-secondary" onClick={() => {setDontAskAgainCurrencyAdd("true"); exchangeNewRef.current?.classList.remove("d-block"); exchangeNewRef.current?.classList.add("d-none"); setShowTypes(true); localStorage.setItem("dontAskAgainCurrencyAdd", "true");}}>No</button>
+          </div>
+        </span>
+        <h3 className="mt-3 mt-md-5 mb-4 mb-md-2 d-none d-flex flex-column justify-content-center align-items-center" ref={exchangedRef}>
+          <input type="text" value={exchangeAmount} onChange={handleExchangeChange} placeholder="Exchanged Value" />
+          <div className="currency d-flex flex-row gap-2 my-2 my-lg-3">
+          {primaryCurrency !== 'null' && (
+            <> 
+              {choosenCurrency !== primaryCurrency &&  <button onClick={() => {handleExchangeSubmit(primaryCurrency)}}>{primaryCurrency}</button>}
+              {choosenCurrency !== secondaryCurrency && secondaryCurrency !== 'null' && <button onClick={() => {handleExchangeSubmit(secondaryCurrency)}}>{secondaryCurrency}</button>}
+              {choosenCurrency !== thirdCurrency && thirdCurrency !== 'null' && <button onClick={() => {handleExchangeSubmit(thirdCurrency)}}>{thirdCurrency}</button>}
+            </>
+          )}
+        </div>
+        </h3>
+      </section>

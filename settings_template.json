@@ -94,7 +94,7 @@
           "emoji":"❌",
           "amount":0,
           "visible":true,
-          "position":17
+          "position":18
        },
        {
           "id":13,
@@ -135,9 +135,18 @@
           "amount":0,
           "visible":true,
           "position":15
-       }
+       },
+         {
+            "id":18,
+            "type":"Investment",
+            "emoji":"💼",
+            "amount":0,
+            "visible":true,
+            "position":17
+         }
     ],
-    "otherSettings":{
-       
+    "visibility": {
+      "income": true,
+      "note": true 
     }
  }
