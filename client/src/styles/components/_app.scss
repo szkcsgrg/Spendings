@@ -1,8 +1,8 @@
 @use "../utils/colors";
-$topo: url("../assets/topo-second.png");
-$topo: url("../assets/topo.png");
-$topo: url("../assets/topo-third.png");
-$topo: url("../assets/topo-purple-second.png");
+// $topo: url("../assets/topo-second.png");
+// $topo: url("../assets/topo.png");
+// $topo: url("../assets/topo-third.png");
+// $topo: url("../assets/topo-purple-second.png");
 $topo: url("../assets/topo-purple-third.png");
 // $topo: url("../assets/topo-white.png");
 // $topo: url("../assets/topo-blue.png");
@@ -267,3 +267,6 @@ footer h5 span, footer h5{
 // 	background-color: colors.$background-light;
 // 	border-radius: 1em;
 // }
+.not-allowed{
+	cursor: not-allowed;
+}

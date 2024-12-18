@@ -215,14 +215,17 @@ option:focus {
   width: 90%;
 }
 
+.smallerI {
+  position: relative;
+}
 .smallerI .pre-tag {
   position: absolute;
-  right: 8.5em;
+  left: 2.5em;
   z-index: 1000;
 }
 .smallerI .input-tag {
   position: absolute;
-  right: 2em;
+  right: 1em;
 }
 
 .header-login {
@@ -648,6 +651,10 @@ input:checked + .switch__wrapper .switch__toggle {
 
 .incomeANDspending {
   margin-top: 8em;
+}
+
+.not-allowed {
+  cursor: not-allowed;
 }
 
 :root {
