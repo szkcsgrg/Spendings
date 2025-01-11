@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ionic/react": "^8.4.1",
     "@popperjs/core": "^2.11.8",
     "apexcharts": "^3.53.0",
     "axios": "^1.6.8",

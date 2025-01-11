@@ -1,13 +1,12 @@
 import React from "react";
 import { useRef, useState, useEffect, useContext} from "react";
 import { AuthContext } from "./utils/AuthContext";
-import { Modal, Dropdown, Row } from 'react-bootstrap';
+import { Modal, Dropdown } from 'react-bootstrap';
 import { Link } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { motion } from "framer-motion";
 // import { PieChart, Pie, Sector, Cell, ResponsiveContainer } from 'recharts';
-
 
 
 type InputEvent = (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -108,6 +107,8 @@ function App() {
       +----+--------------+
 
     */}
+
+
   const [spendings, setSpendings] = useState<Spending[]>(initialSpendings);
   const [updatedSpendings, setUpdatedSpendings] = useState<Spending[]>(initialSpendings);
   const [logEntries, setLogEntries] = useState<Log[]>([]);
@@ -212,14 +213,19 @@ function App() {
   //setSettingsData
 
 
-  // Months Related
+  // Datum Related
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const currentDate = new Date();
   const [choosenMonth, setChoosenMonth] = useState(monthNames[currentDate.getMonth()])
   const [uniqueMonths, setUniqueMonths] = useState<string[]>([]);
+  const [monthsInFetchedData, setMonthsInFetchedData] = useState<string[]>([]);
   const isCurrentMonth = choosenMonth === monthNames[new Date().getMonth()];
+  const [lastMonthValue, setLastMonthValue] = useState<string>("");
   const [choosenYear, setChoosenYear] = useState(new Date().getFullYear())
-  
+  const [uniqueYears, setUniqueYears] = useState<number[]>([]);
+  const currentYear = new Date().getFullYear();
+  // const years = Array.from({ length: currentYear - 2024 + 1 }, (_, i) => 2024 + i);
+  const isCurrentYear = choosenYear === new Date().getFullYear();
 
   // Styles
   const itemStyle = (itemId: string) => ({
@@ -227,7 +233,7 @@ function App() {
     backgroundColor: clickedItemId === itemId && '#daa4fc',
   });
   
-  let uniqueCurrencies: any[] = [];
+  let uniqueCurrencies: any[] = []; 
   //Inital Values END
 
   // const { scrollYProgress } = useScroll()
@@ -239,7 +245,7 @@ function App() {
 
   //Fetching the Data from the DB START
 
-  //Fetch Data fromt the User
+  //Fetch Data from the User
   const fecthUser = async () => {
     const response = await fetch(`${backendServer}/checkUser?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}`, {
       method: "GET",
@@ -307,7 +313,7 @@ function App() {
     // }
     // setInitialIncome(initialIncomeEntry?.income || 0);
 
-    const userEntries = filteredData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === choosenMonth).map(entry => {
+    const userEntries = filteredData.filter(row => row.user_email === localStorage.getItem('userEmail') && row.month === choosenMonth && row.year === Number(choosenYear)).map(entry => {
       //If the userRows has only an income value. Not type_id no amount, then set the initalIncome to that income.
 
 
@@ -402,18 +408,79 @@ function App() {
     });
 
     const fetchedData: any[] = await response.json();
-
+    let emptyData = false;
+    // - If fetchedData is [] then set emptyData to true;
+    if(fetchedData.length === 0){
+      emptyData = true;
+    }
     uniqueCurrencies = [...new Set(fetchedData.map(item => item.currency).filter(currency => currency))]; // filter out falsy values
     // uniqueFormats = [...new Set(fetchedData.map(item => item.format).filter(format => format))]; // filter out falsy values
     // uniqueTags = [...new Set(fetchedData.map(item => item.tag).filter(tag => tag))]; // filter out falsy values
 
-    const currentMonth = monthNames[new Date().getMonth()];
+
+
+
+    // ! ORIGINAL uniqueMonths
+    const currentYear = new Date().getFullYear();
+    const currentMonth = monthNames[currentDate.getMonth()];
     let uniqueMonthsFromData = [...new Set(fetchedData.map(item => item.month))] as string[];
 
     if (!uniqueMonthsFromData.includes(currentMonth)) {
       uniqueMonthsFromData = [...uniqueMonthsFromData, currentMonth];
     }
-    setUniqueMonths(uniqueMonthsFromData);
+    // setUniqueMonths(uniqueMonthsFromData);
+
+
+    let months: React.SetStateAction<string[]>;
+    let years = [];
+
+    if(!emptyData){
+      const filteredData = fetchedData.filter(entry => entry.month !== "initial");
+      const firstEntryDateMonth = filteredData.length > 0 ? filteredData[0].month : null;
+      const firstEntryDateYear = fetchedData[0].year;
+      const firstEntryMonthIndex = monthNames.indexOf(firstEntryDateMonth);
+      console.log(firstEntryDateMonth, firstEntryDateYear, firstEntryMonthIndex)
+
+      years = Array.from({ length: currentYear - firstEntryDateYear + 1 }, (_, i) => firstEntryDateYear + i).reverse();
+
+      if (Number(choosenYear) === firstEntryDateYear) {
+        months = monthNames.slice(firstEntryMonthIndex);
+      } else if (Number(choosenYear) === currentYear) {
+        months = monthNames.slice(0, currentDate.getMonth() + 1);
+      } else {
+        months = [];
+      }
+    }
+    else{
+      // # In 2026 fix this :) 
+      years.push(2025);
+
+      months = monthNames.slice(0, currentDate.getMonth() + 1);
+    }
+
+    // setMonthsInFetchedData(uniqueMonthsFromData.filter(month => month !== "initial"));
+    // # This might be a problem for later. In main account get back to this in July. 
+    setMonthsInFetchedData(fetchedData
+      .filter(entry => entry.year === Number(choosenYear) && entry.month !== "initial")
+      .map(entry => entry.month));
+    setUniqueMonths(months);
+    setUniqueYears(years);
+    // console.log(uniqueMonths, uniqueYears)
+    console.log(monthsInFetchedData)
+
+    const lastMonth = months[months.length - 1];
+    // console.log(lastMonth);
+    setLastMonthValue(lastMonth);
+
+
+
+
+
+
+
+
+
+
 
     const filteredData = filterByCurrency(fetchedData, choosenCurrency);
 
@@ -451,8 +518,10 @@ function App() {
       setMonthlyIncomeAndSpending([monthName, totalSpent]);
     });
     
+    //  ? Here is a bug with the income value. Because of that If I enter a value in previous month on the actual month will be not the correct value
     for (const row of userData.reverse()) {
       if (row.currency === primaryCurrency) {
+        // console.log(row.income)
         setIncomeOfPrimaryAccount(row.income); // Update state with income value
       } else if (row.currency === secondaryCurrency) {
         setIncomeOfSecondaryAccount(row.income); // Update state with income value
@@ -466,7 +535,7 @@ function App() {
         }
         else{ 
           setOtherPaymentMethodsIncome("0");
-        }
+          }
       }
     }
     // Sort the fetched data by month in ascending order
@@ -510,20 +579,20 @@ function App() {
     
     // Get the last entry for last month and current month
     const lastMonthIncome = lastMonthData.length > 0 ? lastMonthData[lastMonthData.length - 1] : { income: undefined };
-    console.log("Last Month: " + lastMonthIncome.month);
-    console.log("Last Months Income: " + lastMonthIncome.income);
+    // console.log("Last Month: " + lastMonthIncome.month);
+    // console.log("Last Months Income: " + lastMonthIncome.income);
     setInitialIncome(lastMonthIncome.income);
 
     
     const currentMonthIncome = currentMonthData.length > 0 ? currentMonthData[currentMonthData.length - 1] : { income: undefined };
-    console.log("Current Month: " + currentMonthIncome.month);
-    console.log("Current Months Income: " + currentMonthIncome.income);
+    // console.log("Current Month: " + currentMonthIncome.month);
+    // console.log("Current Months Income: " + currentMonthIncome.income);
     
     if(!lastMonthIncome.income && !currentMonthIncome.income){
-      console.log("No income");
+      // console.log("No income");
       setIncome(0);
     }else if(lastMonthIncome.income && currentMonthIncome.income){
-      console.log("Both income");
+      // console.log("Both income");
       if(choosenMonth === monthNames[currentDate.getMonth()]){
         setIncome(currentMonthIncome.income);
       }
@@ -535,12 +604,12 @@ function App() {
           row.payment === choosenPaymentMethod &&
           row.month === choosenMonth
         );
-        console.log(choosenMonthData);
-        console.log(choosenMonthData[choosenMonthData.length - 1].income);
+        // console.log(choosenMonthData);
+        // console.log(choosenMonthData[choosenMonthData.length - 1].income);
         setIncome(choosenMonthData[choosenMonthData.length - 1].income);
       }
     }else if(currentMonthIncome.income === undefined && lastMonthIncome.income){  
-      console.log("Last income");
+      // console.log("Last income");
       if(choosenMonth === monthNames[currentDate.getMonth()]){
         setIncome(lastMonthIncome.income);
         // setInitialIncome(lastMonthIncome.income);
@@ -553,15 +622,15 @@ function App() {
           row.payment === choosenPaymentMethod &&
           row.month === choosenMonth
         );
-        console.log(choosenMonthData);
-        console.log(choosenMonthData[choosenMonthData.length - 1].income);
+        // console.log(choosenMonthData);
+        // console.log(choosenMonthData[choosenMonthData.length - 1].income);
         setIncome(choosenMonthData[choosenMonthData.length - 1].income);
       }   
     }else if(currentMonthIncome.income && !lastMonthIncome.income){
-      console.log("Current income");
+      // console.log("Current income");
       setIncome(currentMonthIncome.income);
     }
-    console.log(initialIncome);
+    // console.log(initialIncome);
 
     setIsIncomeSetByAllData(true);
 
@@ -655,7 +724,7 @@ function App() {
         });
       }, 1500);
     }
-  }, [choosenMonth, isDataFetched, choosenCurrency, choosenPaymentMethod, income, fetchNow]);
+  }, [choosenYear, choosenMonth, isDataFetched, choosenCurrency, choosenPaymentMethod, income, fetchNow]);
   useEffect(() => {
     setTimeout(() => {
       Promise.all([fetchAllDataFromUser()])
@@ -669,7 +738,7 @@ function App() {
         setIsLoading(false); // Stop loading in case of error
       });
     }, 1500);
-  },[choosenMonth, choosenCurrency, choosenPaymentMethod])
+  },[choosenYear, choosenMonth, choosenCurrency, choosenPaymentMethod])
 
   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------\\
 
@@ -705,7 +774,7 @@ function App() {
 
   //Functions and Event handlers START
   const copyTextToClipboard = async (text: string, itemId: string) => {
-    // console.log(uniqueCurrencies);
+    console.log(uniqueCurrencies);
     try {
       await navigator.clipboard.writeText(text);
       setCopyEffect(true);
@@ -813,6 +882,7 @@ function App() {
   }
   const handleIncomeSubmit: KeyboardEvent = async (event) => {
     if (event.key === 'Enter' || event.keyCode === 13) {
+      const sentIncome = Number(incomeInput);
       const newIncome = (Number(income) + Number(incomeInput.replace(',', '.'))).toFixed(choosenFormat);
       setIncome(newIncome);
       setIncomeInput('');
@@ -830,6 +900,7 @@ function App() {
           currency: choosenCurrency,
           payment: choosenPaymentMethod,
           difference: Number(incomeInput.replace(',', '.')).toFixed(choosenFormat),
+          information: "Income Change",
           year: choosenYear,
         }),
       });
@@ -857,7 +928,8 @@ function App() {
     // console.log(currentMonthIncome + " " + Number(incomeInput.replace(',', '.')).toFixed(choosenFormat));
     const differenceIncome = Number(incomeInput.replace(',', '.')) + Number(currentMonthIncome);
     // console.log("Dif: " + differenceIncome);
-    if(choosenMonth !== monthNames[currentDate.getMonth()]){
+    // console.log(choosenMonth !== monthNames[currentDate.getMonth()])
+    if(choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()){
       const monthResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
         method: "POST",
         headers: {
@@ -866,12 +938,13 @@ function App() {
         body: JSON.stringify({
           userId: localStorage.getItem("userEmail"),
           month: monthNames[currentDate.getMonth()], 
+          // ? Not always correct, maybe
           income: Number(differenceIncome).toFixed(choosenFormat),
           currency: choosenCurrency,
           payment: choosenPaymentMethod,
           difference: Number(newIncome).toFixed(choosenFormat),
-          information: "Difference from previous Month(s)",
-          year: choosenYear,
+          information: "Difference from previous Month(s). "+ Number(sentIncome),
+          year: currentYear,
         }),
       });
       if(!monthResponse.ok){
@@ -1069,7 +1142,6 @@ function App() {
     // console.log(secondaryCurrency, thirdCurrency);
     
     // console.log(type);
-    
     
     
     // POST request to server
@@ -1275,7 +1347,29 @@ function App() {
     }
     // console.log(currentMonthIncome);
 
-    if(choosenMonth !== monthNames[currentDate.getMonth()]){
+    const getIncome = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&currency=${choosenCurrency}&payment=${choosenPaymentMethod}&year=${currentYear}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if(!getIncome.ok){
+      throw new Error('HTTP error ' + getIncome.status);
+    }
+    const getIncomeData = await getIncome.json();
+    let actualMonthIncome = income;
+    if(getIncomeData.length > 0){
+      actualMonthIncome = getIncomeData[getIncomeData.length-1].income;
+    }
+    else{ 
+      actualMonthIncome = income;
+    }
+    console.log(getIncomeData)
+    console.log("Current Month actual Income "+actualMonthIncome);
+    console.log("Current Amount: "+currentAmount);
+
+    const incomeIfPast = Number(actualMonthIncome) - currentAmount;
+    if(choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()){
       const monthResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
         method: "POST",
         headers: {
@@ -1284,12 +1378,13 @@ function App() {
         body: JSON.stringify({
           userId: localStorage.getItem("userEmail"),
           month: monthNames[currentDate.getMonth()], 
-          income: Number(currentMonthIncome) - currentAmount,
+          income: incomeIfPast,
           currency: choosenCurrency,
           payment: choosenPaymentMethod,
           difference: Number(currentAmount).toFixed(choosenFormat),
+          note: "Collapsable",
           information: "Difference from previous Month(s)",
-          year: choosenYear,
+          year: currentYear,
         }),
       });
       if(!monthResponse.ok){
@@ -1310,6 +1405,8 @@ function App() {
         console.log("Error in the choosenCurrency setting the new income.");
       }
     }
+  
+
     setShowTypes(false);
     setShowNote(false);
     setFetchNow(!fetchNow);
@@ -1317,13 +1414,37 @@ function App() {
     setIncome(newIncome);
   }
   const handleSelectChange = (event: { target: { value: any; }; }) => {
+    const yearElement = document.getElementsByName('year')[0] as HTMLSelectElement;
+    
     setChoosenMonth(event.target.value);
+    setChoosenYear(Number(yearElement.value));
+    console.log(event.target.value, yearElement.value)
+
+
+
     setAnimationKey(prevKey => prevKey + 1);
     exchangedRef.current?.classList.remove("d-block");
     exchangedRef.current?.classList.add("d-none");
     setAmount("");
     setShowTypes(false);
     setShowNote(false);
+  };
+  const handleYearChange = (event: { target: { value: any; }; }) => {
+    const monthElement = document.getElementsByName('month')[0] as HTMLSelectElement;
+    setChoosenYear(Number(event.target.value));
+    setTimeout(() => {
+      setChoosenMonth(monthElement.options[monthElement.options.length - 1].value);
+      console.log(event.target.value, monthElement.options[monthElement.options.length - 1].value);
+      (document.getElementsByName('month')[0] as HTMLSelectElement).value = monthElement.options[monthElement.options.length - 1].value;
+    }, 2000);
+    
+    
+    setAnimationKey(prevKey => prevKey + 1);
+    exchangedRef.current?.classList.remove("d-block");
+    exchangedRef.current?.classList.add("d-none");
+    setAmount("");
+    setShowTypes(false);
+    setShowNote(false); 
   };
 
   // General Data delete from all time.
@@ -1740,6 +1861,9 @@ function App() {
 
       setConfirmFunction(() => async () => {
         //Calculate the new income value
+
+        // ! Missing fucntion
+        // ? if the month or the year is different we need to also update the current Income value 
         let newIncome = Number(income) + Number(amount);
         switch(type){
           case 'Investment':
@@ -1807,8 +1931,9 @@ function App() {
             if (!IncomeResponse.ok) {
               throw new Error('HTTP error ' + IncomeResponse.status);
             }
-            setIsDataFetched(false);
             setTotalSavings(prevTotalSavings => (Number(prevTotalSavings) - amount).toFixed(choosenFormat));
+            setFetchNow(!fetchNow);
+            setIsDataFetched(false);
             break;
           case 'Withdraw & Deposit':
             let otherIncome = 0;
@@ -1894,6 +2019,55 @@ function App() {
               throw new Error('HTTP error ' + choosenPaymentMethodPost.status);
             } 
 
+            /*
+            | 14386 | szkcsgrg@gmail.com |    NULL | December | 1000.00 |    NULL |    NULL | EUR      | card    | 1000.00    | NULL | Income Change | 2024 |
+            | 14388 | szkcsgrg@gmail.com |      15 | December |  990.00 |    NULL |   10.00 | EUR      | card    | 10.00      |      | NULL          | 2024 |
+            | 14389 | szkcsgrg@gmail.com |      15 | December |   10.00 |    NULL |    NULL | EUR      | cash    | 10.00      |      | NULL          | 2024 |
+            | 14391 | szkcsgrg@gmail.com |    NULL | January  | 1000.00 |    NULL |    NULL | EUR      | card    | 10.00      | NULL | Income Change | 2025 |
+            */
+            //Not current month
+            if(choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()){
+              const getIncome = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&currency=${choosenCurrency}&payment=${payment}&year=${currentYear}`, {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+              if(!getIncome.ok){
+                throw new Error('HTTP error ' + getIncome.status);
+              }
+              const getIncomeData = await getIncome.json();
+              let actualMonthIncome = income;
+              if(getIncomeData.length > 0){
+                actualMonthIncome = getIncomeData[getIncomeData.length-1].income;
+              }
+              console.log("Current Month actual Income "+actualMonthIncome);
+
+              const incomeIfPast = Number(actualMonthIncome) - Number(amount);
+              console.log(incomeIfPast);
+              // const incomeChangePost = await fetch(`${backendServer}/setIncomeAfterWipe`, {
+              //   method: "POST",
+              //   headers: {
+              //     "Content-Type": "application/json",
+              //   },
+              //   body: JSON.stringify({
+              //     userId: localStorage.getItem("userEmail"),
+              //     month: monthNames[currentDate.getMonth()], 
+              //     income: incomeIfPast,
+              //     currency: choosenCurrency,
+              //     payment: payment,
+              //     difference: Number(amount).toFixed(choosenFormat),
+              //     note: "Collapsable",
+              //     information: "Difference from previous Month(s)",
+              //     year: currentYear,
+              //   }),
+              // });
+              // if(!incomeChangePost.ok){
+              //   throw new Error('HTTP error ' + incomeChangePost.status);
+              // }
+            }
+
+            
             // //Send two Delete methods to the server to delete the two entries.
             let currenctPaymentMethodDelete = await fetch(`${backendServer}/deleteSpendingsEntry?id=${id}`, {
               method: "DELETE",
@@ -1915,7 +2089,60 @@ function App() {
               throw new Error('HTTP error ' + otherPaymentMethodDelete.status);
             }
             id=id-1;
+            
             setIncome(newIncome);
+
+
+            // - Set the new income value to the currentMonths income value.
+           
+            
+            
+            // - Post the new Income Value as well.
+            if(choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()){
+              // - Get the current Income
+              const getIncome = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&currency=${choosenCurrency}&payment=${choosenPaymentMethod}&year=${currentYear}`, {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+              if(!getIncome.ok){
+                throw new Error('HTTP error ' + getIncome.status);
+              }
+              const getIncomeData = await getIncome.json();
+              let actualMonthIncome = income;
+              if(getIncomeData.length > 0){
+                actualMonthIncome = getIncomeData[getIncomeData.length-1].income;
+              }
+              console.log("Current Month actual Income "+actualMonthIncome);
+
+              // - Calculate the new income value
+              const incomeIfPast = Number(actualMonthIncome) + amount;
+              console.log(incomeIfPast);
+              // # GET BACK TO HERE :) 
+              // const incomeChangePost = await fetch(`${backendServer}/setIncomeAfterWipe`, {
+              //   method: "POST",
+              //   headers: {
+              //     "Content-Type": "application/json",
+              //   },
+              //   body: JSON.stringify({
+              //     userId: localStorage.getItem("userEmail"),
+              //     month: monthNames[currentDate.getMonth()], 
+              //     income: incomeIfPast,
+              //     currency: choosenCurrency,
+              //     payment: choosenPaymentMethod,
+              //     difference: Number(amount).toFixed(choosenFormat),
+              //     note: "Collapsable",
+              //     information: "Difference from previous Month(s)",
+              //     year: currentYear,
+              //   }),
+              // });
+              // if(!incomeChangePost.ok){
+              //   throw new Error('HTTP error ' + incomeChangePost.status);
+              // }
+            }
+
+
             break;
           case "Exchange":
             let otherCIncome = 0;
@@ -2196,6 +2423,7 @@ function App() {
             }
             break;
           default:
+            // ? Here is another bug
             //Send a DELETE request to the server to delete only this entry
             const response = await fetch(`${backendServer}/deleteSpendingsEntry?id=${id}`, {
                 method: "DELETE",
@@ -2208,43 +2436,44 @@ function App() {
             }
              
             //IF the choosenMonth is not the currentMonth then, add the amount to the currentMonthsIncome. 
-            if(choosenMonth !== monthNames[currentDate.getMonth()]){
-              let currentMonthIncome = 0;
+            if(choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()){
+              const getIncome = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&currency=${choosenCurrency}&payment=${payment}&year=${currentYear}`, {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+              if(!getIncome.ok){
+                throw new Error('HTTP error ' + getIncome.status);
+              }
+              const getIncomeData = await getIncome.json();
+              let actualMonthIncome = income;
+              if(getIncomeData.length > 0){
+                actualMonthIncome = getIncomeData[getIncomeData.length-1].income;
+              }
+              console.log("Current Month actual Income "+actualMonthIncome);
 
-              if(choosenCurrency === primaryCurrency){
-                currentMonthIncome = Number(incomeOfPrimaryAccount);
-              }
-              else if(choosenCurrency === secondaryCurrency){
-                currentMonthIncome = Number(incomeOfSecondaryAccount);
-              }
-              else if(choosenCurrency === thirdCurrency){
-                currentMonthIncome = Number(incomeOfThirdAccount);
-              }
-              else{
-                console.log("Error in the choosenCurrency");
-                // console.log(choosenCurrency);
-                // console.log(currentMonthIncome);
-              }
-
-              let diffIncome = Number(currentMonthIncome) + Number(amount);
-
-              const diffResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
-                method: "POST",
+              const incomeIfPast = Number(actualMonthIncome) + Number(amount);
+              console.log(incomeIfPast);
+              const incomeChangePost = await fetch(`${backendServer}/setIncomeAfterWipe`, {
+                method: "POST", 
                 headers: {
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                   userId: localStorage.getItem("userEmail"),
                   month: monthNames[currentDate.getMonth()], 
-                  income: diffIncome,
+                  income: incomeIfPast,
                   currency: choosenCurrency,
-                  payment: choosenPaymentMethod,
-                  information: "Reverse, Difference from previous month(s)",
-                  year: choosenYear,
+                  payment: payment,
+                  difference: Number(amount).toFixed(choosenFormat),
+                  note: "Collapsable",
+                  information: "Difference from previous Month(s)",
+                  year: currentYear,
                 }),
               });
-              if (!diffResponse.ok) {
-                throw new Error('HTTP error ' + diffResponse.status);
+              if(!incomeChangePost.ok){
+                throw new Error('HTTP error ' + incomeChangePost.status);
               }
             }
 
@@ -2269,7 +2498,7 @@ function App() {
             }
             setIsDataFetched(false);
           break;
-        }
+            }
 
         setFetchNow(!fetchNow);
         setIncome(newIncome);
@@ -2277,9 +2506,11 @@ function App() {
         setShowAreYouSureGenericModal(false);
       });
     }
-  }
+    }
   // Calculates the total amount of the entries
   const getEntryAmount = (entry: Log) => {
+    // ? could be a bug here with Log NAN output
+    // if(choosenMonth !== monthNames[currentDate.getMonth()])
     if ((entry.type === "Exchange" || entry.type === "Withdraw & Deposit") && entry.amount === null) {
       return "+" + Number(entry.difference).toFixed(choosenFormat) + choosenTag;
     } else if (entry.type === "Income" && entry.amount === null) {
@@ -2321,14 +2552,15 @@ function App() {
   };
   // Based on the id of the spendings it determines if the user can edit or not the entry.
   const getTitle = (date: string, monthNames: string[], entry: { type: string }) => {
-    const currentMonthName = monthNames[currentDate.getMonth()];
-    if (date !== currentMonthName) {
-      return "You can't edit past Entries!";
-    }
+    // const currentMonthName = monthNames[currentDate.getMonth()];
+    // if (date !== currentMonthName) {
+    //   return "You can't edit past Entries!";
+    // }
     if (entry.type === 'Income' ) { //|| entry.type === 'Exchange'
       return "You can't edit this Entry!";
     }
-    else if(entry.type === 'Exchange' ){
+    else if(entry.type === 'Exchange' || entry.type === "Withdraw" ){
+      // # For later change it here accordignly Exchange Witdraw TITLE
       return "Click to delete this Entry!";
     }
     return "Click to edit this entry!";
@@ -2357,6 +2589,9 @@ function App() {
   const handleEntryChange = async (entry: Log) => {
     // Save the changes (e.g., update the state or make an API call)
     setEditingEntryId(0);
+    // ! Missing function
+    // ? if the month or the year is different we need to also update the current Income value 
+    // - We need the current months income value and the actual months income. 
     switch (entry.type) {
       case 'Income':
         setErrorMessage("You can't edit this entry!");
@@ -2481,6 +2716,7 @@ function App() {
         // setFetchNow(!fetchNow);
         break;
       case 'Withdraw & Deposit':
+        /* 
         //Calculate the new income value for both payment methods.
         //Chose the other payment method
         let otherIncome = 0;
@@ -2602,15 +2838,15 @@ function App() {
           otherIncome = Number(data[0].income) - Number(differencBetweenAmounts) ;
           currentIncome = Number(income) + Number(differencBetweenAmounts);
         }
-        /*
-        console.log("//////////////////////////////////////////////////////////////////")
-        console.log("Current id: "+currentId);
-        console.log("Current Income: "+currentIncome);
-        console.log("------------------")
-        console.log("Other id: " +otherId);
-        console.log("Other income: " +otherIncome);
-        console.log("//////////////////////////////////////////////////////////////////")
-        */
+        
+        // console.log("//////////////////////////////////////////////////////////////////")
+        // console.log("Current id: "+currentId);
+        // console.log("Current Income: "+currentIncome);
+        // console.log("------------------")
+        // console.log("Other id: " +otherId);
+        // console.log("Other income: " +otherIncome);
+        // console.log("//////////////////////////////////////////////////////////////////")
+        
 
 
         //We need change the amount only on the original entry. where we have an amount. 
@@ -2634,7 +2870,7 @@ function App() {
           //send amount for current
           //send other account as well without amount
 
-          // /*
+          // 
           //Current
           let choosenPaymentMethodPost = await fetch(`${backendServer}/editEntry`, {
             method: "POST",
@@ -2686,7 +2922,7 @@ function App() {
           if(!otherPaymentMethodPost.ok){
             throw new Error('HTTP error ' + otherPaymentMethodPost.status);
           }
-          // */
+          // 
         }
         else{
           //send without amount for current and send for other
@@ -2749,7 +2985,7 @@ function App() {
           if(!otherPaymentMethodPost.ok){
             throw new Error('HTTP error ' + otherPaymentMethodPost.status);
           }
-          // */
+          // 
         }
 
         otherId = 0;
@@ -2757,14 +2993,12 @@ function App() {
         differencBetweenAmounts = 0;
         setFetchNow(!fetchNow);
         setIncome(currentIncome);
-        break;
-      case 'Exchange':
-        console.log(monthlyIncomeAndSpending);
-        //Show BOTH of the inputs? 
+        */
         break;
       default:
+        // ? Here is huge bug. Not always. Maybe fixed. NOT
+        // - Set the actual current Months Income
         const pastChange = monthNames[currentDate.getMonth()] !== choosenMonth;
-        // console.log(monthNames[currentDate.getMonth()]);
         console.log(localStorage.getItem("userEmail"), monthNames[currentDate.getMonth()], choosenCurrency, choosenPaymentMethod, choosenYear);
         const getIncome = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&currency=${choosenCurrency}&payment=${choosenPaymentMethod}&year=${choosenYear}`, {
           method: "GET",
@@ -2780,10 +3014,12 @@ function App() {
         if(getIncomeData.length > 0){
           actualMonthIncome = getIncomeData[getIncomeData.length-1].income;
         }
-        console.log(actualMonthIncome);
+        console.log("Current Month actual Income "+actualMonthIncome);
         const newIncomeForActualMonth = Number(actualMonthIncome) + (Number(entry.amount) - Number(editedAmount));
-        console.log(newIncomeForActualMonth);
-        if(pastChange){
+        console.log("New Income for actual Month "+ newIncomeForActualMonth);
+        // /*
+        if(pastChange){ //If the choosen month is not the actual month...
+          console.log("Its past change");
           const pastINCOME = await fetch(`${backendServer}/setIncomeAfterWipe`, {
             method: "POST",
             headers: {
@@ -2796,27 +3032,30 @@ function App() {
               currency: choosenCurrency,
               payment: choosenPaymentMethod,
               information: "Edited Income",
-              year: choosenYear,
+              year: currentYear,
             }),
           });
           if(!pastINCOME.ok){
             throw new Error('HTTP error ' + pastINCOME.status);
           }
         }
+        // */
 
+        // - Set the choosenMonths Income. 
         const newIncome = ( Number(income) + Number(entry.amount) ) - Number(editedAmount);
         const type = updatedSpendings.find(spending => spending.type === editedCategory)?.id || 0;
-        // console.log("ID: "+entry.id);
-        // console.log("Original Type: "+entry.type);
-        // console.log("Edited Type: "+type);
-        // console.log("Amount: "+Number(entry.amount).toFixed(choosenFormat));
-        // console.log("Difference: "+ Number(entry.difference).toFixed(choosenFormat))
-        // console.log("Edited Amount: "+Number(entry.amount).toFixed(choosenFormat))
-        // console.log("NEW INCOME: "+Number(newIncome).toFixed(choosenFormat));
+        console.log("ID: "+entry.id);
+        console.log("Original Type: "+entry.type);
+        console.log("Edited Type: "+type);
+        console.log("Amount: "+Number(entry.amount).toFixed(choosenFormat));
+        console.log("Difference: "+ Number(entry.difference).toFixed(choosenFormat))
+        console.log("Edited Amount: "+Number(entry.amount).toFixed(choosenFormat))
+        console.log("NEW INCOME: "+Number(newIncome).toFixed(choosenFormat));
 
-        // console.log("Default Note: "+entry.note);
-        // console.log("Updated Note: "+editedNote);
+        console.log("Default Note: "+entry.note);
+        console.log("Updated Note: "+editedNote);
         // Send a PUT request to the server to update the entry
+        // /*
         const postResponse = await fetch(`${backendServer}/editEntry`, {
           method: "POST",
           headers: {
@@ -2858,6 +3097,7 @@ function App() {
         if(!postINCOME.ok){
           throw new Error('HTTP error ' + postINCOME.status);
         }
+        // */
 
         setFetchNow(!fetchNow);
         setIncome(newIncome);
@@ -2870,13 +3110,14 @@ function App() {
   /*  @end */
 
   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------\\
-
+  
   return (
     <section className="container-fluid"> 
-      {/* Navbar */}
-      <nav className="navbar mx-2 d-flex justify-content-around align-items-start">
+      {/* > Navbar */}
+      <nav 
+      className="navbar mx-2 d-flex justify-content-around align-items-start">
 
-        {/* Currency */}
+        {/* > Currency */}
         <div className="col-4 gap-1 gap-md-2 currency d-flex flex-column flex-md-row">
           <> 
             {primaryCurrency !== 'null' && 
@@ -2906,12 +3147,17 @@ function App() {
           </>
         </div>
 
-        {/* Date */}
+        {/* > Cash/Card ; Date ; Bin  */}
         <div className="col-4 my-lg-5 d-flex justify-content-center">
+        
           <h5 className="text-center d-flex flex-row align-items-center gap-1 gap-md-3">
+            {/* > Cash Card Icon */}
             <button title="Swap between Cash and Card" className="button-round pointer d-flex align-items-center justify-content-center" onClick={() => {setChoosenPaymentMethod(choosenPaymentMethod === "cash" ? "card" : "cash"); setAnimationKey(prevKey => prevKey + 1); setAmount(""); setShowTypes(false);setShowNote(false);}}>
               {choosenPaymentMethod === "card" ? <i className="bi bi-credit-card-fill"></i> : <i className="bi bi-coin"></i>}
             </button>
+            {/* > Year Month SELECTION */}
+            
+            {/* Original 
             {uniqueMonths.length > 0 ? (
               <select className="month" onChange={handleSelectChange} defaultValue={monthNames[currentDate.getMonth()]}>
                 {uniqueMonths.filter(month => month !== 'initial').map((month, index) => (
@@ -2923,15 +3169,37 @@ function App() {
               ) : (
                 <span className="month">{monthNames[currentDate.getMonth()]}</span> 
               )}
-              {isCurrentMonth && (
-                <>
-                  <button title="Delete Monthly-Spendings on this Currency-Profile" className="button-round pointer d-flex align-items-center justify-content-center" onClick={resetSpendings}><i className="bi bi-trash-fill"></i></button>
-                </>
-              )}
+            */}
+
+            <div> 
+              {/* # uniqueMonths should be the accent color */}
+              <select name="year" onChange={handleYearChange} defaultValue={Number(currentDate.getFullYear())}>
+                {uniqueYears.map((year, index) => (
+                  <option key={index} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+              <select name="month" onChange={handleSelectChange} defaultValue={lastMonthValue}>
+                {uniqueMonths.filter(month => month !== 'initial').map((month, index) => (
+                  <option key={index} value={month}  style={monthsInFetchedData.includes(month) ? { fontWeight: 'bold', color: '#daa4fc' } : {}}>
+                    {month}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+
+            {/* - Reset Icon */}
+            {isCurrentMonth && isCurrentYear && (
+              <>
+                <button title="Delete Monthly-Spendings on this Currency-Profile" className="button-round pointer d-flex align-items-center justify-content-center" onClick={resetSpendings}><i className="bi bi-trash-fill"></i></button>
+              </>
+            )}
           </h5>
         </div>
 
-        {/* Settings Icon */}
+        {/* > Settings Icon */}
         <div className="col-4 user d-flex flex-row justify-content-end" >
           <Dropdown className="dropdown" title="Settings">
             <Dropdown.Toggle className="drop-toggle" variant="" id="dropdown-menu">
@@ -2947,9 +3215,7 @@ function App() {
         
         </div> 
 
-
-
-        {/* Settings */}
+        {/* > Settings */}
         <Modal className="modal-xl" show={showSettingsModal} onHide={() => setShowSettingsModal(false)}>
           <Modal.Header className="modal-header">
             <Modal.Title>Settings</Modal.Title>
@@ -3181,10 +3447,7 @@ function App() {
           </Modal.Body>
         </Modal>
 
-
-
-
-        {/* Are you sure Modal */}
+        {/* > Are you sure Modal */}
         <Modal className="modal" show={showAreYouSureModal} onHide={() => setShowAreYouSureModal(false)} >
           <Modal.Header>
             <Modal.Title>Are you sure?</Modal.Title>
@@ -3200,7 +3463,7 @@ function App() {
           </Modal.Body>
         </Modal>
 
-        {/* Are you sure Generic Modal */}
+        {/* > Are you sure Generic Modal */}
         <Modal className="modal" show={showAreYouSureGenericModal} onHide={() => setShowAreYouSureGenericModal(false)} >
           <Modal.Header>
             <Modal.Title>Are you sure?</Modal.Title>
@@ -3220,7 +3483,7 @@ function App() {
           </Modal.Body>
         </Modal>
 
-        {/* Error Modal */}
+        {/* > Error Modal */}
         <Modal className="modal" show={ShowErrorMessage} onHide={() => setShowErrorMessage(false)} >
             <Modal.Header>
               <Modal.Title>{errorMessage}</Modal.Title>
@@ -3247,7 +3510,7 @@ function App() {
 
       </nav>
 
-      {/* Income & Spending */}
+      {/* > Income & Spending */}
       <motion.section 
       initial={{ opacity: 0 }}
       transition={{ duration: 2.5, delay: 0.5 }}
@@ -3336,7 +3599,7 @@ function App() {
         </div>
       </motion.section>
       
-      {/* Types, Categories */} 
+      {/* > Types, Categories */} 
       <motion.section 
       initial={{ opacity: 0 }}
       transition={{ duration: 2 }}
@@ -3360,14 +3623,12 @@ function App() {
         </div>
       </motion.section>
 
-      {/* Spendings */}
+      {/* > Spendings */}
       <motion.section 
       className="mt-md-5 my-1 mb-5 d-flex justify-content-center"
       initial={{ opacity: 0}}
       transition={{ duration: 2 }}
-      animate={{ opacity: 1}}
-      // style={{ scale }}
-      >
+      animate={{ opacity: 1}}>
         
         <motion.div 
         key={animationKey}
@@ -3398,7 +3659,13 @@ function App() {
         </motion.div>
       </motion.section>
 
-      {/* Log */}
+      {/* > Log */}
+      {/* ? To many Difference from previous months messages */}
+      {/* # if the user has 0 entry point in the current month, dont include the income changes where difference is "" */}
+      {/* # OR add a new collapse section. */}
+      {/* # OR add a new sorting option where the user can disable informations like "Difference..."  */} {/* ! I like this more */}
+      {/* - I added "Collapsable" text for Notes # If multiple Notes has the same text it should get them together and sum the values up with Information shown. */}
+      {/*  */}
       <motion.section 
       initial={{ opacity: 0, y: 100 }}
       transition={{ duration: 1, delay: 3 }}
@@ -3434,8 +3701,7 @@ function App() {
                     // onClick={getOnClickHandler(choosenMonth, monthNames, entry, handleDeleteEntry)} 
                     onClick={() => handleEditClick(entry)}
                     className={"logEntry col-12 col-lg-5 m-1 p-3 p-lg-4 " + (entry.type !== 'Income' ?  "pointer" : "not-allowed")}
-                    ref={editingEntryId === entry.id ? editRef : null}
-                    >
+                    ref={editingEntryId === entry.id ? editRef : null}>
                     <div className="d-block" ref={simpleEntryRef} >
                       <div className="d-flex justify-content-between">
                         {editingEntryId === entry.id && entry.type !== 'Exchange' && entry.type !== 'Withdraw & Deposit' ? (
@@ -3456,7 +3722,7 @@ function App() {
                         )
                         }
                   
-                        {(editingEntryId === entry.id && entry.type !== 'Exchange')? (
+                        {(editingEntryId === entry.id && (entry.type !== 'Exchange' && entry.type !== "Withdraw & Deposit")) ? (
                           <>
                             <h5 className="col-6 smallerI d-flex align-items-center justify-content-end position-realtive">
                               <span className="pre-tag">{getEntryAmount(entry).slice(0, 1)}</span>
@@ -3472,7 +3738,18 @@ function App() {
                             </h5>
                           </>
                         ) : (
-                          <h5>{getEntryAmount(entry)}</h5>
+                          entry.information && !entry.information.includes("Difference from previous Month(s)") ?
+                            <h5>{getEntryAmount(entry)}</h5>
+                            :
+                            <h5>{entry.information ?
+                               parseFloat(entry.information.split(".")[1]) > 0 ?
+                               "+" + parseFloat(entry.information.split(".")[1]).toFixed(choosenFormat) + choosenTag
+                               :
+                               parseFloat(entry.information.split(".")[1]).toFixed(choosenFormat) + choosenTag
+
+                               : 
+                               getEntryAmount(entry)
+                               }</h5>
                         )}
                       
                       </div>
@@ -3492,7 +3769,7 @@ function App() {
                         </h5>
                       }  */}
                       <div className="col d-flex justify-content-between">
-                        {(editingEntryId === entry.id && entry.type !== "Exchange") ? (
+                        {(editingEntryId === entry.id && (entry.type !== 'Exchange' && entry.type !== "Withdraw & Deposit")) ? (
                           <span className="d-flex align-items-center justify-content-start">
                             <input 
                               className="smallerInput"
@@ -3504,31 +3781,38 @@ function App() {
                               />
                           </span>
                         ) : (
-                          entry.note ? 
-                            <>
-                              {entry.information !== 'Edited' &&
-                                <>
-                                  <span>{entry.note}</span>
-                                  <span>{entry.information}</span>
-                                </>
-                              }
-                            </>
-                          :
-                          entry.information !== 'Edited' && (
-                            <>
-                              <span>{entry.information}</span>
-                            </>
-                          )
+                          // entry.note ? 
+                          //   <>
+                          //     {entry.information !== 'Edited' &&
+                          //       <>
+                          //         {/* <span>{entry.note}</span> */}
+                          //         <span>{entry.information}</span>
+                          //       </>
+                          //     }
+                          //   </>
+                          // : 
+                            (
+                              entry.information && !entry.information.includes("Difference from previous Month(s)") ? 
+                              (
+                                entry.information !== 'Edited' && (
+                                  <>
+                                    <span>{entry.information}</span>
+                                  </>
+                                )
+                              ) : (
+                                entry.information ? <span>{entry.information.split(".")[0]}</span> : null
+                              )
+                            )
                         )}
                         {incomeVisibility && (
                           entry.information !== 'Edited' ? (
                             <>
-                              <span>{entry.note}</span>
+                              {editingEntryId !== entry.id && <span>{entry.note}</span>}
                               <span>Income After: {Number(entry.income).toFixed(choosenFormat)}{choosenTag}</span>
                             </>
                           ) :(
                             <>
-                              <span>{entry.note}</span>
+                              {editingEntryId !== entry.id && <span>{entry.note}</span>}
                               <span>Income After Edit: {Number(entry.income).toFixed(choosenFormat)}{choosenTag}</span>
                             </>
                           )
@@ -3537,8 +3821,8 @@ function App() {
                     </div>
                     {(editingEntryId === entry.id) && (
                       <div className="d-flex justify-content-end gap-2 mt-3">
-                        <button className={entry.type !== "Exchange" ? "button-secondary" : ""} onClick={(e) => {e.stopPropagation(); handleDeleteEntry(entry.id, entry.type, entry.amount, entry.payment);}}>Delete</button>
-                        {entry.type !== "Exchange" &&
+                        <button className={(entry.type !== 'Exchange' && entry.type !== "Withdraw & Deposit") ? "button-secondary" : ""} onClick={(e) => {e.stopPropagation(); handleDeleteEntry(entry.id, entry.type, entry.amount, entry.payment);}}>Delete</button>
+                        {(entry.type !== 'Exchange' && entry.type !== "Withdraw & Deposit") &&
                           <button onClick={(e) => {e.stopPropagation(); handleEntryChange(entry);}}>Save</button>
                         }
                       </div>
@@ -3551,7 +3835,7 @@ function App() {
       </motion.section>
 
 
-      {/* Footer */}
+      {/* > Footer */}
       <footer className="fixed-bottom py-2 py-lg-3">
         <div className="d-none d-lg-flex flex-row justify-content-center gap-5">
           <h5 className="text-center">
@@ -3587,4 +3871,5 @@ function App() {
 }
 
 export default App
+
 

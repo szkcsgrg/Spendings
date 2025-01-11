@@ -25,13 +25,16 @@ input[type="text"]:focus{
 select{
     background-color: transparent;
     color: colors.$accent-orange;
+    // color: colors.$color;
     font-weight: 700;
     outline: none;
     border: none;
+    
 }
 option{
     background-color:  colors.$background-light;
-    color: colors.$accent-orange;
+    // color: colors.$accent-orange;
+    color: colors.$color;
     font-weight: 700;
     outline: none;
     border: none;

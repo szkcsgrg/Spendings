@@ -24,6 +24,7 @@ interface AuthContextProps {
   logInGoogle: () => void;
   logInGithub: () => void;
   logOut: () => void;
+  errorMessage: string;
 }
 
 export const AuthContext = createContext<AuthContextProps>({
@@ -36,12 +37,14 @@ export const AuthContext = createContext<AuthContextProps>({
   logInGoogle: () => {},
   logInGithub: () => {},
   logOut: () => {},
+  errorMessage: "",
 });
 
 export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
   const backendServer = import.meta.env.VITE_APP_SERVER;
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isFirstLogin, setIsFirstLogin] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
   
 
   useEffect(() => {
@@ -63,41 +66,56 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
         localStorage.setItem("userEmail", user.email);
         localStorage.setItem("userPhoto", user.photoURL);
         // Send a GET request to the server to check if the user exists
-        const response = await axios.get(`${backendServer}/checkUser`, {
-          params: {
-            user_id: localStorage.getItem("userEmail"),
+        try {
+          const response = await axios.get(`${backendServer}/checkUser`, {
+            params: {
+              user_id: localStorage.getItem("userEmail"),
+            }
+          });
+
+          if(response.status === 500){
+            setErrorMessage("There is a short outage at the moment. Please try again later.");
+          }else {
+            setErrorMessage("");
+            if (!response.data || response.data.length === 0) {
+              setIsFirstLogin(true);
+            } else {
+              if (!response || !response.data || response.data.length === 0) {
+                setIsFirstLogin(true);
+              } else {
+                  const primaryName = response.data[0].primary_name === "" ? "null" : response.data[0].primary_name;
+                  const secondaryName = response.data[0].secondary_name === "" ? "null" : response.data[0].secondary_name;
+                  const thirdName = response.data[0].third_name === "" ? "null" : response.data[0].third_name;
+                
+                  const primaryFormat = response.data[0].primary_format === "" ? "null" : response.data[0].primary_format;
+                  const secondaryFormat = response.data[0].secondary_format === "" ? "null" : response.data[0].secondary_format;
+                  const thirdFormat = response.data[0].third_format === "" ? "null" : response.data[0].third_format;
+                
+                  const primaryTag = response.data[0].primary_tag === "" ? "null" : response.data[0].primary_tag;
+                  const secondaryTag = response.data[0].secondary_tag === "" ? "null" : response.data[0].secondary_tag;
+                  const thirdTag = response.data[0].third_tag === "" ? "null" : response.data[0].third_tag;
+                
+                  localStorage.setItem("primary_name", primaryName);
+                  localStorage.setItem("secondary_name", secondaryName);
+                  localStorage.setItem("third_name", thirdName);
+                
+                  localStorage.setItem("primary_format", primaryFormat);
+                  localStorage.setItem("secondary_format", secondaryFormat);
+                  localStorage.setItem("third_format", thirdFormat);
+                
+                  localStorage.setItem("primary_tag", primaryTag);
+                  localStorage.setItem("secondary_tag", secondaryTag);
+                  localStorage.setItem("third_tag", thirdTag);
+                  
+                  localStorage.setItem("settings", JSON.stringify(response.data[0].settings_json));
+                setIsFirstLogin(false);
+              }
+            }
           }
-        });
-        if (!response || !response.data || response.data.length === 0) {
-          setIsFirstLogin(true);
-        } else {
-            const primaryName = response.data[0].primary_name === "" ? "null" : response.data[0].primary_name;
-            const secondaryName = response.data[0].secondary_name === "" ? "null" : response.data[0].secondary_name;
-            const thirdName = response.data[0].third_name === "" ? "null" : response.data[0].third_name;
-          
-            const primaryFormat = response.data[0].primary_format === "" ? "null" : response.data[0].primary_format;
-            const secondaryFormat = response.data[0].secondary_format === "" ? "null" : response.data[0].secondary_format;
-            const thirdFormat = response.data[0].third_format === "" ? "null" : response.data[0].third_format;
-          
-            const primaryTag = response.data[0].primary_tag === "" ? "null" : response.data[0].primary_tag;
-            const secondaryTag = response.data[0].secondary_tag === "" ? "null" : response.data[0].secondary_tag;
-            const thirdTag = response.data[0].third_tag === "" ? "null" : response.data[0].third_tag;
-          
-            localStorage.setItem("primary_name", primaryName);
-            localStorage.setItem("secondary_name", secondaryName);
-            localStorage.setItem("third_name", thirdName);
-          
-            localStorage.setItem("primary_format", primaryFormat);
-            localStorage.setItem("secondary_format", secondaryFormat);
-            localStorage.setItem("third_format", thirdFormat);
-          
-            localStorage.setItem("primary_tag", primaryTag);
-            localStorage.setItem("secondary_tag", secondaryTag);
-            localStorage.setItem("third_tag", thirdTag);
-            
-            localStorage.setItem("settings", JSON.stringify(response.data[0].settings_json));
-          setIsFirstLogin(false);
+        } catch (error) {
+          setErrorMessage("There is a short outage at the moment. Please try again later.");
         }
+        
       }
     })
     // Clean up the listener when the component unmounts
@@ -311,7 +329,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }
 
   return (
     // registerPassword, loginPassword,
-      <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, isFirstLogin, setIsFirstLogin,  logInGoogle, logInGithub, logOut }}>
+      <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, isFirstLogin, setIsFirstLogin,  logInGoogle, logInGithub, logOut, errorMessage }}>
         {children}
       </AuthContext.Provider>
     );
