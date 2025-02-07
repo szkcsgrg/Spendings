@@ -2423,7 +2423,7 @@ function App() {
             }
             break;
           default:
-            // ? Here is another bug
+            // ? Here is another bug with positive and negative values? 
             //Send a DELETE request to the server to delete only this entry
             const response = await fetch(`${backendServer}/deleteSpendingsEntry?id=${id}`, {
                 method: "DELETE",
