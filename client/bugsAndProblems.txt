@@ -1,0 +1,72 @@
+// - What is working what is not. 
+
+// ----------------------------------------------------------- \\
+
+✅
+ 
+// ? Esc on exchange does not work. And also updates the income value before send.
+// ? The delete month just deletes the selectedCurrency and not all of the currencys.
+
+// # First of all check one single month.
+    - income increase/decrease ✅
+    - spent basic ✅ 
+    - spent withdraw ✅ From both side; Works also with - values
+    - spent exchange ✅ From both side; // # I havent tried with - values
+    - spent savings  ✅
+    - spent investment ✅
+ 
+// # Insert Data in previous month, preferably with year change.
+    - income increase/decrease ✅
+    - spent basic ✅ Works with - values as well. 
+    - spent withdraw // ? It updates the selected month (December) and updates the latest month, but! only the card value. It does not update the cash side. 
+    - spent exchange // ? There was a secondary button not just the other currency. // ? Also the same problem came up. It does not update the secondary currency in the actual month.
+                    +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
+                    | 14499 | szkcsgrg@gmail.com |    NULL | February | 50000.00 |    NULL |    NULL | HUF      | card    | NULL       | NULL             | Reverse                                   | 2025 |
+                    | 14500 | szkcsgrg@gmail.com |    NULL | February |   700.00 |    NULL |    NULL | EUR      | card    | 100.00     | Collapsable      | Difference from previous Month(s)         | 2025 |
+                    | 14501 | szkcsgrg@gmail.com |      17 | December | 90000.00 |    NULL |    NULL | HUF      | card    | 40000.00   |                  | 100.00 EUR to 40000.00 HUF                | 2024 |
+                    | 14502 | szkcsgrg@gmail.com |      17 | December |   700.00 |    NULL |  100.00 | EUR      | card    | 100.00     |                  | 100.00 EUR to 40000.00 HUF                | 2024 |
+                    +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
+                    Before the change the vales looked like: 
+                        December HUF 50000 (becasue of the current Month). 
+                        December EUR 800 
+                        February HUF 50000 (14499)
+                        February EUR 800
+                        We miss a row where should be the updated HUF 
+    - spent savings ✅ Works with - values as well
+    - spent investment ✅ Works with - values as well
+
+// # Change Data in current.
+    - change basic category
+        - increase the amount
+        - decrease the amount
+        - change Note
+    - change savings
+    - change investment
+
+// # Change Data in previous month.
+    - change basic category
+        - increase the amount
+        - decrease the amount
+        - change Note
+    - change investment
+    - change savings
+
+// # Delete Data in current month. 
+    - Delete basic category
+    - Delete withdraw 
+        - Delete from the other side as well
+    - Delete exchange
+        - Delete from the other side as well
+    - Delete savings
+    - Delete investment
+
+// # Delete Data in previous month.
+    - Delete basic category
+    - Delete withdraw 
+        - Delete from the other side as well
+    - Delete exchange
+        - Delete from the other side as well
+    - Delete savings
+    - Delete investment
+
+// # Delete a month. 
