@@ -6,6 +6,7 @@
  
 // ? Esc on exchange does not work. And also updates the income value before send.
 // ? The delete month just deletes the selectedCurrency and not all of the currencys.
+// ? If the server is down, the Service Unavailable message shows even if the user is not logged in. Setup a proper landing screen and a Message below. 
 
 // # First of all check one single month.
     - income increase/decrease ✅
