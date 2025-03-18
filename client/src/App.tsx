@@ -775,6 +775,7 @@ function App() {
   //Functions and Event handlers START
   const copyTextToClipboard = async (text: string, itemId: string) => {
     console.log(uniqueCurrencies);
+    console.log(monthlyIncomeAndSpending)
     try {
       await navigator.clipboard.writeText(text);
       setCopyEffect(true);
@@ -2554,11 +2555,12 @@ function App() {
     }
   };
   // Based on the id of the spendings it determines if the user can edit or not the entry.
-  const getTitle = (date: string, monthNames: string[], entry: { type: string }) => {
+  const getTitle = (date: string, monthNames: string[], entry: { type: string }) => { 
     // const currentMonthName = monthNames[currentDate.getMonth()];
     // if (date !== currentMonthName) {
     //   return "You can't edit past Entries!";
     // }
+    console.log(date, monthNames)
     if (entry.type === 'Income' ) { //|| entry.type === 'Exchange'
       return "You can't edit this Entry!";
     }
