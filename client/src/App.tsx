@@ -1936,45 +1936,53 @@ function App() {
             setIsDataFetched(false);
             break;
           case 'Withdraw & Deposit':
+
+            // other income means always not the current, choosen one.
             let otherIncome = 0;
+            let otherPaymentMethod = payment === 'card' ? 'cash' : 'card';
 
-            //Chose the other payment method
-            let otherPaymentMethod = '';
-            if(payment === 'card'){
-              otherPaymentMethod = "cash";
-            }
-            else{
-              otherPaymentMethod = "card";
-            }
+            /*
+              // - Helper Data
+              +-------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
+              | id    | type_id | month    | income   | saving  | amount  | currency | payment | difference | note             | information                               | year |
+              +-------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
+              | 14545 |      15 | March    |   430.00 |    NULL |   10.00 | EUR      | card    | 10.00      |                  | NULL                                      | 2025 |
+              | 14546 |      15 | March    |   120.00 |    NULL |    NULL | EUR      | cash    | 10.00      |                  | NULL                                      | 2025 |  
+              +-------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+      
+            */
 
+            // - As first step Get the income of the other paymentMethod
+            // If the amount is null, that means that payment method is the secondary one.
+            // In that case we need to -1 of the id so we could get back the data from that id.
             if(amount === null || amount.toString().includes("null")){
-              id=id-1;
-              let getIconeResponse = await fetch(`${backendServer}/getIncome?userId=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&currency=${choosenCurrency}&payment=${otherPaymentMethod}&id=${id}`, {
+              id=id-1;        
+              let getIncomeResponse = await fetch(`${backendServer}/getIncome?userId=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&currency=${choosenCurrency}&payment=${otherPaymentMethod}&id=${id}`, {
                 method: "GET",
                 headers: {
                   "Content-Type": "application/json",
                 },
               });
-              if (!getIconeResponse.ok) {
-                throw new Error('HTTP error ' + getIconeResponse.status);
+              if (!getIncomeResponse.ok) {
+                throw new Error('HTTP error ' + getIncomeResponse.status);
               } 
-              let getIncomeData = await getIconeResponse.json();
+              let getIncomeData = await getIncomeResponse.json();
+              // ? this row might be wrong. Amount is null in that case
               otherIncome = Number(getIncomeData[0].income) + Number(getIncomeData[0].amount);
               newIncome = Number(income) - Number(getIncomeData[0].amount);
             }
             else 
             {
                 id=id+1;
-                let getIconeResponse = await fetch(`${backendServer}/getIncome?userId=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&currency=${choosenCurrency}&payment=${otherPaymentMethod}&id=${id}`, {
+                let getIncomeResponse = await fetch(`${backendServer}/getIncome?userId=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&currency=${choosenCurrency}&payment=${otherPaymentMethod}&id=${id}`, {
                   method: "GET",
                   headers: {
                     "Content-Type": "application/json",
                   },
                 });
-                if (!getIconeResponse.ok) {
-                  throw new Error('HTTP error ' + getIconeResponse.status);
+                if (!getIncomeResponse.ok) {
+                  throw new Error('HTTP error ' + getIncomeResponse.status);
                 } 
-                let getIncomeData = await getIconeResponse.json();
+                let getIncomeData = await getIncomeResponse.json();
                 newIncome = Number(income) + Number(amount);
                 otherIncome = Number(getIncomeData[0].income) - Number(getIncomeData[0].difference);
                 id=id-1;
@@ -2019,12 +2027,7 @@ function App() {
               throw new Error('HTTP error ' + choosenPaymentMethodPost.status);
             } 
 
-            /*
-            | 14386 | szkcsgrg@gmail.com |    NULL | December | 1000.00 |    NULL |    NULL | EUR      | card    | 1000.00    | NULL | Income Change | 2024 |
-            | 14388 | szkcsgrg@gmail.com |      15 | December |  990.00 |    NULL |   10.00 | EUR      | card    | 10.00      |      | NULL          | 2024 |
-            | 14389 | szkcsgrg@gmail.com |      15 | December |   10.00 |    NULL |    NULL | EUR      | cash    | 10.00      |      | NULL          | 2024 |
-            | 14391 | szkcsgrg@gmail.com |    NULL | January  | 1000.00 |    NULL |    NULL | EUR      | card    | 10.00      | NULL | Income Change | 2025 |
-            */
+
             //Not current month
             if(choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()){
               const getIncome = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&currency=${choosenCurrency}&payment=${payment}&year=${currentYear}`, {
