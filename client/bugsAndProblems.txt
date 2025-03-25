@@ -6,6 +6,8 @@
 // ? Esc on exchange does not work. And also updates the income value before send.
 // ? The delete month just deletes the selectedCurrency and not all of the currencys.
 // ? If the server is down, the Service Unavailable message shows even if the user is not logged in. Setup a proper landing screen and a Message below. 
+// ? On login the month in 2025 does not go to the current one. 
+// ? Where there is no secondary or third currency the code will create an exchange entry. But If we will delete it I am not sure if it works. 
 
 // # First of all check one single month.
     - income increase/decrease ✅
@@ -21,6 +23,7 @@
     - spent withdraw // ? It updates the selected month (December) and updates the latest month, but! only the card value. It does not update the cash side. 
     - spent exchange // ? There was a secondary button not just the other currency. // ? Also the same problem came up. It does not update the secondary currency in the actual month.
             // ! Redo this. 
+            // - Test #1
             +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
             | 14499 | szkcsgrg@gmail.com |    NULL | February | 50000.00 |    NULL |    NULL | HUF      | card    | NULL       | NULL             | Reverse                                   | 2025 |
             | 14500 | szkcsgrg@gmail.com |    NULL | February |   700.00 |    NULL |    NULL | EUR      | card    | 100.00     | Collapsable      | Difference from previous Month(s)         | 2025 |
@@ -34,6 +37,27 @@
                 February HUF 50000 (14499)
                 February EUR 800
                 We miss a row where should be the updated HUF 
+
+            // - Test #2
+            // - Values Before anything
+            +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
+        EUR | 14510 | szkcsgrg@gmail.com |      18 | December |  800.00  |   NULL  | -150.00 | EUR      | card    | 0.00       |                  | Edited                                    | 2024 |
+            | 14511 | szkcsgrg@gmail.com |    NULL | February |  800.00  |   NULL  |   NULL  | EUR      | card    | -50.00     | Collapsable      | Difference from previous Month(s)         | 2025 |
+            | 14574 | szkcsgrg@gmail.com |    NULL | March    |  540.00  |   NULL  |   NULL  | EUR      | card    | NULL       | NULL             | Reverse                                   | 2025 |
+        HUF | 14501 | szkcsgrg@gmail.com |      17 | December | 90000.00 |   NULL  |   NULL  | HUF      | card    | 40000.00   |                  | 100.00 EUR to 40000.00 HUF                | 2024 |
+            | 14560 | szkcsgrg@gmail.com |    NULL | March    | 90000.00 |   NULL  |   NULL  | HUF      | card    | NULL       | NULL             | Reverse                                   | 2025 |
+            +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
+
+            I insert an exchange in december from EUR side. 
+            | 14575 | szkcsgrg@gmail.com |      17 | March    | 94000.00 |    NULL |    NULL | HUF      | card    | 4000.00    | Ez a test #2     | 10.00 EUR to 4000.00 HUF                  | 2025 |
+            | 14576 | szkcsgrg@gmail.com |      17 | March    |   530.00 |    NULL |   10.00 | EUR      | card    | 10.00      | Ez a test #2     | 10.00 EUR to 4000.00 HUF                  | 2025 |
+ignore this | 14577 | szkcsgrg@gmail.com |    NULL | March    |   520.00 |    NULL |    NULL | EUR      | card    | 10.00      | Collapsable      | Difference from previous Month(s)         | 2025 |
+Ez itt a fontos: 
+            | 14579 | szkcsgrg@gmail.com |      17 | December | 98000.00 |    NULL |    NULL | HUF      | card    | 4000.00    | Ez a Test 2 Decemberből 800 volt az Income  | 10.00 EUR to 4000.00 HUF                  | 2024 |
+            | 14580 | szkcsgrg@gmail.com |      17 | December |   790.00 |    NULL |   10.00 | EUR      | card    | 10.00      | Ez a Test 2 Decemberből 800 volt az Income  | 10.00 EUR to 4000.00 HUF                  | 2024 |
+            Jól kiszámolta de a jelenhavit nem változtatta.     
+
+
     - spent savings ✅ Works with - values as well
     - spent investment ✅ Works with - values as well
 

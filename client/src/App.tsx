@@ -992,6 +992,8 @@ function App() {
       setShowTypes(true);
     }
   }
+
+  // Exchange Submit
   const handleExchangeSubmit = async (choosedCurrency:any) => {
     // A account is the currenct B account is the choosenCurrency Account.
     let incomeOfOtherAccount = 0 as number;
@@ -1078,6 +1080,32 @@ function App() {
       if (!response2.ok) {
         throw new Error('HTTP error ' + response.status);
       }
+    }
+
+    // ? I think we need to add the two other post if the month is not the current. 
+    if(choosenMonth !== monthNames[currentDate.getMonth()]){
+      console.log("The month is not the current. And here we need to update the ")
+      /* 
+      const thirdResponse = await fetch (`${backendServer}/changespendings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: localStorage.getItem('userEmail'),
+          month: monthNames[currentDate.getMonth()], 
+          type_id: 17,
+          income: newAIncome,
+          amount: Number(currentAmount),
+          currency: choosenCurrency,
+          payment: choosenPaymentMethod,
+          difference: Number(currentAmount).toFixed(choosenFormat),
+          information: Number(amount).toFixed(choosenFormat) + " "  + choosenCurrency + " to " + Number(exchangeAmount).toFixed(choosenFormat) + " " + choosedCurrency,
+          note: noteValue,
+          year: choosenYear,
+        })
+      })
+      */
     }
     
     setSpendings(prevSpendings => {
@@ -1200,6 +1228,10 @@ function App() {
     }
     else if(type === 'Exchange' && ((secondaryCurrency === 'null' || secondaryCurrency === 'undefined' || secondaryCurrency === '')  && dontAskAgainCurrencyAdd === "true")){
       // console.log("Exchnage but there is no other Currency and Dont ask again is true.")
+      // ? Does this even get called?  
+      // - Probably when there is no other currency only. 
+      // - In that case the delete should also work differently. 
+
       const response = await fetch(`${backendServer}/changespendings`, {
         method: 'POST',
         headers: {
@@ -1299,6 +1331,7 @@ function App() {
       newIncomeForWithdraw = 0;
     }
     else{
+      // - Default Submit
       // console.log("else state at the end.")
       const response = await fetch(`${backendServer}/changespendings`, {
         method: 'POST',
