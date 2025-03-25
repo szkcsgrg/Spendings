@@ -439,7 +439,7 @@ function App() {
       const firstEntryDateMonth = filteredData.length > 0 ? filteredData[0].month : null;
       const firstEntryDateYear = fetchedData[0].year;
       const firstEntryMonthIndex = monthNames.indexOf(firstEntryDateMonth);
-      console.log(firstEntryDateMonth, firstEntryDateYear, firstEntryMonthIndex)
+      // console.log(firstEntryDateMonth, firstEntryDateYear, firstEntryMonthIndex)
 
       years = Array.from({ length: currentYear - firstEntryDateYear + 1 }, (_, i) => firstEntryDateYear + i).reverse();
 
@@ -466,7 +466,7 @@ function App() {
     setUniqueMonths(months);
     setUniqueYears(years);
     // console.log(uniqueMonths, uniqueYears)
-    console.log(monthsInFetchedData)
+    // console.log(monthsInFetchedData)
 
     const lastMonth = months[months.length - 1];
     // console.log(lastMonth);
@@ -996,26 +996,26 @@ function App() {
   // Exchange Submit
   const handleExchangeSubmit = async (choosedCurrency:any) => {
     // A account is the currenct B account is the choosenCurrency Account.
-    let incomeOfOtherAccount = 0 as number;
-    //What we need to add to the B account
-    if(choosedCurrency === primaryCurrency){
-      incomeOfOtherAccount = Number(incomeOfPrimaryAccount);
-    }
-    else if(choosedCurrency === secondaryCurrency){
-      incomeOfOtherAccount = Number(incomeOfSecondaryAccount);
-    }
-    else if(choosedCurrency === thirdCurrency){
-      incomeOfOtherAccount = Number(incomeOfThirdAccount);
-    }
-    else{
-      //("Error in the choosedCurrency");
-    }
+    // let incomeOfOtherAccount = 0 as number;
+    // //What we need to add to the B account
+    // if(choosedCurrency === primaryCurrency){
+    //   incomeOfOtherAccount = Number(incomeOfPrimaryAccount);
+    // }
+    // else if(choosedCurrency === secondaryCurrency){
+    //   incomeOfOtherAccount = Number(incomeOfSecondaryAccount);
+    // }
+    // else if(choosedCurrency === thirdCurrency){
+    //   incomeOfOtherAccount = Number(incomeOfThirdAccount);
+    // }
+    // else{
+    //   //("Error in the choosedCurrency");
+    // }
 
     // ("---------------------");
 
     // ("TO: " + choosedCurrency)
     // ("Value: " + exchangeAmount); //This will go to the income of the B account
-    const newBIncom = Number(incomeOfOtherAccount)+Number(exchangeAmount); //This will be the new income of the B account
+    // const newBIncom = Number(incomeOfOtherAccount)+Number(exchangeAmount); //This will be the new income of the B account
     // ("New Income " + newBIncom + " to " + choosedCurrency);
     
     // ("---------------------");
@@ -1025,7 +1025,7 @@ function App() {
     const currentAmount = Number(amount);
     // ("Amount got exchanged: " + currentAmount); //This should be set to the Exchange amount id 17
     // console.log(income);
-    const newAIncome = Number(income) //-Number(currentAmount); //This should be the new income of the A account
+    // const newAIncome = Number(income) //-Number(currentAmount); //This should be the new income of the A account
     // ("New Income " + newAIncome + " to " + choosenCurrency);
 
     // console.log(incomeOfOtherAccount)
@@ -1033,6 +1033,75 @@ function App() {
     // console.log("= " + newBIncom);
     exchangedRef.current?.classList.remove("d-block");
     exchangedRef.current?.classList.add("d-none");
+
+    // ?  Here is also a big problem: 
+    // +-------+--------------------+---------+----------+-----------+---------+---------+----------+---------+------------+---------------------------------------------+-------------------------------------------+------+
+    // | 14598 | szkcsgrg@gmail.com |      17 | December | 134000.00 |    NULL |    NULL | HUF      | card    | 4000.00    |                                             | 10.00 EUR to 4000.00 HUF                  | 2024 |
+    // | 14599 | szkcsgrg@gmail.com |      17 | December |    700.00 |    NULL |   10.00 | EUR      | card    | 10.00      |                                             | 10.00 EUR to 4000.00 HUF                  | 2024 |
+    // | 14600 | szkcsgrg@gmail.com |    NULL | March    |   1000.00 |    NULL |    NULL | EUR      | card    | 500.00     | NULL                                        | Income Change                             | 2025 |
+    // | 14601 | szkcsgrg@gmail.com |    NULL | March    | 100000.00 |    NULL |    NULL | HUF      | card    | 6000       | NULL                                        | Income Change                             | 2025 |
+    // | 14602 | szkcsgrg@gmail.com |      17 | December | 140000.00 |    NULL |    NULL | HUF      | card    | 40000.00   |                                             | 100.00 EUR to 40000.00 HUF                | 2024 |
+    // | 14603 | szkcsgrg@gmail.com |      17 | December |    600.00 |    NULL |  100.00 | EUR      | card    | 100.00     |                                             | 100.00 EUR to 40000.00 HUF                | 2024 |
+    // +-------+--------------------+---------+----------+-----------+---------+---------+----------+---------+------------+---------------------------------------------+-------------------------------------------+------+
+
+    // HUF SIDE 134000 + 40000  is not 140000 
+    // The calculation is wrong.
+
+    let choosenData = [];
+    let choosedData = [];
+    if(choosenCurrency === primaryCurrency){
+      choosenData = primaryCurrencyData.filter(row => row.month === choosenMonth);
+      // console.log("Primary Choosen Currency: ");
+      // console.log(choosenData)
+    }
+    if(choosenCurrency === secondaryCurrency){
+      choosenData = secondaryCurrencyData.filter(row => row.month === choosenMonth);
+      // console.log("Secondary Choosen Currency: ");
+      // console.log(choosenData)
+    }
+    if(choosenCurrency === thirdCurrency){
+      choosenData = thirdCurrencyData.filter(row => row.month === choosenMonth);
+      // console.log("Third Choosen Currency: ");
+      // console.log(choosenData)
+    }
+
+    if(choosedCurrency === primaryCurrency){
+      choosedData = primaryCurrencyData.filter(row => row.month === choosenMonth);
+      // console.log("Primary Choosed Currency: ");
+      // console.log(choosedData)
+    }
+    if(choosedCurrency === secondaryCurrency){
+      choosedData = secondaryCurrencyData.filter(row => row.month === choosenMonth);
+      // console.log("Secondary Choosed Currency: ");
+      // console.log(choosedData)
+    }
+    if(choosedCurrency === thirdCurrency){
+      choosedData = thirdCurrencyData.filter(row => row.month === choosenMonth);
+      // console.log("Third Choosed Currency: ");
+      // console.log(choosedData)
+    }
+    // Get the last entry for the choosen currency
+      const choosenCurrencyData = choosenData.filter(row => row.currency === choosenCurrency);
+      const incomeOfChoosenC = choosenCurrencyData.length > 0 ? choosenCurrencyData[0].income : 0;
+
+      // Get the last entry for the choosed currency
+      const choosedCurrencyData = choosedData.filter(row => row.currency === choosedCurrency);
+      const incomeOfChoosedC = choosedCurrencyData.length > 0 ? choosedCurrencyData[0].income : 0;
+
+      // console.log(choosenCurrency + ": " + incomeOfChoosenC);
+      // console.log(choosedCurrency + ": " + incomeOfChoosedC);
+
+      console.log("Choosen Currency's income: " + incomeOfChoosenC);
+      console.log("Choosed Currency's income: " + incomeOfChoosedC);
+
+      const updatedChoosenIncomeForChoosenMonth = Number(incomeOfChoosenC) - Number(amount);
+      const updatedChoosedIncomeForChoosenMonth = Number(incomeOfChoosedC) + Number(exchangeAmount);
+
+      console.log("Updated Choosen Currency's income: " + updatedChoosenIncomeForChoosenMonth);
+      console.log("Updated Choosed Currency's income: " + updatedChoosedIncomeForChoosenMonth);
+
+
+
 
     //Send Post method to the Server to the ChoosedCurrency - Exchange to. 
     if(choosedCurrency !== null){
@@ -1045,7 +1114,7 @@ function App() {
           user_id: localStorage.getItem('userEmail'),
           month: choosenMonth, 
           type_id: 17,
-          income: newBIncom,
+          income: updatedChoosedIncomeForChoosenMonth,
           currency: choosedCurrency,
           payment: choosenPaymentMethod,
           difference: Number(exchangeAmount).toFixed(choosenFormat),
@@ -1067,7 +1136,7 @@ function App() {
           user_id: localStorage.getItem('userEmail'),
           month: choosenMonth, 
           type_id: 17,
-          income: newAIncome,
+          income: updatedChoosenIncomeForChoosenMonth,
           amount: Number(currentAmount),
           currency: choosenCurrency,
           payment: choosenPaymentMethod,
@@ -1083,29 +1152,131 @@ function App() {
     }
 
     // ? I think we need to add the two other post if the month is not the current. 
-    if(choosenMonth !== monthNames[currentDate.getMonth()]){
-      console.log("The month is not the current. And here we need to update the ")
-      /* 
-      const thirdResponse = await fetch (`${backendServer}/changespendings`, {
-        method: 'POST',
+    if(choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()){
+      // console.log("The month is not the current. And here we need to update the current month!")
+      console.log("//////////////////////////////////////////////////////////")
+      console.log("Updatding: " + monthNames[currentDate.getMonth()] + " because of we are changing in " + choosenMonth);
+      console.log("Choosen Month: " + choosenMonth);
+      console.log("Current Month: " + monthNames[currentDate.getMonth()]);
+      console.log("Choosen Year: " + choosenYear);
+      console.log("Current Year: " + new Date().getFullYear());
+      // We need to have a get first. 
+      console.log("Choosen Currency: " + choosenCurrency);
+      console.log("Choosed Currency: " + choosedCurrency);
+      /*
+      Test #4
+      Choosen Month: December
+      Current Month: March
+      Choosen Year: 2024
+      Current Year: 2025
+
+      Choosen Month's income: 770
+      Current Month's income: NA
+
+      Choosen Currency: EUR
+      Choosed Currency: HUF
+      */
+
+
+      //Get get the data in the current Month. We need only the last entry for both the choosed and the choosen currency.
+      //Check if choosen currency and the choosed currency is the Primary or secondary or thid currency.
+      let choosenData = [];
+      let choosedData = [];
+      if(choosenCurrency === primaryCurrency){
+        choosenData = primaryCurrencyData.filter(row => row.month === monthNames[currentDate.getMonth()]);
+        // console.log("Primary Choosen Currency: ");
+        // console.log(choosenData)
+      }
+      if(choosenCurrency === secondaryCurrency){
+        choosenData = secondaryCurrencyData.filter(row => row.month === monthNames[currentDate.getMonth()]);
+        // console.log("Secondary Choosen Currency: ");
+        // console.log(choosenData)
+      }
+      if(choosenCurrency === thirdCurrency){
+        choosenData = thirdCurrencyData.filter(row => row.month === monthNames[currentDate.getMonth()]);
+        // console.log("Third Choosen Currency: ");
+        // console.log(choosenData)
+      }
+
+      if(choosedCurrency === primaryCurrency){
+        choosedData = primaryCurrencyData.filter(row => row.month === monthNames[currentDate.getMonth()]);
+        // console.log("Primary Choosed Currency: ");
+        // console.log(choosedData)
+      }
+      if(choosedCurrency === secondaryCurrency){
+        choosedData = secondaryCurrencyData.filter(row => row.month === monthNames[currentDate.getMonth()]);
+        // console.log("Secondary Choosed Currency: ");
+        // console.log(choosedData)
+      }
+      if(choosedCurrency === thirdCurrency){
+        choosedData = thirdCurrencyData.filter(row => row.month === monthNames[currentDate.getMonth()]);
+        // console.log("Third Choosed Currency: ");
+        // console.log(choosedData)
+      }
+      
+
+      // Get the last entry for the choosen currency
+      const choosenCurrencyData = choosenData.filter(row => row.currency === choosenCurrency);
+      const incomeOfChoosenC = choosenCurrencyData.length > 0 ? choosenCurrencyData[0].income : 0;
+
+      // Get the last entry for the choosed currency
+      const choosedCurrencyData = choosedData.filter(row => row.currency === choosedCurrency);
+      const incomeOfChoosedC = choosedCurrencyData.length > 0 ? choosedCurrencyData[0].income : 0;
+
+      // console.log(choosenCurrency + ": " + incomeOfChoosenC);
+      // console.log(choosedCurrency + ": " + incomeOfChoosedC);
+
+      console.log("Choosen Currency's income: " + incomeOfChoosenC);
+      console.log("Choosed Currency's income: " + incomeOfChoosedC);
+
+      const updatedChoosenIncomeForCurrentMonth = Number(incomeOfChoosenC) - Number(amount);
+      const updatedChoosedIncomeForCurrentMonth = Number(incomeOfChoosedC) + Number(exchangeAmount);
+
+      console.log("Updated Choosen Currency's income: " + updatedChoosenIncomeForCurrentMonth);
+      console.log("Updated Choosed Currency's income: " + updatedChoosedIncomeForCurrentMonth);
+
+      const choosenCurrencyUpdate = await fetch(`${backendServer}/setIncomeAfterWipe`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id: localStorage.getItem('userEmail'),
+          userId: localStorage.getItem("userEmail"),
           month: monthNames[currentDate.getMonth()], 
-          type_id: 17,
-          income: newAIncome,
-          amount: Number(currentAmount),
+          income: updatedChoosenIncomeForCurrentMonth,
           currency: choosenCurrency,
           payment: choosenPaymentMethod,
           difference: Number(currentAmount).toFixed(choosenFormat),
-          information: Number(amount).toFixed(choosenFormat) + " "  + choosenCurrency + " to " + Number(exchangeAmount).toFixed(choosenFormat) + " " + choosedCurrency,
-          note: noteValue,
-          year: choosenYear,
-        })
-      })
-      */
+          note: "Collapsable",
+          information: "Difference from previous Month(s)",
+          year: currentYear,
+        }),
+      });
+      if(!choosenCurrencyUpdate.ok){
+        throw new Error('HTTP error ' + choosenCurrencyUpdate.status);
+      }
+      const choosedCurrencyUpdate = await fetch(`${backendServer}/setIncomeAfterWipe`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: localStorage.getItem("userEmail"),
+          month: monthNames[currentDate.getMonth()], 
+          income: updatedChoosedIncomeForCurrentMonth,
+          currency: choosedCurrency,
+          payment: choosenPaymentMethod,
+          difference: Number(currentAmount).toFixed(choosenFormat),
+          note: "Collapsable",
+          information: "Difference from previous Month(s)",
+          year: currentYear,
+        }),
+      });
+      if(!choosedCurrencyUpdate.ok){
+        throw new Error('HTTP error ' + choosedCurrencyUpdate.status);
+      }
+      
+      
     }
     
     setSpendings(prevSpendings => {
@@ -1403,7 +1574,7 @@ function App() {
     console.log("Current Amount: "+currentAmount);
 
     const incomeIfPast = Number(actualMonthIncome) - currentAmount;
-    if(choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()){
+    if((choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()) && (type !== 'Exchange')){
       const monthResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
         method: "POST",
         headers: {
@@ -2593,7 +2764,7 @@ function App() {
     // if (date !== currentMonthName) {
     //   return "You can't edit past Entries!";
     // }
-    console.log(date, monthNames)
+    // console.log(date, monthNames)
     if (entry.type === 'Income' ) { //|| entry.type === 'Exchange'
       return "You can't edit this Entry!";
     }

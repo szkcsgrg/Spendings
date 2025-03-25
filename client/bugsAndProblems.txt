@@ -8,6 +8,7 @@
 // ? If the server is down, the Service Unavailable message shows even if the user is not logged in. Setup a proper landing screen and a Message below. 
 // ? On login the month in 2025 does not go to the current one. 
 // ? Where there is no secondary or third currency the code will create an exchange entry. But If we will delete it I am not sure if it works. 
+// ? Just an idea... What if the user enters a - value and then they choose exchange. It should not be possible. It's time to remove the - values option I think. Or just hide the exchange button if the amount is starting with a -.
 
 // # First of all check one single month.
     - income increase/decrease ✅
@@ -21,7 +22,7 @@
     - income increase/decrease ✅
     - spent basic ✅ Works with - values as well. 
     - spent withdraw // ? It updates the selected month (December) and updates the latest month, but! only the card value. It does not update the cash side. 
-    - spent exchange // ? There was a secondary button not just the other currency. // ? Also the same problem came up. It does not update the secondary currency in the actual month.
+    - spent exchange ✅ // ? There was a secondary button not just the other currency.
             // ! Redo this. 
             // - Test #1
             +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
@@ -39,7 +40,7 @@
                 We miss a row where should be the updated HUF 
 
             // - Test #2
-            // - Values Before anything
+            // Values Before anything
             +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
         EUR | 14510 | szkcsgrg@gmail.com |      18 | December |  800.00  |   NULL  | -150.00 | EUR      | card    | 0.00       |                  | Edited                                    | 2024 |
             | 14511 | szkcsgrg@gmail.com |    NULL | February |  800.00  |   NULL  |   NULL  | EUR      | card    | -50.00     | Collapsable      | Difference from previous Month(s)         | 2025 |
@@ -51,13 +52,99 @@
             I insert an exchange in december from EUR side. 
             | 14575 | szkcsgrg@gmail.com |      17 | March    | 94000.00 |    NULL |    NULL | HUF      | card    | 4000.00    | Ez a test #2     | 10.00 EUR to 4000.00 HUF                  | 2025 |
             | 14576 | szkcsgrg@gmail.com |      17 | March    |   530.00 |    NULL |   10.00 | EUR      | card    | 10.00      | Ez a test #2     | 10.00 EUR to 4000.00 HUF                  | 2025 |
-ignore this | 14577 | szkcsgrg@gmail.com |    NULL | March    |   520.00 |    NULL |    NULL | EUR      | card    | 10.00      | Collapsable      | Difference from previous Month(s)         | 2025 |
-Ez itt a fontos: 
+            Ez itt a fontos: 
+            | 14577 | szkcsgrg@gmail.com |    NULL | March    |   520.00 |    NULL |    NULL | EUR      | card    | 10.00      | Collapsable      | Difference from previous Month(s)         | 2025 |
             | 14579 | szkcsgrg@gmail.com |      17 | December | 98000.00 |    NULL |    NULL | HUF      | card    | 4000.00    | Ez a Test 2 Decemberből 800 volt az Income  | 10.00 EUR to 4000.00 HUF                  | 2024 |
             | 14580 | szkcsgrg@gmail.com |      17 | December |   790.00 |    NULL |   10.00 | EUR      | card    | 10.00      | Ez a Test 2 Decemberből 800 volt az Income  | 10.00 EUR to 4000.00 HUF                  | 2024 |
             Jól kiszámolta de a jelenhavit nem változtatta.     
 
 
+            // - Test #3
+            // Values before:
+            +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+---------------------------------------------+-------------------------------------------+------+
+            | 14575 | szkcsgrg@gmail.com |      17 | March    | 94000.00 |    NULL |    NULL | HUF      | card    | 4000.00    | Ez a test #2                                | 10.00 EUR to 4000.00 HUF                  | 2025 |
+            | 14578 | szkcsgrg@gmail.com |    NULL | March    |   510.00 |    NULL |    NULL | EUR      | card    | 10.00      | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+            | 14579 | szkcsgrg@gmail.com |      17 | December | 98000.00 |    NULL |    NULL | HUF      | card    | 4000.00    | Ez a Test 2 Decemberből 800 volt az Income  | 10.00 EUR to 4000.00 HUF                  | 2024 |
+            | 14580 | szkcsgrg@gmail.com |      17 | December |   790.00 |    NULL |   10.00 | EUR      | card    | 10.00      | Ez a Test 2 Decemberből 800 volt az Income  | 10.00 EUR to 4000.00 HUF                  | 2024 |
+            +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+---------------------------------------------+-------------------------------------------+------+
+
+            I sold 10Eur for 4000Huf for our test. 
+            | 14581 | szkcsgrg@gmail.com |    NULL | March    |    500.00 |    NULL |    NULL | EUR      | card    | 10.00      | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+            | 14582 | szkcsgrg@gmail.com |      17 | December | 102000.00 |    NULL |    NULL | HUF      | card    | 4000.00    | Test 3 790 income on Eur                    | 10.00 EUR to 4000.00 HUF                  | 2024 |
+            | 14583 | szkcsgrg@gmail.com |      17 | December |    780.00 |    NULL |   10.00 | EUR      | card    | 10.00      | Test 3 790 income on Eur                    | 10.00 EUR to 4000.00 HUF                  | 2024 |
+
+
+            So what is happening: 
+                It chnages correctly the December month. And updates the current month, but Only on the side where the exchange happened. We need to implent the other currency as well.
+
+
+            // - Test #4
+            Values Before: 
+            +-------+--------------------+---------+----------+-----------+---------+---------+----------+---------+------------+---------------------------------------------+-------------------------------------------+------+
+            | 14575 | szkcsgrg@gmail.com |      17 | March    | 94000.00 |    NULL |    NULL | HUF      | card    | 4000.00    | Ez a test #2                                | 10.00 EUR to 4000.00 HUF                  | 2025 |
+            | 14581 | szkcsgrg@gmail.com |    NULL | March    |    500.00 |    NULL |    NULL | EUR      | card    | 10.00      | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+            | 14582 | szkcsgrg@gmail.com |      17 | December | 102000.00 |    NULL |    NULL | HUF      | card    | 4000.00    | Test 3 790 income on Eur                    | 10.00 EUR to 4000.00 HUF                  | 2024 |
+            | 14583 | szkcsgrg@gmail.com |      17 | December |    780.00 |    NULL |   10.00 | EUR      | card    | 10.00      | Test 3 790 income on Eur                    | 10.00 EUR to 4000.00 HUF                  | 2024 |
+            +-------+--------------------+---------+----------+-----------+---------+---------+----------+---------+------------+---------------------------------------------+-------------------------------------------+------+
+
+            No more update on default handle type click. So we can implement now the two new inserts
+            | 14584 | szkcsgrg@gmail.com |      17 | December | 106000.00 |    NULL |    NULL | HUF      | card    | 4000.00    | Test #4 780Eur                              | 10.00 EUR to 4000.00 HUF                  | 2024 |
+            | 14585 | szkcsgrg@gmail.com |      17 | December |    770.00 |    NULL |   10.00 | EUR      | card    | 10.00      | Test #4 780Eur                              | 10.00 EUR to 4000.00 HUF                  | 2024 |
+
+
+
+            // - Test #5 with the updated code. 
+            Values before: 
+            March HUF 100000
+            March EUR 1000
+            December HUF 180000
+            December EUR 500
+
+            I will sell 100 EUR in December for 40000 HUF.
+
+            Outcome should be: 
+            March HUF 140000
+            March EUR 900
+            December HUF 220000
+            December EUR 400
+
+            | 14606 | szkcsgrg@gmail.com |      17 | December | 220000.00 |    NULL |    NULL | HUF      | card    | 40000.00   | Test #5                                     | 100.00 EUR to 40000.00 HUF                | 2024 |
+            | 14607 | szkcsgrg@gmail.com |      17 | December |    400.00 |    NULL |  100.00 | EUR      | card    | 100.00     | Test #5                                     | 100.00 EUR to 40000.00 HUF                | 2024 |
+            | 14608 | szkcsgrg@gmail.com |    NULL | March    |    400.00 |    NULL |    NULL | EUR      | card    | 100.00     | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+            | 14609 | szkcsgrg@gmail.com |    NULL | March    | 220000.00 |    NULL |    NULL | HUF      | card    | 100.00     | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+
+
+            // - Test #6 / with the same values ✅
+            March HUF 100000
+            March EUR 1000
+            December HUF 180000
+            December EUR 500
+
+            // - Test #7 / Other way around✅
+            Same default values: 
+            March HUF 100000
+            March EUR 1000
+            December HUF 180000
+            December EUR 500
+
+            40000 HUF sell to 100 EUR
+            expected outcome: 
+            March HUF 60000
+            March EUR 1100
+            December HUF 140000
+            December EUR 600
+
+            | 14614 | szkcsgrg@gmail.com |      17 | December |    600.00 |    NULL |     NULL | EUR      | card    | 100        | Test #7                                     | 40000 HUF to 100 EUR                      | 2024 |
+            | 14615 | szkcsgrg@gmail.com |      17 | December | 140000.00 |    NULL | 40000.00 | HUF      | card    | 40000      | Test #7                                     | 40000 HUF to 100 EUR                      | 2024 |
+            | 14616 | szkcsgrg@gmail.com |    NULL | March    |  60000.00 |    NULL |     NULL | HUF      | card    | 40000      | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+            | 14617 | szkcsgrg@gmail.com |    NULL | March    |   1100.00 |    NULL |     NULL | EUR      | card    | 40000      | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+
+
+            // - Test #8 / In current month only. ✅
+            Same default values
+
+            | 14618 | szkcsgrg@gmail.com |      17 | March    | 140000.00 |    NULL |    NULL | HUF      | card    | 40000.00   |                                             | 100.00 EUR to 40000.00 HUF                | 2025 |
+            | 14619 | szkcsgrg@gmail.com |      17 | March    |    900.00 |    NULL |  100.00 | EUR      | card    | 100.00     |                                             | 100.00 EUR to 40000.00 HUF                | 2025 |
     - spent savings ✅ Works with - values as well
     - spent investment ✅ Works with - values as well
 
