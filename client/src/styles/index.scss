@@ -7,11 +7,15 @@
 @use "./components/initialsetup";
 @use "./components/app";
 
+@import url('https://fonts.googleapis.com/css2?family=Questrial&display=swap');
+
 :root {
     // background-color: colors.$background;
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    // font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    font-family: "Questrial", sans-serif;
     line-height: 1.5;
     font-weight: 400;
+    font-style: normal;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;

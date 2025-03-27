@@ -1154,15 +1154,15 @@ function App() {
     // ? I think we need to add the two other post if the month is not the current. 
     if(choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()){
       // console.log("The month is not the current. And here we need to update the current month!")
-      console.log("//////////////////////////////////////////////////////////")
-      console.log("Updatding: " + monthNames[currentDate.getMonth()] + " because of we are changing in " + choosenMonth);
-      console.log("Choosen Month: " + choosenMonth);
-      console.log("Current Month: " + monthNames[currentDate.getMonth()]);
-      console.log("Choosen Year: " + choosenYear);
-      console.log("Current Year: " + new Date().getFullYear());
-      // We need to have a get first. 
-      console.log("Choosen Currency: " + choosenCurrency);
-      console.log("Choosed Currency: " + choosedCurrency);
+      // console.log("//////////////////////////////////////////////////////////")
+      // console.log("Updatding: " + monthNames[currentDate.getMonth()] + " because of we are changing in " + choosenMonth);
+      // console.log("Choosen Month: " + choosenMonth);
+      // console.log("Current Month: " + monthNames[currentDate.getMonth()]);
+      // console.log("Choosen Year: " + choosenYear);
+      // console.log("Current Year: " + new Date().getFullYear());
+      // // We need to have a get first. 
+      // console.log("Choosen Currency: " + choosenCurrency);
+      // console.log("Choosed Currency: " + choosedCurrency);
       /*
       Test #4
       Choosen Month: December
@@ -1226,14 +1226,14 @@ function App() {
       // console.log(choosenCurrency + ": " + incomeOfChoosenC);
       // console.log(choosedCurrency + ": " + incomeOfChoosedC);
 
-      console.log("Choosen Currency's income: " + incomeOfChoosenC);
-      console.log("Choosed Currency's income: " + incomeOfChoosedC);
+      // console.log("Choosen Currency's income: " + incomeOfChoosenC);
+      // console.log("Choosed Currency's income: " + incomeOfChoosedC);
 
       const updatedChoosenIncomeForCurrentMonth = Number(incomeOfChoosenC) - Number(amount);
       const updatedChoosedIncomeForCurrentMonth = Number(incomeOfChoosedC) + Number(exchangeAmount);
 
-      console.log("Updated Choosen Currency's income: " + updatedChoosenIncomeForCurrentMonth);
-      console.log("Updated Choosed Currency's income: " + updatedChoosedIncomeForCurrentMonth);
+      // console.log("Updated Choosen Currency's income: " + updatedChoosenIncomeForCurrentMonth);
+      // console.log("Updated Choosed Currency's income: " + updatedChoosedIncomeForCurrentMonth);
 
       const choosenCurrencyUpdate = await fetch(`${backendServer}/setIncomeAfterWipe`, {
         method: "POST",
@@ -1446,9 +1446,50 @@ function App() {
       }
     }
     else if(type === 'Withdraw & Deposit'){
-      //Send a post method to the server with choosenPayment to the other not the current as income and keep the widraw here as it is. 
-      //First send a simple post method as usualy to the currenct payment method.
-      const response = await fetch(`${backendServer}/changespendings`, {
+      
+
+      //Get the the income values of cash and card for the choosenMonth
+      
+      let choosenDataPast = [];
+      let choosedDataPast = [];
+
+      const notTheChoosenPaymentMethod = choosenPaymentMethod === 'card' ? 'cash' : 'card';
+
+      switch (choosenCurrency) {
+        case primaryCurrency:
+          choosenDataPast = primaryCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === choosenMonth);
+          choosedDataPast = primaryCurrencyData.filter(row => row.payment === notTheChoosenPaymentMethod && row.month === choosenMonth);
+          break;
+        case secondaryCurrency:
+          choosenDataPast = secondaryCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === choosenMonth);
+          choosedDataPast = secondaryCurrencyData.filter(row => row.payment === notTheChoosenPaymentMethod && row.month === choosenMonth);
+          break;
+        case thirdCurrency:
+          choosenDataPast = thirdCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === choosenMonth);
+          choosedDataPast = thirdCurrencyData.filter(row => row.payment === notTheChoosenPaymentMethod && row.month === choosenMonth);
+          break;
+        default:
+          break;
+      }
+      const incomeOfChoosenCPast = choosenDataPast.length > 0 ? choosenDataPast[0].income : 0;
+  
+      // Get the last entry for the choosed currency
+      const incomeOfChoosedCPast = choosedDataPast.length > 0 ? choosedDataPast[0].income : 0;
+
+      // console.log(choosenCurrency + ": " + incomeOfChoosenC);
+      // console.log(choosedCurrency + ": " + incomeOfChoosedC);
+
+      console.log("Choosen Currency's income: " + incomeOfChoosenCPast);
+      console.log("Choosed Currency's income: " + incomeOfChoosedCPast);
+
+      const updatedChoosenIncomeForChoosenMonth = Number(incomeOfChoosenCPast) - Number(amount);
+      const updatedChoosedIncomeForChoosenMonth = Number(incomeOfChoosedCPast) + Number(amount);
+
+      console.log("Updated Current Month's (choosen)income: " + updatedChoosenIncomeForChoosenMonth);
+      console.log("Updated Current Month's (choosed)income: " + updatedChoosedIncomeForChoosenMonth);
+
+      
+      const choosenPaymentMethodResponse = await fetch(`${backendServer}/changespendings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1457,8 +1498,8 @@ function App() {
           user_id: localStorage.getItem('userEmail'),
           type_id: id,
           month: choosenMonth, 
-          income: newIncome,
-          amount: Number(currentAmount),
+          income: updatedChoosenIncomeForChoosenMonth,
+          amount: Number(amount),
           currency: choosenCurrency,
           payment: choosenPaymentMethod,
           difference: Number(currentAmount).toFixed(choosenFormat),
@@ -1466,17 +1507,11 @@ function App() {
           year: choosenYear,
         })
       })
-      if (!response.ok) {
-        throw new Error('HTTP error ' + response.status);
+      if (!choosenPaymentMethodResponse.ok) {
+        throw new Error('HTTP error ' + choosenPaymentMethodResponse.status);
       }
-      //Secondly send the post method to the other payment method with the amount as income.
-      //We need to get the other payment methods income value to add to it the currentAmount. 
-      
-      
 
-
-      let newIncomeForWithdraw = Number(otherPaymentMethodsIncome) + currentAmount;
-      const response2 = await fetch(`${backendServer}/changespendings`, {
+      const choosedPaymentMethodResponse = await fetch(`${backendServer}/changespendings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1485,21 +1520,114 @@ function App() {
           user_id: localStorage.getItem('userEmail'),
           type_id: id,
           month: choosenMonth, 
-          income: Number(newIncomeForWithdraw),
+          income: updatedChoosedIncomeForChoosenMonth,
           currency: choosenCurrency,
-          payment: choosenPaymentMethod === 'card' ? 'cash' : 'card',
-          difference: Number(currentAmount).toFixed(choosenFormat),
+          payment: notTheChoosenPaymentMethod,
+          difference: Number(amount).toFixed(choosenFormat),
           note: noteValue,
           year: choosenYear,
         })
       })
-      if (!response2.ok) {
-        throw new Error('HTTP error ' + response.status);
+      if (!choosedPaymentMethodResponse.ok) {
+        throw new Error('HTTP error ' + choosedPaymentMethodResponse.status);
       }
-      setOtherPaymentMethodsIncome(Number(newIncomeForWithdraw));
+      
+
+
+      if(choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()){
+        let choosenData = [];
+        let choosedData = [];
+
+        
+        switch (choosenCurrency) {
+          case primaryCurrency:
+            choosenData = primaryCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === monthNames[currentDate.getMonth()]);
+            choosedData = primaryCurrencyData.filter(row => row.payment === notTheChoosenPaymentMethod && row.month === monthNames[currentDate.getMonth()]);
+            break;
+          case secondaryCurrency:
+            choosenData = secondaryCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === monthNames[currentDate.getMonth()]);
+            choosedData = secondaryCurrencyData.filter(row => row.payment === notTheChoosenPaymentMethod && row.month === monthNames[currentDate.getMonth()]);
+            break;
+          case thirdCurrency:
+            choosenData = thirdCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === monthNames[currentDate.getMonth()]);
+            choosedData = thirdCurrencyData.filter(row => row.payment === notTheChoosenPaymentMethod && row.month === monthNames[currentDate.getMonth()]);
+            break;
+          default:
+            break;
+        }
+  
+        // Get the last entry for the choosen currency
+        const incomeOfChoosenC = choosenData.length > 0 ? choosenData[0].income : 0;
+
+        // Get the last entry for the choosed currency
+        const incomeOfChoosedC = choosedData.length > 0 ? choosedData[0].income : 0;
+
+        // console.log(choosenCurrency + ": " + incomeOfChoosenC);
+        // console.log(choosedCurrency + ": " + incomeOfChoosedC);
+
+        console.log("Choosen Currency's income: " + incomeOfChoosenC);
+        console.log("Choosed Currency's income: " + incomeOfChoosedC);
+
+        const updatedChoosenIncomeForCurrentMonth = Number(incomeOfChoosenC) - Number(amount);
+        const updatedChoosedIncomeForCurrentMonth = Number(incomeOfChoosedC) + Number(amount);
+
+        console.log("Updated Current Month's (choosen)income: " + updatedChoosenIncomeForCurrentMonth);
+        console.log("Updated Current Month's (choosed)income: " + updatedChoosedIncomeForCurrentMonth);
+
+
+        const choosenPaymentMethodPast = await fetch(`${backendServer}/setIncomeAfterWipe`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: localStorage.getItem("userEmail"),
+            month: monthNames[currentDate.getMonth()], 
+            income: updatedChoosenIncomeForCurrentMonth,
+            currency: choosenCurrency,
+            payment: choosenPaymentMethod,
+            difference: Number(currentAmount).toFixed(choosenFormat),
+            note: "Collapsable",
+            information: "Difference from previous Month(s)",
+            year: currentYear,
+          }),
+        });
+        if(!choosenPaymentMethodPast.ok){
+          throw new Error('HTTP error ' + choosenPaymentMethodPast.status);
+        }
+        const choosedPaymentMethodPast = await fetch(`${backendServer}/setIncomeAfterWipe`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: localStorage.getItem("userEmail"),
+            month: monthNames[currentDate.getMonth()], 
+            income: updatedChoosedIncomeForCurrentMonth,
+            currency: choosenCurrency,
+            payment: notTheChoosenPaymentMethod,
+            difference: Number(currentAmount).toFixed(choosenFormat),
+            note: "Collapsable",
+            information: "Difference from previous Month(s)",
+            year: currentYear,
+          }),
+        });
+        if(!choosedPaymentMethodPast.ok){
+          throw new Error('HTTP error ' + choosedPaymentMethodPast.status);
+        }
+
+
+
+
+
+      }
+
+      // setOtherPaymentMethodsIncome(Number(newIncomeForWithdraw));
       setAmount("");
       setNoteValue("");
-      newIncomeForWithdraw = 0;
+      // newIncomeForWithdraw = 0;
+
+
     }
     else{
       // - Default Submit
@@ -1569,45 +1697,48 @@ function App() {
     else{ 
       actualMonthIncome = income;
     }
-    console.log(getIncomeData)
-    console.log("Current Month actual Income "+actualMonthIncome);
-    console.log("Current Amount: "+currentAmount);
+    // console.log(getIncomeData)
+    // console.log("Current Month actual Income "+actualMonthIncome);
+    // console.log("Current Amount: "+currentAmount);
 
     const incomeIfPast = Number(actualMonthIncome) - currentAmount;
-    if((choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()) && (type !== 'Exchange')){
-      const monthResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: localStorage.getItem("userEmail"),
-          month: monthNames[currentDate.getMonth()], 
-          income: incomeIfPast,
-          currency: choosenCurrency,
-          payment: choosenPaymentMethod,
-          difference: Number(currentAmount).toFixed(choosenFormat),
-          note: "Collapsable",
-          information: "Difference from previous Month(s)",
-          year: currentYear,
-        }),
-      });
-      if(!monthResponse.ok){
-        throw new Error('HTTP error ' + monthResponse.status);
-      }
 
-      const newIn = Number(currentMonthIncome) - currentAmount;
-      if(choosenCurrency === primaryCurrency){
-        setPrimaryCurrency(newIn.toString());
-      }
-      else if(choosenCurrency === secondaryCurrency){
-        setSecondaryCurrency(newIn.toString());
-      }
-      else if(choosenCurrency === thirdCurrency){
-        setThirdCurrency(newIn.toString());
-      }
-      else{
-        console.log("Error in the choosenCurrency setting the new income.");
+    if(type !== 'Withdraw & Deposit'){
+      if((choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()) && (type !== 'Exchange')){
+        const monthResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
+            method: "POST",
+            headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: localStorage.getItem("userEmail"),
+            month: monthNames[currentDate.getMonth()], 
+            income: incomeIfPast,
+            currency: choosenCurrency,
+            payment: choosenPaymentMethod,
+            difference: Number(currentAmount).toFixed(choosenFormat),
+            note: "Collapsable",
+            information: "Difference from previous Month(s)",
+            year: currentYear,
+          }),
+        });
+        if(!monthResponse.ok){
+          throw new Error('HTTP error ' + monthResponse.status);
+        }
+        
+        const newIn = Number(currentMonthIncome) - currentAmount;
+        if(choosenCurrency === primaryCurrency){
+          setPrimaryCurrency(newIn.toString());
+        }
+        else if(choosenCurrency === secondaryCurrency){
+          setSecondaryCurrency(newIn.toString());
+        }
+        else if(choosenCurrency === thirdCurrency){
+          setThirdCurrency(newIn.toString());
+        }
+        else{
+          console.log("Error in the choosenCurrency setting the new income.");
+        }
       }
     }
   
@@ -3206,6 +3337,122 @@ function App() {
         break;
       default:
         // ? Here is huge bug. Not always. Maybe fixed. NOT
+
+        const type = updatedSpendings.find(spending => spending.type === editedCategory)?.id || 0;
+
+        let dataPast = [];
+        let data = [];
+
+        switch (choosenCurrency) {
+          case primaryCurrency:
+            data = primaryCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === monthNames[currentDate.getMonth()]);
+            break;
+          case secondaryCurrency:
+            data = secondaryCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === monthNames[currentDate.getMonth()]);
+            break;
+          case thirdCurrency:
+            data = thirdCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === monthNames[currentDate.getMonth()]);
+            break;
+          default:
+            break;
+        }
+
+        switch (choosenCurrency) {
+          case primaryCurrency:
+            dataPast = primaryCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === choosenMonth);
+            break;
+          case secondaryCurrency:
+            dataPast = secondaryCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === choosenMonth);
+            break;
+          case thirdCurrency:
+            dataPast = thirdCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === choosenMonth);
+            break;
+          default:
+            break;
+        }
+
+        const incomePast = dataPast.length > 0 ? dataPast[0].income : 0;
+        const incomeCurrent = data.length > 0 ? data[0].income : 0;
+
+        console.log("Income Current: "+incomeCurrent);
+        console.log("Income Past: "+incomePast);
+        console.log("Edited Amount: "+editedAmount);
+        console.log("Entry Amount: "+entry.amount);
+
+        const newIncomeOfPast = Number(incomePast) + Number(entry.amount) - Number(editedAmount);
+        const newIncomeOfCurrent = Number(incomeCurrent) + Number(entry.amount) - Number(editedAmount);
+
+        console.log("Past income: "+newIncomeOfPast);
+        console.log("Current income: "+newIncomeOfCurrent);
+
+        // ChoosenMonth
+        const postResponse = await fetch(`${backendServer}/editEntry`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: localStorage.getItem("userEmail"),
+            id: entry.id,
+            amount: Number(editedAmount).toFixed(choosenFormat),
+            month: choosenMonth,
+            type_id: type,
+            currency: choosenCurrency,
+            payment: choosenPaymentMethod,
+            difference: Number(entry.difference).toFixed(choosenFormat),
+            note: editedNote,
+            information: "Edited",
+            year: choosenYear,
+          }),
+        });
+        if (!postResponse.ok) {
+          throw new Error('HTTP error ' + postResponse.status);
+        }
+        const choosenMonthResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: localStorage.getItem("userEmail"),
+            month: choosenMonth, 
+            income: newIncomeOfPast,
+            currency: choosenCurrency,
+            payment: choosenPaymentMethod,
+            note: "Collapsable",
+            information: "Difference from previous Month(s)",
+            year: choosenYear,
+          }),
+        });
+        if(!choosenMonthResponse.ok){
+          throw new Error('HTTP error ' + choosenMonthResponse.status);
+        }
+
+        // Current Month
+        if(choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()){
+          const currentMonthResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
+              method: "POST",
+              headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: localStorage.getItem("userEmail"),
+              month: monthNames[currentDate.getMonth()], 
+              income: newIncomeOfCurrent,
+              currency: choosenCurrency,
+              payment: choosenPaymentMethod,
+              note: "Collapsable",
+              information: "Difference from previous Month(s)",
+              year: currentYear,
+            }),
+          });
+          if(!currentMonthResponse.ok){
+            throw new Error('HTTP error ' + currentMonthResponse.status);
+          }
+        }
+
+
+        /*
         // - Set the actual current Months Income
         const pastChange = monthNames[currentDate.getMonth()] !== choosenMonth;
         console.log(localStorage.getItem("userEmail"), monthNames[currentDate.getMonth()], choosenCurrency, choosenPaymentMethod, choosenYear);
@@ -3226,7 +3473,7 @@ function App() {
         console.log("Current Month actual Income "+actualMonthIncome);
         const newIncomeForActualMonth = Number(actualMonthIncome) + (Number(entry.amount) - Number(editedAmount));
         console.log("New Income for actual Month "+ newIncomeForActualMonth);
-        // /*
+        
         if(pastChange){ //If the choosen month is not the actual month...
           console.log("Its past change");
           const pastINCOME = await fetch(`${backendServer}/setIncomeAfterWipe`, {
@@ -3248,8 +3495,7 @@ function App() {
             throw new Error('HTTP error ' + pastINCOME.status);
           }
         }
-        // */
-
+        
         // - Set the choosenMonths Income. 
         const newIncome = ( Number(income) + Number(entry.amount) ) - Number(editedAmount);
         const type = updatedSpendings.find(spending => spending.type === editedCategory)?.id || 0;
@@ -3264,7 +3510,7 @@ function App() {
         console.log("Default Note: "+entry.note);
         console.log("Updated Note: "+editedNote);
         // Send a PUT request to the server to update the entry
-        // /*
+        
         const postResponse = await fetch(`${backendServer}/editEntry`, {
           method: "POST",
           headers: {
@@ -3306,10 +3552,10 @@ function App() {
         if(!postINCOME.ok){
           throw new Error('HTTP error ' + postINCOME.status);
         }
-        // */
+        */
 
         setFetchNow(!fetchNow);
-        setIncome(newIncome);
+        // setIncome(newIncome);
         break;
 
     }
