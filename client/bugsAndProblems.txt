@@ -240,6 +240,46 @@
     - change withdraw // ! This function is disabled
 
 // # Change Data in previous month.
+    To acchive that, we need another table in the Database. And store the original values in that Table. 
+    That way we can get back the data and count the cumulativeDifference on each change. 
+
+    Example
+        Original Entry (December):
+        original_id: 1
+        amount: 100 EUR
+        income: 800 EUR
+        
+        First Edit (March):
+        original_id: 1
+        amount: 150 EUR
+        income: 750 EUR (800 - (150-100))
+        cumulative_difference: 50 EUR
+        
+        Second Edit (March):
+        original_id: 1
+        amount: 125 EUR
+        income: 775 EUR (750 - (125-150))
+        cumulative_difference: 25 EUR
+
+    This is needed because, if we always just change the amount without the original data it will couse some incorrect calculations. 
+    For example: 
+        Original Entry December: 
+            amount 100 
+            income 800
+        
+        First change March: 
+            amount 150 
+            income 750
+
+        Second change March: 
+            150-100=50 lastIncome - amount = difference
+            750+50     lastIncome + difference
+            amount 100
+            income would be logical to set back to 800 but with the current calculations it will return 850
+
+
+
+
     - change basic category // ? That does not updated the current months income properly. 
         - increase the amount
             Updating the original row works. Only the incomes are not the proper ones. 

@@ -738,7 +738,7 @@ function App() {
         setIsLoading(false); // Stop loading in case of error
       });
     }, 1500);
-  },[choosenYear, choosenMonth, choosenCurrency, choosenPaymentMethod])
+  },[choosenYear, choosenMonth, choosenCurrency, choosenPaymentMethod, fetchNow,])
 
   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------\\
 
@@ -1151,7 +1151,6 @@ function App() {
       }
     }
 
-    // ? I think we need to add the two other post if the month is not the current. 
     if(choosenMonth !== monthNames[currentDate.getMonth()] || choosenYear !== new Date().getFullYear()){
       // console.log("The month is not the current. And here we need to update the current month!")
       // console.log("//////////////////////////////////////////////////////////")
@@ -1180,8 +1179,7 @@ function App() {
 
       //Get get the data in the current Month. We need only the last entry for both the choosed and the choosen currency.
       //Check if choosen currency and the choosed currency is the Primary or secondary or thid currency.
-      let choosenData = [];
-      let choosedData = [];
+      
       if(choosenCurrency === primaryCurrency){
         choosenData = primaryCurrencyData.filter(row => row.month === monthNames[currentDate.getMonth()]);
         // console.log("Primary Choosen Currency: ");
@@ -3374,16 +3372,18 @@ function App() {
         const incomePast = dataPast.length > 0 ? dataPast[0].income : 0;
         const incomeCurrent = data.length > 0 ? data[0].income : 0;
 
+        console.log("");
         console.log("Income Current: "+incomeCurrent);
         console.log("Income Past: "+incomePast);
         console.log("Edited Amount: "+editedAmount);
         console.log("Entry Amount: "+entry.amount);
 
-        const newIncomeOfPast = Number(incomePast) + Number(entry.amount) - Number(editedAmount);
-        const newIncomeOfCurrent = Number(incomeCurrent) + Number(entry.amount) - Number(editedAmount);
+        const newIncomeOfPast = Number(incomePast) - (Number(editedAmount) - Number(entry.amount));
+        const newIncomeOfCurrent = Number(incomeCurrent) - (Number(editedAmount) - Number(entry.amount));
+        const cumulativeDifference = Number(entry.amount) - Number(editedAmount);
 
-        console.log("Past income: "+newIncomeOfPast);
         console.log("Current income: "+newIncomeOfCurrent);
+        console.log("Past income: "+newIncomeOfPast);
 
         // ChoosenMonth
         const postResponse = await fetch(`${backendServer}/editEntry`, {
@@ -3399,7 +3399,7 @@ function App() {
             type_id: type,
             currency: choosenCurrency,
             payment: choosenPaymentMethod,
-            difference: Number(entry.difference).toFixed(choosenFormat),
+            difference: cumulativeDifference,
             note: editedNote,
             information: "Edited",
             year: choosenYear,
@@ -3450,7 +3450,7 @@ function App() {
             throw new Error('HTTP error ' + currentMonthResponse.status);
           }
         }
-
+        
 
         /*
         // - Set the actual current Months Income
@@ -3555,7 +3555,7 @@ function App() {
         */
 
         setFetchNow(!fetchNow);
-        // setIncome(newIncome);
+        setIncome(newIncomeOfPast);
         break;
 
     }
