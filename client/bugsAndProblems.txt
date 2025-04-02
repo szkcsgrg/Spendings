@@ -6,7 +6,6 @@
 // ? Esc on exchange does not work. And also updates the income value before send.
 // ? The delete month just deletes the selectedCurrency and not all of the currencys.
 // ? If the server is down, the Service Unavailable message shows even if the user is not logged in. Setup a proper landing screen and a Message below. 
-// ? On login the month in 2025 does not go to the current one. 
 // ? Where there is no secondary or third currency the code will create an exchange entry. But If we will delete it I am not sure if it works. 
 // ? Just an idea... What if the user enters a - value and then they choose exchange. It should not be possible. It's time to remove the - values option I think. Or just hide the exchange button if the amount is starting with a -.
 
@@ -230,6 +229,22 @@
     - spent investment ✅ Works with - values as well
 
 // # Change Data in current.
+    Tests
+        | 14868 | szkcsgrg@gmail.com |    NULL | April    |    980.00 |  100.00 |    NULL | EUR      | card    | NULL       |                                             | NULL                                      | 2025 |
+        | 14869 | szkcsgrg@gmail.com |      18 | April    |    880.00 |    NULL |  100.00 | EUR      | card    | NULL       |                                             | NULL                                      | 2025 |
+        
+        880 is the original income.
+        I will increase the Clothes from 50 to 100 and decrease to 25
+            From 880 -> 830 ✅ 50 -> 100
+            From 830 -> 905 ✅ 100 -> 25
+        I will increase the 100 under savings to 200
+            Total Saving: 2300 -> 2400 -> 2250 ✅
+            From 905 -> 805 100 -> 200 ✅
+            From 805 -> 955 200 -> 50 ✅
+        I will increase the 100 under investment to 200
+            Total Investment: 150 -> 250 -> 100 ✅
+            From 955 -> 855 100 -> 200 ✅
+            From 855 -> 1005 200 -> 50 ✅
     - change basic category
         - increase the amount ✅
         - decrease the amount ✅
@@ -240,48 +255,47 @@
     - change withdraw // ! This function is disabled
 
 // # Change Data in previous month.
-    To acchive that, we need another table in the Database. And store the original values in that Table. 
-    That way we can get back the data and count the cumulativeDifference on each change. 
+    // - Concept
+        To acchive that, we need another table in the Database. And store the original values in that Table. 
+        That way we can get back the data and count the cumulativeDifference on each change. 
 
-    Example
-        Original Entry (December):
-        original_id: 1
-        amount: 100 EUR
-        income: 800 EUR
-        
-        First Edit (March):
-        original_id: 1
-        amount: 150 EUR
-        income: 750 EUR (800 - (150-100))
-        cumulative_difference: 50 EUR
-        
-        Second Edit (March):
-        original_id: 1
-        amount: 125 EUR
-        income: 775 EUR (750 - (125-150))
-        cumulative_difference: 25 EUR
+        Example
+            Original Entry (December):
+            original_id: 1
+            amount: 100 EUR
+            income: 800 EUR
+            
+            First Edit (March):
+            original_id: 1
+            amount: 150 EUR
+            income: 750 EUR (800 - (150-100))
+            cumulative_difference: 50 EUR
+            
+            Second Edit (March):
+            original_id: 1
+            amount: 125 EUR
+            income: 775 EUR (750 - (125-150))
+            cumulative_difference: 25 EUR
 
-    This is needed because, if we always just change the amount without the original data it will couse some incorrect calculations. 
-    For example: 
-        Original Entry December: 
-            amount 100 
-            income 800
-        
-        First change March: 
-            amount 150 
-            income 750
+        This is needed because, if we always just change the amount without the original data it will couse some incorrect calculations. 
+        For example: 
+            Original Entry December: 
+                amount 100 
+                income 800
+            
+            First change March: 
+                amount 150 
+                income 750
 
-        Second change March: 
-            150-100=50 lastIncome - amount = difference
-            750+50     lastIncome + difference
-            amount 100
-            income would be logical to set back to 800 but with the current calculations it will return 850
+            Second change March: 
+                150-100=50 lastIncome - amount = difference
+                750+50     lastIncome + difference
+                amount 100
+                income would be logical to set back to 800 but with the current calculations it will return 850
 
-
-
-
-    - change basic category // ? That does not updated the current months income properly. 
-        - increase the amount
+    - change basic category 
+        - increase the amount ✅
+            // - Test #1
             Updating the original row works. Only the incomes are not the proper ones. 
             december: (o)700 + 50 = 750 ✅
             march: (o)440 + 50 // ! 750 = 490
@@ -294,7 +308,30 @@
             | 14530 | szkcsgrg@gmail.com |    NULL | March    |   750.00 |    NULL |    NULL | EUR      | card    | NULL       | NULL             | Edited Income                             | 2025 |
             | 14531 | szkcsgrg@gmail.com |    NULL | December |   750.00 |    NULL |    NULL | EUR      | card    | NULL       | NULL             | Edited Income                             | 2024 |
             +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
-        - decrease the amount
+
+
+
+            // - Test #2 ✅
+            +-------+--------------------+---------+----------+-----------+---------+---------+----------+---------+------------+---------------------------------------------+-------------------------------------------+------+
+            | id    | user_email         | type_id | month    | income    | saving  | amount  | currency | payment | difference | note                                        | information                               | year |
+            +-------+--------------------+---------+----------+-----------+---------+---------+----------+---------+------------+---------------------------------------------+-------------------------------------------+------+
+            | 14485 | szkcsgrg@gmail.com |       8 | December |      NULL |    NULL |  150.00 | EUR      | card    | -25        | Here is a note                              | Edited                                    | 2024 |
+            | 14656 | szkcsgrg@gmail.com |    NULL | December |    550.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2024 |
+            | 14657 | szkcsgrg@gmail.com |    NULL | March    |    950.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+            +-------+--------------------+---------+----------+-----------+---------+---------+----------+---------+------------+---------------------------------------------+-------------------------------------------+------+
+
+            From 150 to 200
+            Expected Values: 
+            December 500
+            March 900
+            Spent This month from 600 to 650.
+
+            | 14658 | szkcsgrg@gmail.com |    NULL | December |    500.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2024 |
+            | 14659 | szkcsgrg@gmail.com |    NULL | April    |    -50.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+
+            Would be good but the April value is not there yet...
+        - decrease the amount ✅
+            // - Test #1
             december: (o)700 - 50 = 650
             march: (o)430 - 50 = // ! 650 = 380
             +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
@@ -305,8 +342,22 @@
             | 14528 | szkcsgrg@gmail.com |    NULL | March    |   650.00 |    NULL |    NULL | EUR      | card    | NULL       | NULL             | Edited Income                             | 2025 |
             | 14529 | szkcsgrg@gmail.com |    NULL | December |   650.00 |    NULL |    NULL | EUR      | card    | NULL       | NULL             | Edited Income                             | 2024 |
             +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
+
+            // - Test #3 ✅
+            +-------+--------------------+---------+----------+-----------+---------+---------+----------+---------+------------+---------------------------------------------+-------------------------------------------+------+
+            | id    | user_email         | type_id | month    | income    | saving  | amount  | currency | payment | difference | note                                        | information                               | year |
+            +-------+--------------------+---------+----------+-----------+---------+---------+----------+---------+------------+---------------------------------------------+-------------------------------------------+------+
+            | 14865 | szkcsgrg@gmail.com |       8 | April    |    900.00 |    NULL |   50.00 | EUR      | card    | NULL       |                                             | NULL                                      | 2025 |
+            | 14658 | szkcsgrg@gmail.com |    NULL | December |    500.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2024 |
+            +-------+--------------------+---------+----------+-----------+---------+---------+----------+---------+------------+---------------------------------------------+-------------------------------------------+------+
+
+            from 200 to 20
+            That should increase both incomes with 180 +
+
+            | 14866 | szkcsgrg@gmail.com |    NULL | December |    680.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2024 |
+            | 14867 | szkcsgrg@gmail.com |    NULL | April    |   1080.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2025 |
         - change Note ✅
-    - change investment
+    - change investment ✅
         ! total investment does not change 
         - increase "-50" to 100
             ! there is no actual month change 
@@ -319,6 +370,18 @@
             | 14524 | szkcsgrg@gmail.com |      15 | March    |   440.00 |    NULL |   10.00 | EUR      | card    | 10.00      |                  | NULL                                      | 2025 |
             | 14536 | szkcsgrg@gmail.com |    NULL | December |   650.00 |    NULL |    NULL | EUR      | card    | NULL       | NULL             | Edited Income                             | 2024 |
             +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
+
+
+            // - Test #2 ✅
+            Total investment: 200
+            | 14866 | szkcsgrg@gmail.com |    NULL | December |    680.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2024 |
+            | 14895 | szkcsgrg@gmail.com |    NULL | April    |    405.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+
+            I will change the -100 to -200 that should decrease the incomes with 100 and also the total investment will be 300 from the 200. ✅
+
+            | 14896 | szkcsgrg@gmail.com |    NULL | December |    580.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2024 |
+            | 14897 | szkcsgrg@gmail.com |    NULL | April    |    305.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+
         - decrease  "+100" to 150
             december: // ? not the proper calculation 700 + 50 suppose to be 750 not 800
             march: // ? completly missing so there is no question here. // ! missing row in db
@@ -329,7 +392,17 @@
             | 14524 | szkcsgrg@gmail.com |      15 | March    |   440.00 |    NULL |   10.00 | EUR      | card    | 10.00      |                  | NULL                                      | 2025 |
             | 14538 | szkcsgrg@gmail.com |    NULL | December |   800.00 |    NULL |    NULL | EUR      | card    | NULL       | NULL             | Edited Income                             | 2024 |
             +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+
-    - change savings
+
+            // - Test #3 ✅
+            Total Investment: 300
+            | 14896 | szkcsgrg@gmail.com |    NULL | December |    580.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2024 |
+            | 14897 | szkcsgrg@gmail.com |    NULL | April    |    305.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+
+            I will change 200 to 50 that should increase the income values with 150 and the total investment value should drop down from 300 to 150. ✅
+
+            | 14898 | szkcsgrg@gmail.com |    NULL | December |    730.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2024 |
+            | 14899 | szkcsgrg@gmail.com |    NULL | April    |    455.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+    - change savings ✅
         ! - increase "-100" to "-100" 
             total saving changed ✅
             the original value got changed properly ✅
@@ -342,6 +415,7 @@
             | 14524 | szkcsgrg@gmail.com |      15 | March    |   440.00 |    NULL |   10.00 | EUR      | card    | 10.00      |                  | NULL                                      | 2025 |
             | 14541 | szkcsgrg@gmail.com |    NULL | December |  1000.00 |    NULL |    NULL | EUR      | card    | NULL       | NULL             | Edited Income                             | 2024 |
             +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+                
+
         - increase "-50" to 100
             total saving changed ✅
             the original value got changed properly ✅
@@ -354,6 +428,17 @@
             | 14524 | szkcsgrg@gmail.com |      15 | March    |   440.00 |    NULL |   10.00 | EUR      | card    | 10.00      |                  | NULL                                      | 2025 |
             | 14539 | szkcsgrg@gmail.com |    NULL | December |   750.00 |    NULL |    NULL | EUR      | card    | NULL       | NULL             | Edited Income                             | 2024 |
             +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+    
+
+            // - Test #2 ✅
+            Total Savings: 2450
+            | 14898 | szkcsgrg@gmail.com |    NULL | December |    730.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2024 |
+            | 14899 | szkcsgrg@gmail.com |    NULL | April    |    455.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+
+            I will change -100 to -200. Thant means the income values should decrease with 100 and the total Savings value should increse from 2450 to 2550✅
+
+            | 14900 | szkcsgrg@gmail.com |    NULL | December |    630.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2024 |
+            | 14901 | szkcsgrg@gmail.com |    NULL | April    |    355.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+
         - decrease "+50" to 100
             total saving changed ✅
             the original value got changed properly ✅
@@ -366,12 +451,35 @@
             | 14524 | szkcsgrg@gmail.com |      15 | March    |   440.00 |    NULL |   10.00 | EUR      | card    | 10.00      |                  | NULL                                      | 2025 |
             | 14540 | szkcsgrg@gmail.com |    NULL | December |   850.00 |    NULL |    NULL | EUR      | card    | NULL       | NULL             | Edited Income                             | 2024 |
             +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+      
+
+
+            // - Test #2 ✅
+            Total Savings: 2550
+            | 14900 | szkcsgrg@gmail.com |    NULL | December |    630.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2024 |
+            | 14901 | szkcsgrg@gmail.com |    NULL | April    |    355.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2025 |
+
+            I will change -200 to -50 that means the income values should increase with 150 and the total Savings should decrease from 2550 to 2400 ✅
+
+            | 14902 | szkcsgrg@gmail.com |    NULL | December |    780.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2024 |
+            | 14903 | szkcsgrg@gmail.com |    NULL | April    |    505.00 |    NULL |    NULL | EUR      | card    | NULL       | Collapsable                                 | Difference from previous Month(s)         | 2025 |
     - change exchange
         ! this function is currently disabled 
     - change withdraw
         ! this function is currently disabled 
 
-// # Delete Data in current month. 
+// # Delete Data in current month.
+    Concept:
+        Use the same method as before using the updatedSpendings and get back the data. 
+        It sounds easy. Just add the amount that the entry had to the income. If the choosen month is not the current one then update also the current, otherwise the choosen is the current so it can stay choosen
+        With Savings same thing update the totalSavings value
+        Same with Investment
+        However with Withdraw we need the choosen and the choosed values as well and update also the current month if so 
+        Exchange is kind of the same but with the currency values. 
+
+        We need to also look into if the user edited something. What if the user edited something in December and it will update the income value of the current month as well. 
+        After edit the income values appear in the db. It just a simple change there. Like 
+        Someone spent 50 euro on something then just add it to the income values. 
+
     - Delete basic category  ✅
         updates the total spent this month  ✅
     - Delete withdraw 
@@ -424,7 +532,7 @@
         | 14551 | szkcsgrg@gmail.com |    NULL | March    |   440.00 |    NULL |    NULL | EUR      | card    | NULL       | NULL             | Reverse                                   | 2025 |
         | 14552 | szkcsgrg@gmail.com |    NULL | March    |   110.00 |    NULL |    NULL | EUR      | cash    | NULL       | NULL             | Reverse                                   | 2025 |
         +-------+--------------------+---------+----------+----------+---------+---------+----------+---------+------------+------------------+-------------------------------------------+------+      
-    - Delete exchange 
+    - Delete exchange  
         Did it from EUR side where the exchange happened
         Values are correct. 
         ? Spent this month is not correct

@@ -220,7 +220,7 @@ function App() {
   const [uniqueMonths, setUniqueMonths] = useState<string[]>([]);
   const [monthsInFetchedData, setMonthsInFetchedData] = useState<string[]>([]);
   const isCurrentMonth = choosenMonth === monthNames[new Date().getMonth()];
-  const [lastMonthValue, setLastMonthValue] = useState<string>("");
+  const [lastMonthValue, setLastMonthValue] = useState<string>(monthNames[currentDate.getMonth() - 1]); 
   const [choosenYear, setChoosenYear] = useState(new Date().getFullYear())
   const [uniqueYears, setUniqueYears] = useState<number[]>([]);
   const currentYear = new Date().getFullYear();
@@ -244,7 +244,6 @@ function App() {
 
 
   //Fetching the Data from the DB START
-
   //Fetch Data from the User
   const fecthUser = async () => {
     const response = await fetch(`${backendServer}/checkUser?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}`, {
@@ -469,7 +468,7 @@ function App() {
     // console.log(monthsInFetchedData)
 
     const lastMonth = months[months.length - 1];
-    // console.log(lastMonth);
+    console.log(lastMonth);
     setLastMonthValue(lastMonth);
 
 
@@ -642,6 +641,107 @@ function App() {
     setAllInvestments(investmentData);
   }
 
+  const [hasUpdated, setHasUpdated] = useState(false);
+  const updateCurrentMonthWithLastValues = async () => {
+    // console.log(hasUpdated)
+    // if (hasUpdated) return; 
+    const notTheChoosenPaymentMethod = choosenPaymentMethod === 'card' ? 'cash' : 'card';
+    
+
+
+    const response = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&year=${currentYear}&payment=${encodeURIComponent(choosenPaymentMethod)}&currency=${encodeURIComponent(choosenCurrency)}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  
+    if (!response.ok) {
+      console.error("Error fetching data:", response.status);
+      return;
+    }
+  
+    const fetchedData = await response.json();
+    // console.log("Fetched Data:", fetchedData);
+  
+    // Check if any entry already starts with "Updated from last entry"
+    const alreadyUpdated = fetchedData.some((entry: { information: string; }) => entry.information?.startsWith("Updated from last entry"));
+    // console.log(alreadyUpdated)
+
+    if (alreadyUpdated) {
+      // console.log("Entries already updated for the current month. Skipping update.");
+      return; // Skip the update logic
+    }
+
+
+
+
+    const getLastRow = (data: any[], paymentMethod: string) => {
+      return data
+        .filter(row => row.payment === paymentMethod)
+        .sort((a, b) => new Date(b.year, monthNames.indexOf(b.month)).getTime() - new Date(a.year, monthNames.indexOf(a.month)).getTime())[0];
+    };
+
+    const lastPrimaryCurrencyRowChoosen = getLastRow(primaryCurrencyData, choosenPaymentMethod);
+    const lastPrimaryCurrencyRowNotChoosen = getLastRow(primaryCurrencyData, notTheChoosenPaymentMethod);
+    const lastSecondaryCurrencyRowChoosen = getLastRow(secondaryCurrencyData, choosenPaymentMethod);
+    const lastSecondaryCurrencyRowNotChoosen = getLastRow(secondaryCurrencyData, notTheChoosenPaymentMethod);
+    const lastThirdCurrencyRowChoosen = getLastRow(thirdCurrencyData, choosenPaymentMethod);
+    const lastThirdCurrencyRowNotChoosen = getLastRow(thirdCurrencyData, notTheChoosenPaymentMethod);
+
+
+    const rowsToUpdate = [
+      { row: lastPrimaryCurrencyRowChoosen, currency: primaryCurrency },
+      { row: lastPrimaryCurrencyRowNotChoosen, currency: primaryCurrency },
+      { row: lastSecondaryCurrencyRowChoosen, currency: secondaryCurrency },
+      { row: lastSecondaryCurrencyRowNotChoosen, currency: secondaryCurrency },
+      { row: lastThirdCurrencyRowChoosen, currency: thirdCurrency },
+      { row: lastThirdCurrencyRowNotChoosen, currency: thirdCurrency },
+    ];
+
+    // console.log(rowsToUpdate)
+
+
+    for (const { row, currency } of rowsToUpdate) {
+      if (row) {
+        const newIncome = row.income; // Use the income from the last row
+        const payment = row.payment;
+
+        try {
+          const response = await fetch(`${backendServer}/setIncomeAfterWipe`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: localStorage.getItem("userEmail"),
+              month: monthNames[currentDate.getMonth()],
+              income: newIncome,
+              currency: currency,
+              payment: payment,
+              difference: 0,
+              information: `Updated from last entry (${row.month} ${row.year})`,
+              year: currentYear,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to update income for ${currency}: ${response.status}`);
+          }
+        } catch (error) {
+          console.error("Error updating income:", error);
+        }
+      }
+    }
+    // console.log(hasUpdated)
+    setTimeout(() => {
+      if(!hasUpdated){
+        setFetchNow(!fetchNow);
+      }
+      setHasUpdated(true);
+    }, 3000);
+  }
+
   //Fetching the Data from the DB END
   useEffect(() => {
     fecthUser();
@@ -725,6 +825,7 @@ function App() {
       }, 1500);
     }
   }, [choosenYear, choosenMonth, isDataFetched, choosenCurrency, choosenPaymentMethod, income, fetchNow]);
+  
   useEffect(() => {
     setTimeout(() => {
       Promise.all([fetchAllDataFromUser()])
@@ -740,6 +841,9 @@ function App() {
     }, 1500);
   },[choosenYear, choosenMonth, choosenCurrency, choosenPaymentMethod, fetchNow,])
 
+  useEffect(() => {
+    updateCurrentMonthWithLastValues();
+  },[fetchNow])
   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------\\
 
 
@@ -1749,7 +1853,6 @@ function App() {
   }
   const handleSelectChange = (event: { target: { value: any; }; }) => {
     const yearElement = document.getElementsByName('year')[0] as HTMLSelectElement;
-    
     setChoosenMonth(event.target.value);
     setChoosenYear(Number(yearElement.value));
     console.log(event.target.value, yearElement.value)
@@ -2925,16 +3028,13 @@ function App() {
   }
   //Based on the Changes in the Edit Modal it updates the state of the editedAmount
   const handleEntryChange = async (entry: Log) => {
-    // Save the changes (e.g., update the state or make an API call)
     setEditingEntryId(0);
-    // ! Missing function
-    // ? if the month or the year is different we need to also update the current Income value 
-    // - We need the current months income value and the actual months income. 
     switch (entry.type) {
       case 'Income':
         setErrorMessage("You can't edit this entry!");
         setShowErrorMessage(true);
         break;
+        /*
       case 'Investment':
         //Remove from the total Investment or add then run the default section. 
         const newIncomeInv = ( Number(income) + Number(entry.amount) ) - Number(editedAmount);
@@ -2999,7 +3099,64 @@ function App() {
         setIncome(newIncomeInv);
         // setFetchNow(!fetchNow);
         break;
+      /* 
       case 'Savings':
+        /*
+        const typeS = updatedSpendings.find(spending => spending.type === editedCategory)?.id || 0;
+
+        let dataChoosenSaving = [];
+        let dataCurrentSaving = [];
+
+        switch (choosenCurrency) {
+          case primaryCurrency:
+            dataCurrentSaving = primaryCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === monthNames[currentDate.getMonth()]);
+            break;
+          case secondaryCurrency:
+            dataCurrentSaving = secondaryCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === monthNames[currentDate.getMonth()]);
+            break;
+          case thirdCurrency:
+            dataCurrentSaving = thirdCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === monthNames[currentDate.getMonth()]);
+            break;
+          default:
+            break;
+        }
+
+        switch (choosenCurrency) {
+          case primaryCurrency:
+            dataChoosenSaving = primaryCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === choosenMonth);
+            break;
+          case secondaryCurrency:
+            dataChoosenSaving = secondaryCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === choosenMonth);
+            break;
+          case thirdCurrency:
+            dataChoosenSaving = thirdCurrencyData.filter(row => row.payment === choosenPaymentMethod && row.month === choosenMonth);
+            break;
+          default:
+            break;
+        }
+
+        const incomeChoosenSaving = dataChoosenSaving.length > 0 ? dataChoosenSaving[0].income : 0;
+        const incomeCurrentSaving = dataCurrentSaving.length > 0 ? dataCurrentSaving[0].income : 0;
+
+        console.log("");
+        console.log("Income Current: "+incomeCurrentSaving);
+        console.log("Income Past: "+incomeChoosenSaving);
+        console.log("Edited Amount: "+editedAmount);
+        console.log("Entry Amount: "+entry.amount);
+
+        const newIncomeOfChoosenSaving = Number(incomeChoosenSaving) - (Number(editedAmount) - Number(entry.amount));
+        const newIncomeOfCurrentSaving = Number(incomeCurrentSaving) - (Number(editedAmount) - Number(entry.amount));
+        const cumulativeDifferenceSaving = Number(entry.amount) - Number(editedAmount);
+
+        console.log("Current income: "+newIncomeOfCurrentSaving);
+        console.log("Past income: "+newIncomeOfChoosenSaving);
+
+        setTotalSavings(prevTotalSaving => (Number(prevTotalSaving) - Number(entry.amount) + Number(editedAmount)).toFixed(choosenFormat));
+        console.log(Number(totalSavings)-Number(entry.amount)+Number(editedAmount));
+        console.log(totalSavings);
+        */
+
+        /*
         const newIncomeSav = ( Number(income) + Number(entry.amount) ) - Number(editedAmount);
         const typeSav = updatedSpendings.find(spending => spending.type === editedCategory)?.id || 0;
         const newSaving = (Number(entry.saving) - Number(entry.amount) + Number(editedAmount)).toFixed(choosenFormat);
@@ -3052,290 +3209,9 @@ function App() {
         // console.log(totalSavings);
         setIncome(newIncomeSav);
         // setFetchNow(!fetchNow);
-        break;
-      case 'Withdraw & Deposit':
-        /* 
-        //Calculate the new income value for both payment methods.
-        //Chose the other payment method
-        let otherIncome = 0;
-        let currentIncome = 0;
-        // let otherPaymentMethod = (choosenPaymentMethod === 'card' ? 'cash' : 'card');
-        let comeFrom = "";
-        // let searchedId = entry.id;
-        let otherId = 0;
-        let currentId = 0;
-        let amountForOriginal = null;
-        let differencBetweenAmounts = Number(entry.difference) - Number(editedAmount);
-        
-        // +-------+-----------------------+---------+-----------+-----------+--------+-----------+----------+---------+------------+------+-------------+
-        // | id    | user_email            | type_id | month     | income    | saving | amount    | currency | payment | difference | note | information |
-        // +-------+-----------------------+---------+-----------+-----------+--------+-----------+----------+---------+------------+------+-------------+
-        // | 13829 | legoger0312@gmail.com |    NULL | September |     18.00 |   NULL |      NULL | EUR      | cash    | 18.00      | NULL | NULL        |
-        // | 13830 | legoger0312@gmail.com |      15 | September |    900.00 |   NULL |     82.00 | EUR      | card    | 82.00      |      | NULL        | 82 side
-        // | 13831 | legoger0312@gmail.com |      15 | September |    100.00 |   NULL |      NULL | EUR      | cash    | 82.00      |      | NULL        | 0  side
-
-
-        //Change on 0 side amount will be 90 then the income of that accound should be income+difference-editedAmount the other account should be income-amount+editedAmount? 
-        //so the changed amount is 90 insted of the 82. that means the income of the other accout is 900-82=818+90=908 other account is = 100+82=182-90=92
-        
-        //Change on 82 side amount will be 90 as well. 
-        //Income the current account will be then: 900-82+90=908 that means income-amount+editedAmount
-        //Income the other account will be then: 100+82-90=92 that means income+difference-editedAmount
-
-
-        // Another Example
-        // +-------+-----------------------+---------+-----------+-----------+--------+-----------+----------+---------+------------+------+-------------+
-        // | id    | user_email            | type_id | month     | income    | saving | amount    | currency | payment | difference | note | information |
-        // +-------+-----------------------+---------+-----------+-----------+--------+-----------+----------+---------+------------+------+-------------+
-        // | 13855 | legoger0312@gmail.com |    NULL | September | 100.00 |   NULL |   NULL | EUR      | card    | 0.00       | NULL | NULL        |
-        // | 13856 | legoger0312@gmail.com |    NULL | September |  30.00 |   NULL |   NULL | EUR      | cash    | 0.00       | NULL | NULL        |
-        // | 13857 | legoger0312@gmail.com |      15 | September |  50.00 |   NULL |  50.00 | EUR      | card    | 50.00      |      | NULL        |
-        // | 13858 | legoger0312@gmail.com |      15 | September |  80.00 |   NULL |   NULL | EUR      | cash    | 50.00      |      | NULL        |
-        // +-------+-----------------------+---------+-----------+--------+--------+--------+----------+---------+------------+------+-------------+
-
-
-        //New calculation methode. We counted the difference of the original amount and the edited amount. 
-        //We will change the 50 to 70. In this case the differenceBetweenAmounts will be (-20).
-        
-        //If amount is not null. IN our case it is 50.
-        //income = income - differnceBetweenAmounts
-        //otherIncome = otherIncome + differnceBetweenAmounts
-
-        //If amount is null. In our case it is 0.
-        //income = income + differnceBetweenAmounts
-        //otherIncome = otherIncome - differnceBetweenAmounts
-
-
-        //This should be the outcome no matter what.
-        // | 13857 | legoger0312@gmail.com |      15 | September | 30.00 |   NULL |  70.00 | EUR      | card    | 70.00      |      | Edited      |
-        // | 13858 | legoger0312@gmail.com |      15 | September | 100.00 |   NULL |  70.00 | EUR      | cash    | 70.00      |      | Edited      |
-        // +-------+-----------------------+---------+-----------+--------+--------+--------+----------+---------+------------+------+-------------+
-
-
-        if(entry.amount === null || entry.amount.toString().includes("null")){
-          comeFrom = (entry.payment === 'card' ? 'cash' : 'card');
-          // console.log("felso");
-          // console.log(comeFrom);
-          //id should be: entry.id
-          //searchedId should be: entry.id + 1
-          currentId = entry.id 
-          otherId = entry.id - 1;
-          if(choosenPaymentMethod === comeFrom){
-            amountForOriginal = Number(editedAmount);
-            // console.log("Amount Value: "+amountForOriginal);
-          }
-        }
-        else{
-          comeFrom = (entry.payment === 'card' ? 'card' : 'cash');
-          // console.log("also")
-          // console.log(comeFrom);
-          //Here we need to set the amount. 
-          //id should be: entry.id
-          //searchedId should be: entry.id - 1
-          currentId = entry.id
-          otherId = entry.id + 1;
-          if(choosenPaymentMethod === comeFrom){
-            amountForOriginal = Number(editedAmount);
-            // console.log("Amount Value: "+amountForOriginal);
-          }
-        }
-
-        // console.log(currentId);
-        // console.log(otherId);
-        if(entry.amount === null || entry.amount.toString().includes("null")){
-          // console.log("Amount is 0 and + -> Other Profile")
-
-          const fetchResponse = await fetch(`${backendServer}/getIncome?userId=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&currency=${choosenCurrency}&payment=${comeFrom}&id=${otherId}`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-          if(!fetchResponse.ok){
-            throw new Error('HTTP error ' + fetchResponse.status);
-          }
-          const data = await fetchResponse.json();
-          // console.log(data);
-          otherIncome = Number(data[0].income) + Number(differencBetweenAmounts);
-          currentIncome = Number(income) - Number(differencBetweenAmounts);
-
-        }
-        else{
-          // console.log("Amount is not 0 -> Current Profile")
-          const fetchResponse = await fetch(`${backendServer}/getIncome?userId=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&currency=${choosenCurrency}&payment=${comeFrom}&id=${otherId}`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-          if(!fetchResponse.ok){
-            throw new Error('HTTP error ' + fetchResponse.status);
-          }
-          const data = await fetchResponse.json();
-          // console.log(data);
-          otherIncome = Number(data[0].income) - Number(differencBetweenAmounts) ;
-          currentIncome = Number(income) + Number(differencBetweenAmounts);
-        }
-        
-        // console.log("//////////////////////////////////////////////////////////////////")
-        // console.log("Current id: "+currentId);
-        // console.log("Current Income: "+currentIncome);
-        // console.log("------------------")
-        // console.log("Other id: " +otherId);
-        // console.log("Other income: " +otherIncome);
-        // console.log("//////////////////////////////////////////////////////////////////")
-        
-
-
-        //We need change the amount only on the original entry. where we have an amount. 
-        //if we dont have an amount just pass it without amount. We need to aufpassen which payment method was the original. 
-        
-        // console.log(entry.amount);
-        // console.log(entry.payment);
-        //we got the comeFrom value which helps us to understand where does the original entry come from.
-        //we need to get also which id belong to where and which incom belong to where.
-
-        //Then send the to update like this
-        //First: otherid, otherPaymentMethode, otherIncome, difference = editedAmount
-        //Second: searchedId, entry.payment, currentIncome, difference = editedAmount, amount = editedAmount
-
-
-        if(amountForOriginal !== null && choosenPaymentMethod === comeFrom){
-          //Current
-          // console.log("This will be the current account");
-          // console.log(comeFrom);
-          // console.log(currentId);
-          //send amount for current
-          //send other account as well without amount
-
-          // 
-          //Current
-          let choosenPaymentMethodPost = await fetch(`${backendServer}/editEntry`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userId: localStorage.getItem("userEmail"),
-              id: currentId,
-              amount: Number(editedAmount).toFixed(choosenFormat),
-              month: choosenMonth,
-              type_id: 15,
-              income: Number(currentIncome).toFixed(choosenFormat),
-              currency: choosenCurrency,
-              payment: choosenPaymentMethod,
-              difference: Number(editedAmount).toFixed(choosenFormat),
-              note: editedNote,
-              information: "Edited",
-              year: choosenYear,
-            }),
-          });
-          if(!choosenPaymentMethodPost.ok){
-            throw new Error('HTTP error ' + choosenPaymentMethodPost.status);
-          }
-
-          comeFrom = (choosenPaymentMethod === 'card' ? 'cash' : 'card');
-          // console.log(comeFrom)
-          //Other
-          let otherPaymentMethodPost = await fetch(`${backendServer}/editEntry`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userId: localStorage.getItem("userEmail"),
-              id: otherId,
-              // amount: Number(editedAmount).toFixed(choosenFormat),
-              month: choosenMonth,
-              type_id: 15,
-              income: Number(otherIncome).toFixed(choosenFormat),
-              currency: choosenCurrency,
-              payment: comeFrom,
-              difference: Number(editedAmount).toFixed(choosenFormat),
-              note: editedNote,
-              information: "Edited",
-              year: choosenYear,
-            }),
-          });
-          if(!otherPaymentMethodPost.ok){
-            throw new Error('HTTP error ' + otherPaymentMethodPost.status);
-          }
-          // 
-        }
-        else{
-          //send without amount for current and send for other
-          // console.log("This will be the other account");
-          // console.log(currentId)
-          comeFrom = (choosenPaymentMethod === 'card' ? 'cash' : 'card');
-          // console.log(comeFrom)
-          //No AMOUNT 
-
-          // /*
-          //Current
-          let choosenPaymentMethodPost = await fetch(`${backendServer}/editEntry`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userId: localStorage.getItem("userEmail"),
-              id: currentId,
-              // amount: Number(editedAmount).toFixed(choosenFormat),
-              month: choosenMonth,
-              type_id: 15,
-              income: Number(currentIncome).toFixed(choosenFormat),
-              currency: choosenCurrency,
-              payment: choosenPaymentMethod,
-              difference: Number(editedAmount).toFixed(choosenFormat),
-              note: editedNote,
-              information: "Edited",
-              year: choosenYear,
-            }),
-          });
-          if(!choosenPaymentMethodPost.ok){
-            throw new Error('HTTP error ' + choosenPaymentMethodPost.status);
-          }
-
-          // comeFrom = (comeFrom === 'card' ? 'cash' : 'card');
-          // console.log(comeFrom)
-          
-          //Other
-          let otherPaymentMethodPost = await fetch(`${backendServer}/editEntry`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userId: localStorage.getItem("userEmail"),
-              id: otherId,
-              amount: Number(editedAmount).toFixed(choosenFormat),
-              month: choosenMonth,
-              type_id: 15,
-              income: Number(otherIncome).toFixed(choosenFormat),
-              currency: choosenCurrency,
-              payment: comeFrom,
-              difference: Number(editedAmount).toFixed(choosenFormat),
-              note: editedNote,
-              information: "Edited",
-              year: choosenYear,
-            }),
-          });
-          if(!otherPaymentMethodPost.ok){
-            throw new Error('HTTP error ' + otherPaymentMethodPost.status);
-          }
-          // 
-        }
-
-        otherId = 0;
-        currentId = 0;
-        differencBetweenAmounts = 0;
-        setFetchNow(!fetchNow);
-        setIncome(currentIncome);
         */
-        break;
+//       break;
       default:
-        // ? Here is huge bug. Not always. Maybe fixed. NOT
-
         const type = updatedSpendings.find(spending => spending.type === editedCategory)?.id || 0;
 
         let dataPast = [];
@@ -3386,27 +3262,56 @@ function App() {
         console.log("Past income: "+newIncomeOfPast);
 
         // ChoosenMonth
-        const postResponse = await fetch(`${backendServer}/editEntry`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: localStorage.getItem("userEmail"),
-            id: entry.id,
-            amount: Number(editedAmount).toFixed(choosenFormat),
-            month: choosenMonth,
-            type_id: type,
-            currency: choosenCurrency,
-            payment: choosenPaymentMethod,
-            difference: cumulativeDifference,
-            note: editedNote,
-            information: "Edited",
-            year: choosenYear,
-          }),
-        });
-        if (!postResponse.ok) {
-          throw new Error('HTTP error ' + postResponse.status);
+        if(entry.type === "Savings"){
+          const postResponse = await fetch(`${backendServer}/editEntry`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: localStorage.getItem("userEmail"),
+              id: entry.id,
+              saving: Number(editedAmount).toFixed(choosenFormat),
+              month: choosenMonth,
+              type_id: type,
+              currency: choosenCurrency,
+              payment: choosenPaymentMethod,
+              difference: cumulativeDifference,
+              note: editedNote,
+              information: "Edited",
+              year: choosenYear,
+            }),
+          });
+          if (!postResponse.ok) {
+            throw new Error('HTTP error ' + postResponse.status);
+          }
+        }
+        else{
+          const postResponse = await fetch(`${backendServer}/editEntry`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: localStorage.getItem("userEmail"),
+              id: entry.id,
+              amount: Number(editedAmount).toFixed(choosenFormat),
+              month: choosenMonth,
+              type_id: type,
+              currency: choosenCurrency,
+              payment: choosenPaymentMethod,
+              difference: cumulativeDifference,
+              note: editedNote,
+              information: "Edited",
+              year: choosenYear,
+            }),
+          });
+          if (!postResponse.ok) {
+            throw new Error('HTTP error ' + postResponse.status);
+          }
+          if(entry.type === "Investment"){
+            setTotalInvestment(prevTotalInvesment => (Number(prevTotalInvesment) - Number(entry.amount)+Number(editedAmount)).toFixed(choosenFormat));
+          }
         }
         const choosenMonthResponse = await fetch(`${backendServer}/setIncomeAfterWipe`, {
           method: "POST",
@@ -3450,109 +3355,17 @@ function App() {
             throw new Error('HTTP error ' + currentMonthResponse.status);
           }
         }
-        
 
-        /*
-        // - Set the actual current Months Income
-        const pastChange = monthNames[currentDate.getMonth()] !== choosenMonth;
-        console.log(localStorage.getItem("userEmail"), monthNames[currentDate.getMonth()], choosenCurrency, choosenPaymentMethod, choosenYear);
-        const getIncome = await fetch(`${backendServer}/getspendingsUserMonth?user_id=${encodeURIComponent(localStorage.getItem("userEmail") || "")}&month=${monthNames[currentDate.getMonth()]}&currency=${choosenCurrency}&payment=${choosenPaymentMethod}&year=${choosenYear}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        if(!getIncome.ok){
-          throw new Error('HTTP error ' + getIncome.status);
-        }
-        const getIncomeData = await getIncome.json();
-        let actualMonthIncome = income;
-        if(getIncomeData.length > 0){
-          actualMonthIncome = getIncomeData[getIncomeData.length-1].income;
-        }
-        console.log("Current Month actual Income "+actualMonthIncome);
-        const newIncomeForActualMonth = Number(actualMonthIncome) + (Number(entry.amount) - Number(editedAmount));
-        console.log("New Income for actual Month "+ newIncomeForActualMonth);
+        if(entry.type === "Savings")
+        {
+          setTotalSavings((prevTotalSaving) => 
+            (Number(prevTotalSaving) - Number(entry.amount) + Number(editedAmount)).toFixed(choosenFormat)
+          );
         
-        if(pastChange){ //If the choosen month is not the actual month...
-          console.log("Its past change");
-          const pastINCOME = await fetch(`${backendServer}/setIncomeAfterWipe`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userId: localStorage.getItem("userEmail"),
-              month: monthNames[currentDate.getMonth()],
-              income: newIncomeForActualMonth,
-              currency: choosenCurrency,
-              payment: choosenPaymentMethod,
-              information: "Edited Income",
-              year: currentYear,
-            }),
-          });
-          if(!pastINCOME.ok){
-            throw new Error('HTTP error ' + pastINCOME.status);
-          }
+          console.log("Updated Total Savings: ", 
+            Number(totalSavings) - Number(entry.amount) + Number(editedAmount)
+          );
         }
-        
-        // - Set the choosenMonths Income. 
-        const newIncome = ( Number(income) + Number(entry.amount) ) - Number(editedAmount);
-        const type = updatedSpendings.find(spending => spending.type === editedCategory)?.id || 0;
-        console.log("ID: "+entry.id);
-        console.log("Original Type: "+entry.type);
-        console.log("Edited Type: "+type);
-        console.log("Amount: "+Number(entry.amount).toFixed(choosenFormat));
-        console.log("Difference: "+ Number(entry.difference).toFixed(choosenFormat))
-        console.log("Edited Amount: "+Number(entry.amount).toFixed(choosenFormat))
-        console.log("NEW INCOME: "+Number(newIncome).toFixed(choosenFormat));
-
-        console.log("Default Note: "+entry.note);
-        console.log("Updated Note: "+editedNote);
-        // Send a PUT request to the server to update the entry
-        
-        const postResponse = await fetch(`${backendServer}/editEntry`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: localStorage.getItem("userEmail"),
-            id: entry.id,
-            amount: Number(editedAmount).toFixed(choosenFormat),
-            month: choosenMonth,
-            type_id: type,
-            income: newIncome,
-            currency: choosenCurrency,
-            payment: choosenPaymentMethod,
-            difference: Number(entry.difference).toFixed(choosenFormat),
-            note: editedNote,
-            information: "Edited",
-            year: choosenYear,
-          }),
-        });
-        if (!postResponse.ok) {
-          throw new Error('HTTP error ' + postResponse.status);
-        }
-        const postINCOME = await fetch(`${backendServer}/setIncomeAfterWipe`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: localStorage.getItem("userEmail"),
-            month: choosenMonth,
-            income: newIncome,
-            currency: choosenCurrency,
-            payment: choosenPaymentMethod,
-            information: "Edited Income",
-            year: choosenYear,
-          }),
-        });
-        if(!postINCOME.ok){
-          throw new Error('HTTP error ' + postINCOME.status);
-        }
-        */
 
         setFetchNow(!fetchNow);
         setIncome(newIncomeOfPast);
@@ -3560,7 +3373,6 @@ function App() {
 
     }
   };
-
   //Functions and Event handlers END
   /*  @end */
 
@@ -3634,10 +3446,10 @@ function App() {
                     {year}
                   </option>
                 ))}
-              </select>
-              <select name="month" onChange={handleSelectChange} defaultValue={lastMonthValue}>
+              </select>   
+              <select name="month" onChange={handleSelectChange} value={choosenMonth}>
                 {uniqueMonths.filter(month => month !== 'initial').map((month, index) => (
-                  <option key={index} value={month}  style={monthsInFetchedData.includes(month) ? { fontWeight: 'bold', color: '#daa4fc' } : {}}>
+                  <option key={index} value={month} style={monthsInFetchedData.includes(month) ? { fontWeight: 'bold', color: '#daa4fc' } : {}}>
                     {month}
                   </option>
                 ))}
