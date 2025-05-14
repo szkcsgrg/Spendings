@@ -27,6 +27,7 @@ const Main: React.FC = () => {
       </p>
     </div>
     :
+    // ? After inital setup The user cannot access the input fields until refresh.
       <Suspense fallback={<div className="loader"></div>}>
         <Routes>
           {isLoggedIn ? (
